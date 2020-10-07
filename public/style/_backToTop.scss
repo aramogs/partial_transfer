@@ -1,0 +1,46 @@
+// Smooth scrolling IF user doesn't have a preference due to motion sensitivities
+$color: #254568;
+
+@media screen and (prefers-reduced-motion: no-preference) {
+    html,
+    body {
+      scroll-behavior: smooth;
+    }
+  }
+
+#back-to-top-wrapper {
+  position: fixed;
+  bottom: 0em;
+  pointer-events: none;
+  transition: all 2s;
+}
+
+.wrapper-hide {
+  opacity:0;
+  left:-100%;
+}
+.wrapper-show {
+  opacity:1;
+  left:0;
+}
+
+.back-to-top-link {
+  position: inherit;
+  pointer-events: all;
+  top: calc(100vh - 5rem);
+  display: inline-block;
+  font-size: 2rem;
+  line-height: 3rem;
+  text-align: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  transition: transform 80ms ease-in;
+  right: 10px;
+
+  &:hover,
+  &:focus {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 3px scale-color($color, $lightness: 55%);
+  }
+}

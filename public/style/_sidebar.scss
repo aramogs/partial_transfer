@@ -1,0 +1,78 @@
+#sidebar-wrapper {
+  min-height: 100vh;
+  margin-left: -15rem;
+  -webkit-transition: margin .25s ease-out;
+  -moz-transition: margin .25s ease-out;
+  -o-transition: margin .25s ease-out;
+  transition: margin .25s ease-out;
+  background-image: url("../img/white-lines.png");
+  background-repeat: no-repeat;
+  background-position-x: -150px;
+  background-position-y: 90px;
+
+  .sidebar-heading {
+    padding: 0.875rem 1.25rem;
+    font-size: 1.2rem;
+  }
+
+  .list-group {
+    width: 15rem;
+  }
+
+  .list-group-item {
+    background-color: rgba(0, 0, 0, 0.4) !important;
+    border-radius: 90px/5px;
+    &:hover {
+      transition-property: 50%;
+      border-style: double;
+      border-right-width: 20px;
+      border-right-color: #17a2b8;
+    }
+  }
+
+  .list-group-ticket {
+    position: fixed;
+    bottom: 0;
+    width: 240px;
+    cursor:help;
+  }
+}
+
+
+
+#page-content-wrapper {
+  min-width: 100vw;
+}
+
+#wrapper.toggle {
+  #sidebar-wrapper {
+    margin-left: 0;
+  }
+}
+
+@media (min-width: 400px) {
+  #sidebar-wrapper {
+    margin-left: 0;
+  }
+
+  #page-content-wrapper {
+    min-width: 0;
+    width: 100%;
+  }
+
+  #wrapper.toggled #sidebar-wrapper {
+    margin-left: -15rem;
+  }
+}
+
+.img_sidebar {
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center center;
+}
+
+.bg-wrap .user-logo .img_sidebar {
+  width: 80px;
+  height: 50px;
+  margin: 0 auto;
+}

@@ -1,0 +1,49 @@
+﻿<IntegrationFile Version="4" ID="95fbb953-4ea2-4e3e-b3aa-4080a4266ba3">
+  <ActionGroup Name="IntegrationFileActionGroup" ID="e4b2ca8c-032e-4804-8b89-fd6a9ba625de" RunMethod="Sequential" MessagingEnabled="false">
+    <Actions>
+      <WebRequestIntegration Name="PartialTransfer" ID="88ece4b5-1cf2-48ea-b230-bb32a9d1903b" IgnoreErrors="true" Port="8086" ServiceName="%PartialTransfer%" ResponseFormat="Json">
+        <Variables>
+          <Variable Name="cantidad" Type="System.String">
+            <Value></Value>
+          </Variable>
+          <Variable Name="material" Type="System.String">
+            <Value></Value>
+          </Variable>
+          <Variable Name="serial" Type="System.String">
+            <Value></Value>
+          </Variable>
+        </Variables>
+        <ActionGroup ID="50758abe-f38d-4021-bc74-902fc5fa47f3" RunMethod="Sequential" MessagingEnabled="false">
+          <Actions>
+            <PrintAction Name="PartialTransfer" ID="65b3dbd2-1800-4307-b6b6-33590a9d350e" IgnoreErrors="false" Document="C:\Users\aram.guillen\Documents\GitHub\partial_transfer\labels\TransferenciaMaterial.btw" Printer="\\tftdelsrv003\TFTDELPRN067" CloseDocumentAfterPrint="true" CopiesPerSerialNumber="1" UseDatabase="false">
+              <NamedDataSources>
+                <Field Name="material">%material%</Field>
+                <Field Name="cantidad">%cantidad%</Field>
+                <Field Name="serial">%serial%</Field>
+              </NamedDataSources>
+            </PrintAction>
+          </Actions>
+        </ActionGroup>
+        <ContentData ContentDataType="JsonVariables" />
+        <ResponseHeaders />
+        <ResponseData>
+          <Value>%Response%</Value>
+        </ResponseData>
+      </WebRequestIntegration>
+    </Actions>
+  </ActionGroup>
+  <Metadata>
+    <Properties>
+      <Properties Name="MostRecentlyUsedVariables" Type="System.String">
+        <Value>serial;cantidad;material</Value>
+      </Properties>
+      <Properties Name="SelectedIntegration" Type="System.Int32">
+        <Value>0</Value>
+      </Properties>
+      <Properties Name="SelectedOptionsPage" Type="System.String">
+        <Value>1;0</Value>
+      </Properties>
+    </Properties>
+  </Metadata>
+  <SourcePath>C:\Users\aram.guillen\Documents\GitHub\partial_transfer\labels\partial_transfer.btin</SourcePath>
+</IntegrationFile>

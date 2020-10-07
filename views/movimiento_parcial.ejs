@@ -1,0 +1,247 @@
+<%- include ("./static/header") %>
+<%- include ("./static/sidebar") %>
+<%- include ("./static/navbar") %>
+
+
+<div class="col-lg-12 jumbotron jumbotronBg">
+
+  <div class="row">
+    <div class="col-lg-4"></div>
+
+    <div class="col-lg-4">
+
+      <div class="card">
+        <div class="card-header"><strong >Datos de Usuario</strong></div>
+        <div class="card-body">
+          <table class="table table-sm ">
+            <tbody>
+              <tr>
+                <td><strong>ID:</strong> </td>
+                <td><small id="user_id"><%= user_id %></small> </td>
+              </tr>
+              <tr>
+                <td><strong>Nombre:</strong> </td>
+                <td><small id="user_name"><%= user_name  %></small> </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-4"></div>
+  </div>
+
+  <br><br>
+  <div class="container text-center">
+
+    <h4 class="text-center animate__animated animate__bounceIn" display: inline-block>Movimiento parcial:</h1>
+      <span class="fas fa-dolly-flatbed text-warning" style="font-size: 3rem;"></span>
+    </h4>
+    <br><br>
+    <form id="submitSerial">
+      <div class="form-group">
+        <label for="serial_num">Storage_unit:(S)</label>
+        <input type="text" class="form-control" name="serial_num" id="serial_num" aria-describedby="helpId"
+          placeholder="">
+        <small id="helpId" class="form-text text-muted"><i class="fas fa-barcode" style="font-size: 4rem;"></i></small>
+      </div>
+    </form>
+    <div class="alert alert-danger animate__flipOutX animate__animated role=" alert" id="alerta_prefijo">Prefijo
+      incorrecto: Verificar escaneo
+    </div>
+  </div>
+  <br><br><br><br><br><br><br><br><br><br><br><br><br>
+</div>
+
+
+
+
+
+<!-- Small modal Error-->
+<div class="modal fade" id="modalError" tabindex="-1" role="dialog" aria-labelledby="modelTitleId" aria-hidden="true">
+  <div class="modal-dialog modal-sm" role="document">
+    <div class="modal-content">
+      <div class="modal-header card-mov">
+        <img src="/img/sap.png" alt="SAP" srcset="" class="card-mov">
+        <h4 class="card-mov">Error:</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-2">
+            <i class="fas fa-exclamation-circle text-danger" style="font-size: 2rem;"> </i>
+          </div>
+          <div class="col">
+            <p id="errorText"></p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btnCerrar" data-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Modal -->
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
+  aria-hidden="true">
+  <div class="modal-dialog " role="document">
+    <div class="modal-content">
+
+      <div class="modal-body">
+
+        <div class="card">
+          <div class="card-header text-center ">
+            <img src="/img/sap.png" alt="SAP" srcset="" class="card-mov">
+            <h4 class="card-mov">Movimiento Parcial</h4>
+          </div>
+
+          <div class="card-body">
+
+            <div class="row">
+              <div class="col-5">
+                <h6 class="text-left">Serial:</h6>
+              </div>
+              <div class="col-7">
+                <h6 class="text-left" class="text-left"><span class="badge badge-primary" id="Bserial"></span>
+                </h6>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-5">
+                <h6>Material:</h6>
+              </div>
+              <div class="col-7">
+                <h6 class="text-left"><span class="badge badge-primary" id="Bmaterial"></span></h6>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-lg-5 col-sm-12">
+                <h6 class="text-left">Description: </h6>
+              </div>
+              <div class="col-lg-7 col-sm-12">
+                <h6 class="text-left"><span class="badge badge-primary" id="Bdescription"></span></h6>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-5">
+                <h6 class="text-left">Net Weigth: </h6>
+              </div>
+              <div class="col-7">
+                <h6 class="text-left"><span class="badge badge-primary" id="Bweigth"></span></h6>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-5">
+                <h6 class="text-left">Stock: </h6>
+              </div>
+              <div class="col-7">
+                <h6 class="text-left"><span class="badge badge-primary" id="Bstock"></span></h6>
+              </div>
+            </div>
+
+
+
+            <hr>
+
+            <div class="row">
+              <div class="col-lg-12">
+                <h3>Cantidad a transferir:</h3>
+              </div>
+            </div>
+
+
+            <div class="container">
+              <div class="row">
+
+                <div class="input-group mb-3">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text fas fa-shipping-fast" id="basic-addon1"></span>
+                  </div>
+                  <input type="number" class="form-control" name="cantidadSubmit" id="cantidadSubmit"
+                    placeholder="Ingrese cantidad a transferir" min="1" max="500">
+                </div>
+
+              </div>
+            </div>
+
+            <div class="alert alert-danger animate__flipOutX animate__animated role=" alert" id="alerta_cantidad">
+              incorrecto: Cantidad disponible excedida</div>
+          </div>
+        </div>
+
+      </div>
+      <form id="submitCantidad">
+        <div class="modal-footer">
+          <button type="button" class="btn btn-danger btnCerrar" data-dismiss="modal">Cancelar</button>
+          <button type="submit" id="btnTransferir" class="btn btn-success">Transferir</button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- Small modal Success-->
+<div class="modal fade" id="modalSuccess" tabindex="-1" role="dialog" aria-labelledby="modelTitleId" aria-hidden="true">
+  <div class="modal-dialog modal-sm" role="document">
+    <div class="modal-content">
+      <div class="modal-header card-mov">
+        <img src="/img/sap.png" alt="SAP" srcset="" class="card-mov">
+        <h4 class="card-mov">Movimiento exitoso</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-2">
+            <i class="far fa-check-square text-success" style="font-size: 2rem;"> </i>
+          </div>
+          <div class="col">
+            <p id="successText"></p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btnCerrar" data-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Modal Spinners -->
+<div class="modal fade" id="modalSpinner" tabindex="-1" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h2 class="modal-title "> <span class="text-secondary  fas fa-stopwatch"></span>
+          Procesando</h2>
+        <div class="spinner-grow spinner-grow-sm text-warning mt-4 cdelay-1" role="status">
+          <span class="sr-only">Loading...</span>
+        </div>
+        <div class="spinner-grow spinner-grow-sm text-primary mt-4 cdelay-2" role="status">
+          <span class="sr-only">Loading...</span>
+        </div>
+        <div class="spinner-grow spinner-grow-sm text-secondary mt-4 cdelay-3" role="status">
+          <span class="sr-only">Loading...</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include ("./static/footer") %>
+<script type="text/javascript" src="/js/functions/movimiento_parcial.js"></script>
+
+</body>
+
+</html>
