@@ -11,7 +11,7 @@
     <div class="col-lg-4">
 
       <div class="card">
-        <div class="card-header"><strong >Datos de Usuario</strong></div>
+        <div class="card-header d-none d-sm-block"><strong >Datos de Usuario</strong></div>
         <div class="card-body">
           <table class="table table-sm ">
             <tbody>
@@ -31,26 +31,27 @@
     <div class="col-lg-4"></div>
   </div>
 
-  <br><br>
   <div class="container text-center">
 
     <h4 class="text-center animate__animated animate__bounceIn" display: inline-block>Movimiento parcial:</h1>
-      <span class="fas fa-dolly-flatbed text-warning" style="font-size: 3rem;"></span>
+      <span class="fas fa-dolly-flatbed text-warning" style="font-size: 2rem;"></span>
     </h4>
-    <br><br>
+
     <form id="submitSerial">
       <div class="form-group">
         <label for="serial_num">Storage_unit:(S)</label>
         <input type="text" class="form-control" name="serial_num" id="serial_num" aria-describedby="helpId"
-          placeholder="">
-        <small id="helpId" class="form-text text-muted"><i class="fas fa-barcode" style="font-size: 4rem;"></i></small>
+          placeholder="" autocomplete="off">
+        <small id="helpId" class="form-text text-muted"><i class="fas fa-barcode" style="font-size: 2rem;"></i></small>
       </div>
     </form>
-    <div class="alert alert-danger animate__flipOutX animate__animated role=" alert" id="alerta_prefijo">Prefijo
-      incorrecto: Verificar escaneo
+    <div class="alert alert-danger animate__flipOutX animate__animated role=" alert" id="alerta_prefijo">Error: Verificar escaneo
     </div>
   </div>
+  <div class="d-none d-sm-block">
   <br><br><br><br><br><br><br><br><br><br><br><br><br>
+
+  </div>
 </div>
 
 
@@ -94,7 +95,7 @@
       <div class="modal-body">
 
         <div class="card">
-          <div class="card-header text-center ">
+          <div class="card-header text-center d-none d-sm-block">
             <img src="/img/sap.png" alt="SAP" srcset="" class="card-mov">
             <h4 class="card-mov">Movimiento Parcial</h4>
           </div>
@@ -103,47 +104,47 @@
 
             <div class="row">
               <div class="col-5">
-                <h6 class="text-left">Serial:</h6>
+                <h7 class="text-left">Serial:</h7>
               </div>
               <div class="col-7">
-                <h6 class="text-left" class="text-left"><span class="badge badge-primary" id="Bserial"></span>
-                </h6>
+                <h7 class="text-left" class="text-left"><span class="badge badge-primary" id="Bserial"></span>
+                </h7>
               </div>
             </div>
 
             <div class="row">
               <div class="col-5">
-                <h6>Material:</h6>
+                <h7>Material:</h7>
               </div>
               <div class="col-7">
-                <h6 class="text-left"><span class="badge badge-primary" id="Bmaterial"></span></h6>
+                <h7 class="text-left"><span class="badge badge-primary" id="Bmaterial"></span></h7>
               </div>
             </div>
 
             <div class="row">
               <div class="col-lg-5 col-sm-12">
-                <h6 class="text-left">Description: </h6>
+                <h7 class="text-left">Description: </h7>
               </div>
               <div class="col-lg-7 col-sm-12">
-                <h6 class="text-left"><span class="badge badge-primary" id="Bdescription"></span></h6>
+                <h7 class="text-left"><span class="badge badge-primary" id="Bdescription"></span></h7>
+              </div>
+            </div>
+
+            <div class="row d-none d-sm-block">
+              <div class="col-5">
+                <h7 class="text-left">Net Weigth: </h7>
+              </div>
+              <div class="col-7">
+                <h7 class="text-left"><span class="badge badge-primary" id="Bweigth"></span></h7>
               </div>
             </div>
 
             <div class="row">
               <div class="col-5">
-                <h6 class="text-left">Net Weigth: </h6>
+                <h7 class="text-left">Stock: </h7>
               </div>
               <div class="col-7">
-                <h6 class="text-left"><span class="badge badge-primary" id="Bweigth"></span></h6>
-              </div>
-            </div>
-
-            <div class="row">
-              <div class="col-5">
-                <h6 class="text-left">Stock: </h6>
-              </div>
-              <div class="col-7">
-                <h6 class="text-left"><span class="badge badge-primary" id="Bstock"></span></h6>
+                <h7 class="text-left"><span class="badge badge-primary" id="Bstock"></span></h7>
               </div>
             </div>
 
@@ -151,9 +152,9 @@
 
             <hr>
 
-            <div class="row">
+            <div class="row d-none d-sm-block">
               <div class="col-lg-12">
-                <h3>Cantidad a transferir:</h3>
+                <h5>Cantidad a transferir:</h5>
               </div>
             </div>
 
@@ -173,7 +174,7 @@
             </div>
 
             <div class="alert alert-danger animate__flipOutX animate__animated role=" alert" id="alerta_cantidad">
-              incorrecto: Cantidad disponible excedida</div>
+              Error: Verificar escaneo</div>
           </div>
         </div>
 

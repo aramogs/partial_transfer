@@ -7,17 +7,13 @@ funcion.getUsers = (user) => {
     return new Promise((resolve, reject) => {
         db(`
         SELECT 
-            emp_nombre
+            emp_name
         FROM
-            del_empleados
-        LEFT JOIN 
-            del_accesos
-        ON 
-            emp_id = acc_id
+            empleados
         WHERE
-            emp_id = ${user}
+            emp_num = ${user}
         AND 
-            acc_pt = 1
+            emp_area = "TO"
         `)
             .then((result) => { resolve(result) })
             .catch((error) => { reject(error) })

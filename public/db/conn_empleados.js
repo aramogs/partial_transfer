@@ -3,9 +3,9 @@ const mysql = require('mysql');
 const pool = mysql.createPool({
   connectionLimit: 10,
   supportBigNumbers: true,
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
+  host: process.env.DB_EMPLEADOS_HOST,
+  user: process.env.DB_EMPLEADOS_USER,
+  password: process.env.DB_EMPLEADOS_PASS,
   database: process.env.DB_CONN_EMPLEADOS
 })
 

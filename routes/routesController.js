@@ -26,8 +26,9 @@ controller.userAccess_POST = (req, res) => {
     let user_id = req.body.user
     funcion.getUsers(user_id)
         .then((result) => {
+            console.log(result);
             if (result.length == 1) {
-                emp_nombre = result[0].emp_nombre
+                emp_nombre = result[0].emp_name
 
                 accessToken(user_id, emp_nombre)
                     .then((result) => {
@@ -87,6 +88,7 @@ controller.movimiento_parcial_GET = (req, res) => {
 
 
 controller.getInfo_POST = (req, res) => {
+    //TODO verificar si cookie aun es valida, sino regresar a login
     let estacion = uuidv4()
     let serial = req.body.serial
     let proceso = req.body.proceso

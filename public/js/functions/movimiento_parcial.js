@@ -98,6 +98,7 @@ submitSerial.addEventListener("submit", function (e) {
                     Bweigth.innerHTML = response.material_w
                     $('#modalSpinner').modal('hide')
                     $('#myModal').modal({ backdrop: 'static', keyboard: false })
+                    
                 }
 
             })
