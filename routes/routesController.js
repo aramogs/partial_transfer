@@ -26,7 +26,6 @@ controller.userAccess_POST = (req, res) => {
     let user_id = req.body.user
     funcion.getUsers(user_id)
         .then((result) => {
-            console.log(result);
             if (result.length == 1) {
                 emp_nombre = result[0].emp_name
 
