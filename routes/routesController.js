@@ -60,7 +60,7 @@ function accessToken(user_id, user_name) {
 
 function cookieSet(req, res, result) {
 
-    let minutes = 60;
+    let minutes = 30;
     const time = minutes * 60 * 1000;
 
     res.cookie('accessToken', result,
@@ -75,11 +75,8 @@ function cookieSet(req, res, result) {
 
 
 controller.movimiento_parcial_GET = (req, res) => {
-
-
     user_id = req.res.locals.authData.id.id
     user_name = req.res.locals.authData.id.username
-
     res.render('movimiento_parcial.ejs', {
         user_id,
         user_name
@@ -88,7 +85,6 @@ controller.movimiento_parcial_GET = (req, res) => {
 
 
 controller.getInfo_POST = (req, res) => {
-    //TODO verificar si cookie aun es valida, sino regresar a login
     let estacion = uuidv4()
     let serial = req.body.serial
     let proceso = req.body.proceso
@@ -97,7 +93,7 @@ controller.getInfo_POST = (req, res) => {
     let cantidad = null
     let cantidad_restante = null
     let user_id = req.body.user_id
-    let user_name= req.body.user_name
+    let user_name = req.body.user_name
 
     // accessToken(user_id, user_name)
     //     .then((result) => {
@@ -122,11 +118,11 @@ controller.transferenciaMaterial_POST = (req, res) => {
     let cantidad = req.body.cantidad
     let cantidad_restante = req.body.cantidad_restante
     let user_id = req.body.user_id
-    let user_name= req.body.user_name
+    let user_name = req.body.user_name
 
 
 
-    amqpRequest(estacion, serial, proceso, material, material_description,cantidad, cantidad_restante, user_id)
+    amqpRequest(estacion, serial, proceso, material, material_description, cantidad, cantidad_restante, user_id)
         .then((result) => { res.json(result) })
         .catch((err) => { res.json(err) })
 }
