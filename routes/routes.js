@@ -9,7 +9,7 @@ router.get('/', routesController.index_GET);
 router.get('/login/', routesController.login);
 router.post('/userAccess', routesController.userAccess_POST);
 router.get('/movimiento_parcial', verifyToken, routesController.movimiento_parcial_GET);
-router.post("/getInfo", routesController.getInfo_POST);
+router.post("/getInfo",verifyToken, routesController.getInfo_POST);
 router.post("/transferenciaMaterial", routesController.transferenciaMaterial_POST);
 
 // // router.get('*', (req, res) => {
