@@ -10,7 +10,10 @@
 
 img {
     width: $imgSize;
-    // height: $imgSize;
+}
+
+.logoSize{
+    width: $logoSize;
 }
 
 .jumbotronBg {
@@ -85,4 +88,25 @@ table{
 }
 
 
-  
+.borderless td, .borderless th {
+    border: none;
+}
+
+.card-body {
+    padding: .5rem !important;
+}
+
+#page-content-wrapper{
+    background-image: url("/img/white-background.jpg");
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+}
+
+
+
+.alert{
+    padding: 0 !important;
+    border-radius: .50rem !important;
+}

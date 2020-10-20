@@ -22,6 +22,16 @@ controller.login = (req, res) => {
     });
 }
 
+controller.mainMenu_GET = (req,res)=>{
+
+    user_id = req.res.locals.authData.id.id
+    user_name = req.res.locals.authData.id.username
+    res.render('main_menu.ejs', {
+        user_id,
+        user_name
+    })
+}
+
 controller.userAccess_POST = (req, res) => {
     let user_id = req.body.user
     funcion.getUsers(user_id)
@@ -65,11 +75,47 @@ function cookieSet(req, res, result) {
     res.cookie('accessToken', result,
         {
             maxAge: time,
-            httpOnly: true,
+            httpOnly: false,
             secure: process.env.NODE_ENV === 'production' ? true : false
         })
     res.json(result)
 
+}
+
+
+controller.consultaFG_GET = (req,res)=>{
+    user_id = req.res.locals.authData.id.id
+    user_name = req.res.locals.authData.id.username
+    res.render('consulta_fg.ejs', {
+        user_id,
+        user_name
+    })
+}
+
+controller.transferFG_GET = (req,res)=>{
+    user_id = req.res.locals.authData.id.id
+    user_name = req.res.locals.authData.id.username
+    res.render('transfer_fg.ejs', {
+        user_id,
+        user_name
+    })
+}
+
+controller.postSerials_POST = (req,res)=>{
+    let estacion = uuidv4()
+    let serial = req.body.serial
+    let proceso = req.body.proceso
+    let material = null
+    let material_description = null
+    let storage_bin = req.body.storage_bin
+    let cantidad = null
+    let cantidad_restante = null
+    let user_id = req.res.locals.authData.id.id
+    let user_name = req.res.locals.authData.id.username
+
+    amqpRequest(estacion, serial, proceso, material, material_description, storage_bin, cantidad, cantidad_restante, user_id)
+    .then((result) => { res.json(result) })
+    .catch((err) => { res.json(err) })
 }
 
 
@@ -82,6 +128,22 @@ controller.movimiento_parcial_GET = (req, res) => {
     })
 }
 
+controller.getUbicaciones_POST = (req, res)=>{
+    let estacion = uuidv4()
+    let serial = req.body.serial
+    let proceso = req.body.proceso
+    let material = null
+    let material_description = null
+    let storage_bin = null
+    let cantidad = null
+    let cantidad_restante = null
+    let user_id = req.res.locals.authData.id.id
+    let user_name = req.res.locals.authData.id.username
+
+    amqpRequest(estacion, serial, proceso, material, material_description, storage_bin, cantidad, cantidad_restante, user_id)
+    .then((result) => { res.json(result) })
+    .catch((err) => { res.json(err) })
+}
 
 controller.getInfo_POST = (req, res) => {
     let estacion = uuidv4()
@@ -89,10 +151,11 @@ controller.getInfo_POST = (req, res) => {
     let proceso = req.body.proceso
     let material = null
     let material_description = null
+    let storage_bin = null
     let cantidad = null
     let cantidad_restante = null
-    let user_id = req.body.user_id
-    let user_name = req.body.user_name
+    let user_id = req.res.locals.authData.id.id
+    let user_name = req.res.locals.authData.id.username
 
     // accessToken(user_id, user_name)
     //     .then((result) => {
@@ -101,10 +164,11 @@ controller.getInfo_POST = (req, res) => {
     //     .catch((err) => { res.json(err); })
 
 
-    amqpRequest(estacion, serial, proceso, material, material_description, cantidad, cantidad_restante, user_id)
+    amqpRequest(estacion, serial, proceso, material, material_description, storage_bin, cantidad, cantidad_restante, user_id)
         .then((result) => { res.json(result) })
         .catch((err) => { res.json(err) })
 }
+
 
 
 
@@ -114,6 +178,7 @@ controller.transferenciaMaterial_POST = (req, res) => {
     let proceso = req.body.proceso
     let material = req.body.material
     let material_description = req.body.material_description
+    let storage_bin = null
     let cantidad = req.body.cantidad
     let cantidad_restante = req.body.cantidad_restante
     let user_id = req.body.user_id
@@ -121,7 +186,7 @@ controller.transferenciaMaterial_POST = (req, res) => {
 
 
 
-    amqpRequest(estacion, serial, proceso, material, material_description, cantidad, cantidad_restante, user_id)
+    amqpRequest(estacion, serial, proceso, material, material_description, storage_bin, cantidad, cantidad_restante, user_id)
         .then((result) => { res.json(result) })
         .catch((err) => { res.json(err) })
 }
@@ -130,9 +195,9 @@ controller.transferenciaMaterial_POST = (req, res) => {
 
 
 
-function amqpRequest(estacion, serial, proceso, material, material_description, cantidad, cantidad_restante, user_id) {
+function amqpRequest(estacion, serial, proceso, material, material_description, storage_bin, cantidad, cantidad_restante, user_id) {
     return new Promise((resolve, reject) => {
-        let send = `{"station":"${estacion}","serial_num":"${serial}","process":"${proceso}", "material": "${material}", "material_description": "${material_description}", "cantidad":"${cantidad}", "cantidad_restante":"${cantidad_restante}", "user_id":${user_id}}`
+        let send = `{"station":"${estacion}","serial_num":"${serial}","process":"${proceso}", "material": "${material}", "material_description": "${material_description}","storage_bin": "${storage_bin}", "cantidad":"${cantidad}", "cantidad_restante":"${cantidad_restante}", "user_id":${user_id}}`
 
         var args = process.argv.slice(2);
         if (args.length == 0) {

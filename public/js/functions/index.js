@@ -53,7 +53,7 @@ bottomWrapper = document.getElementById("back-to-top-wrapper");
 
 var myScrollFunc = function () {
     var y = window.scrollY;
-    if (y >= 800) {
+    if (y >= 200) {
         bottomWrapper.className = "bottomMenu wrapper-show"
     } else {
         bottomWrapper.className = "bottomMenu wrapper-hide"

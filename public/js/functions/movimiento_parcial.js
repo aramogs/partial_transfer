@@ -81,6 +81,15 @@ submitSerial.addEventListener("submit", function (e) {
             data: JSON.stringify(data)
         })
             .then((result) => {
+
+                if ((result.data).includes("<!DOCTYPE html>")) {
+
+                    setTimeout(() => {
+                        location.href="/login"
+                    }, 1000);
+                    soundWrong()
+                }
+
                 response = JSON.parse(result.data)
                 // console.log(response);
 
@@ -124,6 +133,15 @@ submitCantidad.addEventListener("submit", function (e) {
         data: JSON.stringify(data)
     })
         .then((result) => {
+
+            if ((result.data).includes("<!DOCTYPE html>")) {
+
+                setTimeout(() => {
+                    location.href="/login"
+                }, 1000);
+                soundWrong()
+            }
+
             cantidadSubmit.value = ""
 
             response = JSON.parse(result.data)

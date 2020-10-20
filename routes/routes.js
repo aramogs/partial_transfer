@@ -7,10 +7,15 @@ const jwt = require('jsonwebtoken');
 
 router.get('/', routesController.index_GET);
 router.get('/login/', routesController.login);
+router.get('/mainMenu',verifyToken,routesController.mainMenu_GET);
 router.post('/userAccess', routesController.userAccess_POST);
+router.get('/consultaFG',verifyToken, routesController.consultaFG_GET);
+router.get('/transferFG',verifyToken, routesController.transferFG_GET);
+router.post('/postSeriales',verifyToken, routesController.postSerials_POST);
 router.get('/movimiento_parcial', verifyToken, routesController.movimiento_parcial_GET);
 router.post("/getInfo",verifyToken, routesController.getInfo_POST);
-router.post("/transferenciaMaterial", routesController.transferenciaMaterial_POST);
+router.post("/getUbicaciones",verifyToken, routesController.getUbicaciones_POST);
+router.post("/transferenciaMaterial", verifyToken, routesController.transferenciaMaterial_POST);
 
 // // router.get('*', (req, res) => {
 // //   res.redirect('http://tftdelsrv001:3000/not_found');

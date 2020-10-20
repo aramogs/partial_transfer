@@ -3,12 +3,16 @@
 <%- include ("./static/navbar") %>
 
 
+
+
 <nav aria-label="breadcrumb">
   <ol class="breadcrumb">
     <li class="breadcrumb-item"><a href="/mainMenu"><span class="fas fa-arrow-circle-left"></span> Menu</a></li>
-    <li class="breadcrumb-item active" aria-current="page">Transferencia MP</li>
+    <li class="breadcrumb-item active" aria-current="page">Consulta Ubicaciones PT</li>
   </ol>
 </nav>
+
+
 
 
 <div class="col-lg-12 frame">
@@ -38,23 +42,22 @@
     <div class="col-lg-4"></div>
   </div>
 
-  <div class="container text-center">
+  <div class="container text-center mb-5">
 
-    <h4 class="text-center animate__animated animate__bounceIn d-none d-md-block " display: inline-block>Movimiento parcial:</h1> 
-    </h4>
-    <span class="fas fa-box text-warning mt-2" style="font-size: 2rem;"></span>
-
-    <form id="submitSerial">
-      <div class="form-group">
-        <label for="serial_num">Storage_unit:</label>
-        <input type="text" class="form-control" name="serial_num" id="serial_num" aria-describedby="helpId"
-          placeholder="" autocomplete="off">
-        <small id="helpId" class="form-text text-muted"><i class="fas fa-barcode" style="font-size: 2rem;"></i></small>
+    <h4 class="text-center animate__animated animate__bounceIn d-none d-md-block" display: inline-block>Consulta Ubicaciones PT:</h4>
+    <span class="fas fa-search text-warning mt-2" style="font-size: 2rem;"></span>
+      <form id="submitSerial">
+        <div class="form-group">
+          <label for="serial_num">Storage_unit:(S)</label>
+          <input type="text" class="form-control" name="serial_num" id="serial_num" aria-describedby="helpId"
+            placeholder="" autocomplete="off">
+          <small id="helpId" class="form-text text-muted"><i class="fas fa-barcode"
+              style="font-size: 2rem;"></i></small>
+        </div>
+      </form>
+      <div class="alert alert-danger animate__flipOutX animate__animated role=" alert" id="alerta_prefijo">Error:
+        Verificar escaneo
       </div>
-    </form>
-    <div class="alert alert-danger animate__flipOutX animate__animated role= mb-5" alert" id="alerta_prefijo">Error:
-      Verificar escaneo
-    </div>
   </div>
   <div class="d-none d-lg-block">
     <br><br><br><br><br><br><br><br><br><br><br><br><br>
@@ -97,104 +100,33 @@
 <!-- Modal -->
 <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
   aria-hidden="true">
-  <div class="modal-dialog " role="document">
+  <div class="modal-dialog modal-dialog-scrollable" role="document">
     <div class="modal-content">
 
       <div class="modal-body">
 
-        <div class="card">
-          <div class="card-header text-center d-none d-lg-block">
-            <img src="/img/sap.png" alt="SAP" srcset="" class="card-mov">
-            <h4 class="card-mov">Movimiento Parcial</h4>
-          </div>
 
-          <div class="card-body">
-
-            <div class="row">
-              <div class="col-5">
-                <h7 class="text-left">Serial:</h7>
-              </div>
-              <div class="col-7">
-                <h7 class="text-left" class="text-left"><span class="badge badge-primary" id="Bserial"></span>
-                </h7>
-              </div>
-            </div>
-
-            <div class="row">
-              <div class="col-5">
-                <h7>Material:</h7>
-              </div>
-              <div class="col-7">
-                <h7 class="text-left"><span class="badge badge-primary" id="Bmaterial"></span></h7>
-              </div>
-            </div>
-
-            <div class="row">
-              <div class="col-lg-5 col-sm-12">
-                <h7 class="text-left">Description: </h7>
-              </div>
-              <div class="col-lg-7 col-sm-12">
-                <h7 class="text-left"><span class="badge badge-primary" id="Bdescription"></span></h7>
-              </div>
-            </div>
-
-            <div class="d-none d-lg-block">
-              <div class="row ">
-                <div class="col-5">
-                  <h7 class="text-left">Net Weigth: </h7>
-                </div>
-                <div class="col-7">
-                  <h7 class="text-left"><span class="badge badge-primary" id="Bweigth"></span></h7>
-                </div>
-              </div>
-            </div>
-
-            <div class="row">
-              <div class="col-5">
-                <h7 class="text-left">Stock: </h7>
-              </div>
-              <div class="col-7">
-                <h7 class="text-left"><span class="badge badge-primary" id="Bstock"></span></h7>
-              </div>
-            </div>
-
-
-
-            <hr>
-
-            <div class="row d-none d-lg-block">
-              <div class="col-lg-12">
-                <h5>Cantidad a transferir:</h5>
-              </div>
-            </div>
-
-
-            <div class="container">
-              <div class="row">
-
-                <div class="input-group mb-3">
-                  <div class="input-group-prepend">
-                    <span class="input-group-text fas fa-shipping-fast" id="basic-addon1"></span>
-                  </div>
-                  <input type="number" class="form-control" name="cantidadSubmit" id="cantidadSubmit"
-                    placeholder="Ingrese cantidad a transferir" min="1" max="500">
-                </div>
-
-              </div>
-            </div>
-
-            <div class="alert alert-danger animate__flipOutX animate__animated role=" alert" id="alerta_cantidad">
-              Error: Verificar escaneo</div>
-          </div>
-        </div>
+        <table id="tabla_consulta" class="table table-hover  text-center table-bordered table-sm table-striped" >
+          <thead class="thead-dark">
+            <tr class="header">
+              <th scope="col" >Storage Bin</th>
+              <th scope="col" >Cantidad</th>
+              <th scope="col" >FIFO</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- INFO AGREGADA DESDE JAVASCRIPT -->
+          </tbody>
+        </table>
 
       </div>
-      <form id="submitCantidad">
+      
         <div class="modal-footer">
-          <button type="button" class="btn btn-danger btnCerrar" data-dismiss="modal">Cancelar</button>
-          <button type="submit" id="btnTransferir" class="btn btn-success">Transferir</button>
+          <button type="button" class="btn btn-danger btnCerrar" data-dismiss="modal">Cerrar <span class="fas fa-times-circle"></span></button>
+           <button type="button" onclick="location.href='/transferFG'" class="btn btn-primary">Transferir <span class="fas fa-arrow-circle-right"></span></button>
+
         </div>
-      </form>
+      
 
     </div>
   </div>
@@ -251,7 +183,7 @@
 </div>
 
 <%- include ("./static/footer") %>
-<script type="text/javascript" src="/js/functions/movimiento_parcial.js"></script>
+<script type="text/javascript" src="/js/functions/consulta_fg.js"></script>
 
 </body>
 
