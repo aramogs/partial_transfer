@@ -64,7 +64,15 @@ submitSerial.addEventListener("submit", function (e) {
     if (value == true) {
         $('#modalSpinner').modal({ backdrop: 'static', keyboard: false })
         serial_num.disabled = true
-        let data = { "proceso": "transfer_fg", "serial": `${serial.substring(1)}`, "user_id": user_id.innerHTML };
+        let serial_
+
+        if (serial.substring(1).length < 10) {
+            serial_ = `0${serial.substring(1)}`
+        } else {
+            serial_ = serial.substring(1)
+        }
+
+        let data = { "proceso": "transfer_fg", "serial": `${serial_}`, "user_id": user_id.innerHTML };
         axios({
             method: 'post',
             url: "/getUbicaciones",

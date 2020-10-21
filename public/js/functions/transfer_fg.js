@@ -70,7 +70,6 @@ function listAdd(e) {
     } else if (serialsArray.indexOf((serial_num.value).substring(1)) === -1) {
         soundOk()
         if ((serial_num.value).substring(1).length < 10) {
-            console.log(`0${(serial_num.value).substring(1)}`);
             serialsArray.push(`0${(serial_num.value).substring(1)}`)
         } else {
             serialsArray.push((serial_num.value).substring(1))
