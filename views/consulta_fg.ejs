@@ -43,22 +43,32 @@
   </div>
 
   <div class="container text-center mb-5">
+    <div class="row">
+      <div class="col-lg-3"></div>
+      <div class="col-lg-6">
 
-    <h4 class="text-center animate__animated animate__bounceIn d-none d-md-block" display: inline-block>Consulta Ubicaciones PT:</h4>
-    <span class="fas fa-search text-warning mt-2" style="font-size: 2rem;"></span>
-      <form id="submitSerial">
-        <div class="form-group">
-          <label for="serial_num">Storage_unit:(S)</label>
-          <input type="text" class="form-control" name="serial_num" id="serial_num" aria-describedby="helpId"
-            placeholder="" autocomplete="off">
-          <small id="helpId" class="form-text text-muted"><i class="fas fa-barcode"
-              style="font-size: 2rem;"></i></small>
+
+        <h4 class="text-center animate__animated animate__bounceIn d-none d-md-block" display: inline-block>Consulta
+          Ubicaciones PT:</h4>
+        <span class="fas fa-search text-warning mt-2" style="font-size: 2rem;"></span>
+        <form id="submitSerial">
+          <div class="form-group">
+            <label for="serial_num">Storage_unit:(S)</label>
+            <input type="text" class="form-control" name="serial_num" id="serial_num" aria-describedby="helpId"
+              placeholder="" autocomplete="off">
+            <small id="helpId" class="form-text text-muted"><i class="fas fa-barcode"
+                style="font-size: 2rem;"></i></small>
+          </div>
+        </form>
+        <div class="alert alert-danger animate__flipOutX animate__animated role=" alert" id="alerta_prefijo">Error:
+          Verificar escaneo
         </div>
-      </form>
-      <div class="alert alert-danger animate__flipOutX animate__animated role=" alert" id="alerta_prefijo">Error:
-        Verificar escaneo
       </div>
+      <div class="col-lg-3"></div>
+    </div>
+
   </div>
+
   <div class="d-none d-lg-block">
     <br><br><br><br><br><br><br><br><br><br><br><br><br>
 
@@ -106,12 +116,12 @@
       <div class="modal-body">
 
 
-        <table id="tabla_consulta" class="table table-hover  text-center table-bordered table-sm table-striped" >
+        <table id="tabla_consulta" class="table table-hover  text-center table-bordered table-sm table-striped">
           <thead class="thead-dark">
             <tr class="header">
-              <th scope="col" >Storage Bin</th>
-              <th scope="col" >Cantidad</th>
-              <th scope="col" >FIFO</th>
+              <th scope="col">Storage Bin</th>
+              <th scope="col">Cantidad</th>
+              <th scope="col">FIFO</th>
             </tr>
           </thead>
           <tbody>
@@ -120,13 +130,15 @@
         </table>
 
       </div>
-      
-        <div class="modal-footer">
-          <button type="button" class="btn btn-danger btnCerrar" data-dismiss="modal">Cerrar <span class="fas fa-times-circle"></span></button>
-           <button type="button" onclick="location.href='/transferFG'" class="btn btn-primary">Transferir <span class="fas fa-arrow-circle-right"></span></button>
 
-        </div>
-      
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger btnCerrar" data-dismiss="modal">Cerrar <span
+            class="fas fa-times-circle"></span></button>
+        <button type="button" onclick="location.href='/transferFG'" class="btn btn-primary">Transferir <span
+            class="fas fa-arrow-circle-right"></span></button>
+
+      </div>
+
 
     </div>
   </div>
