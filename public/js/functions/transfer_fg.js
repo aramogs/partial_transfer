@@ -55,7 +55,8 @@ function listAdd(e) {
     e.preventDefault()
 
     serial = serial_num.value;
-    if (serial.charAt(0) !== "S" && serial.charAt(0) !== "s") {
+    const regex = /.*[a-zA-Z].*/;
+    if (serial.charAt(0) !== "S" && serial.charAt(0) !== "s" || (serial.substring(1)).length < 9 || regex.exec(serial.substring(1)) !== null) {
         soundWrong()
         alerta_prefijo.classList.remove("animate__flipOutX", "animate__animated")
         alerta_prefijo.classList.add("animate__flipInX", "animate__animated")
@@ -67,7 +68,7 @@ function listAdd(e) {
         }, 2000);
 
 
-    } else if (serialsArray.indexOf((serial_num.value).substring(1)) === -1) {
+    } else if (serialsArray.indexOf((serial_num.value).substring(1)) === -1 && serialsArray.indexOf(`0${(serial_num.value).substring(1)}`) ===-1) {
         soundOk()
         if ((serial_num.value).substring(1).length < 10) {
             serialsArray.push(`0${(serial_num.value).substring(1)}`)
@@ -162,14 +163,14 @@ function transferFG(e) {
             if ((result.data).includes("<!DOCTYPE html>")) {
 
                 setTimeout(() => {
-                    location.href="/login"
+                    location.href = "/login"
                 }, 1000);
                 soundWrong()
             }
 
             response = JSON.parse(result.data)
-                
-            
+
+
 
             if (response.error !== "N/A") {
 
