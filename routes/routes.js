@@ -13,6 +13,8 @@ router.get('/consultaFG',verifyToken, routesController.consultaFG_GET);
 router.get('/transferFG',verifyToken, routesController.transferFG_GET);
 router.post('/postSeriales',verifyToken, routesController.postSerials_POST);
 router.get('/movimiento_parcial', verifyToken, routesController.movimiento_parcial_GET);
+router.get('/transferMP',verifyToken, routesController.transferMP_GET);
+router.post('/postSerialesMP',verifyToken, routesController.postSerialsMP_POST);
 router.post("/getInfo",verifyToken, routesController.getInfo_POST);
 router.post("/getUbicaciones",verifyToken, routesController.getUbicaciones_POST);
 router.post("/transferenciaMaterial", verifyToken, routesController.transferenciaMaterial_POST);

@@ -27,7 +27,8 @@
           </table>
         </div>
         <div class="card-footer manu_footer">
-          <button type="button"  id="btn_logoff" class="btn btn-danger btn-sm btn-block" btn-lg btn-block">Cerrar sesion</button>
+          <button type="button" id="btn_logoff" class="btn btn-danger btn-sm btn-block" btn-lg btn-block">Cerrar
+            sesion</button>
         </div>
       </div>
 
@@ -43,44 +44,53 @@
 
       <div id="accordion">
 
-        <div class="card">
+        <div class="card bg-dark">
           <div class="card-header" id="headingOne">
             <h5 class="mb-0">
-              <button class="btn btn-link" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true"
-                aria-controls="collapseOne">
+              <button class="btn btn-link btn-block text-left text-white" data-toggle="collapse"
+                data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
                 1: Producto Terminado
               </button>
             </h5>
           </div>
 
           <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
-            <button id="btn_pt_1" class="btn btn-outline-primary btn-block mt-4 mb-4" data-target="#collapseOne"
-              aria-expanded="true" aria-controls="collapseOne">
-              1: Consulta Ubicaciones PT
-            </button>
+            <div class="container">
+              <button id="btn_pt_1" class="btn btn-outline-warning btn-block mt-4 mb-4" data-target="#collapseOne"
+                aria-expanded="true" aria-controls="collapseOne">
+                1: Consulta Ubicaciones PT
+              </button>
 
-            <button id="btn_pt_2" class="btn btn-outline-primary btn-block mt-4 mb-4" data-target="#collapseOne"
-              aria-expanded="true" aria-controls="collapseOne">
-              2: Transferencia PT
-            </button>
+              <button id="btn_pt_2" class="btn btn-outline-warning btn-block mt-4 mb-4" data-target="#collapseOne"
+                aria-expanded="true" aria-controls="collapseOne">
+                2: Transferencia PT
+              </button>
+            </div>
           </div>
         </div>
 
-        <div class="card">
+        <div class="card bg-dark">
           <div class="card-header" id="headingTwo">
             <h5 class="mb-0">
-              <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseTwo"
-                aria-expanded="false" aria-controls="collapseTwo">
+              <button class="btn btn-link btn-block text-left text-white collapsed" data-toggle="collapse"
+                data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
                 2: Materia Prima
               </button>
             </h5>
           </div>
 
           <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
-            <button id="btn_mp_1" class="btn btn-outline-primary btn-block mt-4 mb-4" data-target="#collapseOne"
-              aria-expanded="true" aria-controls="collapseOne">
-              1: Movimiento Parcial MP
-            </button>
+            <div class="container">
+              <button id="btn_mp_1" class="btn btn-outline-success btn-block mt-4 mb-4" data-target="#collapseOne"
+                aria-expanded="true" aria-controls="collapseOne">
+                1: Transferencia Parcial MP
+              </button>
+
+              <button id="btn_mp_2" class="btn btn-outline-success btn-block mt-4 mb-4" data-target="#collapseOne"
+                aria-expanded="true" aria-controls="collapseOne">
+                2: Transferencia Multiple MP
+              </button>
+            </div>
           </div>
 
         </div>

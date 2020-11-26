@@ -24,7 +24,6 @@ let btnCerrar_Bin = document.getElementById("btnCerrar_Bin")
 let submitArray_Bin = document.getElementById("submitArray_Bin")
 let spanBin = document.getElementById("spanBin")
 
-
 serial_num.focus()
 btnCerrar.forEach(element => {
     element.addEventListener("click", cleanInput)
@@ -38,7 +37,7 @@ submitArray_form.addEventListener("submit", verifyBinModal)
 
 submitArray_Bin.addEventListener("submit", verifyBin)
 
-btnCerrar_Success.addEventListener("click", () => { location.href = "/consultaFG" })
+// btnCerrar_Success.addEventListener("click", () => { location.href = "/consultaFG" })
 
 btnCerrar_Error.addEventListener("click", cleanInput())
 
@@ -81,7 +80,7 @@ function listAdd(e) {
         }, 2000);
 
 
-    } else if (serialsArray.indexOf((serial_num.value).substring(1)) === -1 && serialsArray.indexOf(`0${(serial_num.value).substring(1)}`) ===-1) {
+    } else if (serialsArray.indexOf((serial_num.value).substring(1)) === -1 && serialsArray.indexOf(`0${(serial_num.value).substring(1)}`) === -1) {
         soundOk()
         if ((serial_num.value).substring(1).length < 10) {
             serialsArray.push(`0${(serial_num.value).substring(1)}`)
@@ -100,7 +99,7 @@ function listAdd(e) {
 
         btn_transferFG.disabled = false
         btn_transferFG.classList.remove("btn-secondary")
-        btn_transferFG.classList.add("btn-warning")
+        btn_transferFG.classList.add("btn-success")
 
 
     } else {
@@ -190,11 +189,10 @@ function transferFG(e) {
     let storage_bin = submitArray.value
     $('#myModal').modal('hide')
     $('#modalSpinner').modal({ backdrop: 'static', keyboard: false })
-
-    let data = { "proceso": "transfer_fg_confirmed", "user_id": user_id.innerHTML, "serial": `${serialsArray}`, "storage_bin": `${storage_bin}` };
+    let data = { "proceso": "transfer_mp_confirmed", "user_id": user_id.innerHTML, "serial": `${serialsArray}`, "storage_bin": `${storage_bin}` };
     axios({
         method: 'post',
-        url: "/postSeriales",
+        url: "/postSerialesMP",
         headers: {
             'Content-Type': 'application/json'
         },

@@ -69,7 +69,7 @@ function accessToken(user_id, user_name) {
 
 function cookieSet(req, res, result) {
 
-    let minutes = 30;
+    let minutes = 60;
     const time = minutes * 60 * 1000;
 
     res.cookie('accessToken', result,
@@ -126,6 +126,32 @@ controller.movimiento_parcial_GET = (req, res) => {
         user_id,
         user_name
     })
+}
+
+controller.transferMP_GET = (req,res)=>{
+    user_id = req.res.locals.authData.id.id
+    user_name = req.res.locals.authData.id.username
+    res.render('transfer_mp.ejs', {
+        user_id,
+        user_name
+    })
+}
+
+controller.postSerialsMP_POST = (req,res)=>{
+    let estacion = uuidv4()
+    let serial = req.body.serial
+    let proceso = req.body.proceso
+    let material = null
+    let material_description = null
+    let storage_bin = req.body.storage_bin
+    let cantidad = null
+    let cantidad_restante = null
+    let user_id = req.res.locals.authData.id.id
+    let user_name = req.res.locals.authData.id.username
+
+    amqpRequest(estacion, serial, proceso, material, material_description, storage_bin, cantidad, cantidad_restante, user_id)
+    .then((result) => { res.json(result) })
+    .catch((err) => { res.json(err) })
 }
 
 controller.getUbicaciones_POST = (req, res)=>{

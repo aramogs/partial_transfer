@@ -5,8 +5,9 @@
 
 <nav aria-label="breadcrumb">
   <ol class="breadcrumb">
-    <li class="breadcrumb-item"><a href="/mainMenu" class="text-warning"><span class="fas fa-arrow-circle-left text-warning"></span> Menu</a></li>
-    <li class="breadcrumb-item active" aria-current="page">Transferencia PT</li>
+    <li class="breadcrumb-item"><a href="/mainMenu" class="text-success"><span
+          class="fas fa-arrow-circle-left text-success"></span> Menu</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Transferencia Multiple MP</li>
   </ol>
 </nav>
 
@@ -44,8 +45,8 @@
       <form id="submitSerial">
 
         <h4 class="text-center animate__animated animate__bounceIn d-none d-lg-block" display: inline-block>
-          Transferencia PT:</h4>
-        <span class="fas fa-boxes text-warning mt-2" style="font-size: 2rem;"></span>
+          Transferencia Multiple MP:</h4>
+        <span class="fas fa-boxes text-success mt-2" style="font-size: 2rem;"></span>
 
         <div class="form-group">
 
@@ -234,13 +235,42 @@
 
       </div>
       <div class="modal-footer">
-        <button id="btnCerrar_Error" type="button" class="btn btn-outline-warning btnCerrar" data-dismiss="modal">Cerrar
+        <button id="btnCerrar_Error" type="button" class="btn btn-outline-success btnCerrar" data-dismiss="modal">Cerrar
         </button>
 
       </div>
     </div>
   </div>
 </div>
+
+
+<!-- Small modal StorageBin-->
+<div class="modal fade" id="modalSBin" tabindex="-1" role="dialog" aria-labelledby="modelTitleId" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable" role="document">
+    <div class="modal-content">
+      <div class="modal-header card-mov">
+        <img src="/img/sap.png" alt="SAP" srcset="" class="card-mov">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-2">
+            <i class="fas fa-check-circle text-success" style="font-size: 2rem;"> </i>
+          </div>
+          <div class="col">
+            <h5>Transferencia(s) realizada(s) con exito</h5>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="btnCerrar_Success" type="button" class="btn btn-secondary btnCerrar"
+          data-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 <!-- Small modal Confirm Storage-Bin-->
 <div class="modal fade" id="modalStorage" tabindex="-1" role="dialog" aria-labelledby="modelTitleId" aria-hidden="true">
@@ -255,7 +285,7 @@
       <div class="modal-body">
         <div class="row text-center">
           <div class="col-12">
-            <h5>Verificar Storage Bin: <span class="badge badge-warning" id="spanBin"></span> </h5>
+            <h5>Verificar Storage Bin: <span class="badge badge-success" id="spanBin"></span> </h5>
           </div>
         </div>
         <div class="row text-center">
@@ -289,7 +319,7 @@
       <div class="modal-header text-center">
         <h2 class="modal-title "> <span class="text-secondary  fas fa-stopwatch"></span>
           Procesando</h2>
-        <div class="spinner-grow spinner-grow-sm text-warning mt-4 cdelay-1" role="status">
+        <div class="spinner-grow spinner-grow-sm text-success mt-4 cdelay-1" role="status">
           <span class="sr-only">Loading...</span>
         </div>
         <div class="spinner-grow spinner-grow-sm text-primary mt-4 cdelay-2" role="status">
@@ -304,7 +334,7 @@
 </div>
 
 <%- include ("./static/footer") %>
-<script type="text/javascript" src="/js/functions/transfer_fg.js"></script>
+<script type="text/javascript" src="/js/functions/transfer_mp.js"></script>
 
 </body>
 
