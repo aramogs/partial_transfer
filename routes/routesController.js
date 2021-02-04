@@ -131,8 +131,8 @@ controller.master_request_GM_POST = (req,res)=>{
     let user_id = req.res.locals.authData.id.id
     let user_name = req.res.locals.authData.id.username
     let lower_gr_date = null
-
-    amqpRequest(estacion, serial, proceso, material, material_description, storage_bin, cantidad, cantidad_restante, user_id, lower_gr_date)
+    let single_container = null
+    amqpRequest(estacion, serial, proceso, material, material_description, storage_bin, cantidad, cantidad_restante, user_id, lower_gr_date, single_container)
     .then((result) => { res.json(result) })
     .catch((err) => { res.json(err) })
 }
@@ -149,8 +149,9 @@ controller.master_request_GM_CREATE_POST = (req,res)=>{
     let user_id = req.res.locals.authData.id.id
     let user_name = req.res.locals.authData.id.username
     let lower_gr_date = req.body.lower_gr_date
+    let single_container = req.body.single_container
 
-    amqpRequest(estacion, serial, proceso, material, material_description, storage_bin, cantidad, cantidad_restante, user_id, lower_gr_date)
+    amqpRequest(estacion, serial, proceso, material, material_description, storage_bin, cantidad, cantidad_restante, user_id, lower_gr_date, single_container)
     .then((result) => { res.json(result) })
     .catch((err) => { res.json(err) })
 }
@@ -167,8 +168,9 @@ controller.postSerials_POST = (req,res)=>{
     let user_id = req.res.locals.authData.id.id
     let user_name = req.res.locals.authData.id.username
     let lower_gr_date = null
+    let single_container = null
 
-    amqpRequest(estacion, serial, proceso, material, material_description, storage_bin, cantidad, cantidad_restante, user_id, lower_gr_date)
+    amqpRequest(estacion, serial, proceso, material, material_description, storage_bin, cantidad, cantidad_restante, user_id, lower_gr_date, single_container)
     .then((result) => { res.json(result) })
     .catch((err) => { res.json(err) })
 }
@@ -204,8 +206,9 @@ controller.postSerialsMP_POST = (req,res)=>{
     let user_id = req.res.locals.authData.id.id
     let user_name = req.res.locals.authData.id.username
     let lower_gr_date = null
+    let single_container = null
 
-    amqpRequest(estacion, serial, proceso, material, material_description, storage_bin, cantidad, cantidad_restante, user_id, lower_gr_date)
+    amqpRequest(estacion, serial, proceso, material, material_description, storage_bin, cantidad, cantidad_restante, user_id, lower_gr_date, single_container)
     .then((result) => { res.json(result) })
     .catch((err) => { res.json(err) })
 }
@@ -222,8 +225,9 @@ controller.getUbicaciones_POST = (req, res)=>{
     let user_id = req.res.locals.authData.id.id
     let user_name = req.res.locals.authData.id.username
     let lower_gr_date = null
+    let single_container = null
 
-    amqpRequest(estacion, serial, proceso, material, material_description, storage_bin, cantidad, cantidad_restante, user_id, lower_gr_date)
+    amqpRequest(estacion, serial, proceso, material, material_description, storage_bin, cantidad, cantidad_restante, user_id, lower_gr_date, single_container)
     .then((result) => { res.json(result) })
     .catch((err) => { res.json(err) })
 }
@@ -240,6 +244,7 @@ controller.getInfo_POST = (req, res) => {
     let user_id = req.res.locals.authData.id.id
     let user_name = req.res.locals.authData.id.username
     let lower_gr_date = null
+    let single_container = null
 
     // accessToken(user_id, user_name)
     //     .then((result) => {
@@ -248,7 +253,7 @@ controller.getInfo_POST = (req, res) => {
     //     .catch((err) => { res.json(err); })
 
 
-    amqpRequest(estacion, serial, proceso, material, material_description, storage_bin, cantidad, cantidad_restante, user_id, lower_gr_date)
+    amqpRequest(estacion, serial, proceso, material, material_description, storage_bin, cantidad, cantidad_restante, user_id, lower_gr_date, single_container)
         .then((result) => { res.json(result) })
         .catch((err) => { res.json(err) })
 }
@@ -268,9 +273,10 @@ controller.transferenciaMaterial_POST = (req, res) => {
     let user_id = req.body.user_id
     let user_name = req.body.user_name
     let lower_gr_date = null
+    let single_container = null
 
 
-    amqpRequest(estacion, serial, proceso, material, material_description, storage_bin, cantidad, cantidad_restante, user_id, lower_gr_date)
+    amqpRequest(estacion, serial, proceso, material, material_description, storage_bin, cantidad, cantidad_restante, user_id, lower_gr_date, single_container)
         .then((result) => { res.json(result) })
         .catch((err) => { res.json(err) })
 }
@@ -279,9 +285,9 @@ controller.transferenciaMaterial_POST = (req, res) => {
 
 
 
-function amqpRequest(estacion, serial, proceso, material, material_description, storage_bin, cantidad, cantidad_restante, user_id, lower_gr_date) {
+function amqpRequest(estacion, serial, proceso, material, material_description, storage_bin, cantidad, cantidad_restante, user_id, lower_gr_date, single_container) {
     return new Promise((resolve, reject) => {
-        let send = `{"station":"${estacion}","serial_num":"${serial}","process":"${proceso}", "material": "${material}", "material_description": "${material_description}","storage_bin": "${storage_bin}", "cantidad":"${cantidad}", "cantidad_restante":"${cantidad_restante}", "user_id":${user_id},"lower_gr_date":"${lower_gr_date}"}`
+        let send = `{"station":"${estacion}","serial_num":"${serial}","process":"${proceso}", "material": "${material}", "material_description": "${material_description}","storage_bin": "${storage_bin}", "cantidad":"${cantidad}", "cantidad_restante":"${cantidad_restante}", "user_id":${user_id},"lower_gr_date":"${lower_gr_date}","single_container":"${single_container}"}`
 
         var args = process.argv.slice(2);
         if (args.length == 0) {
@@ -307,11 +313,11 @@ function amqpRequest(estacion, serial, proceso, material, material_description, 
                         reject(error2)
                     }
                     var correlationId = estacion;
-                    // console.log(' [x] Requesting: ', send);
+                    console.log(' [x] Requesting: ', send);
 
                     channel.consume(q.queue, function (msg) {
                         if (msg.properties.correlationId == correlationId) {
-                            // console.log(' [x] Response:   ', msg.content.toString());
+                            console.log(' [x] Response:   ', msg.content.toString());
                             resolve(msg.content.toString())
                             setTimeout(function () {
                                 connection.close();

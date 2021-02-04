@@ -195,7 +195,7 @@ function verifyHandlingUnits(e) {
             }
 
             response = JSON.parse(result.data)
-            console.log(response);
+
 
             if (response.error !== "N/A") {
                 let error_json = ""
@@ -335,6 +335,52 @@ function createMaster(e) {
 
 
             if (response.error !== "N/A") {
+                let error_json = ""
+        
+                try {
+                    error_json = JSON.parse(response.error)
+                } catch (error) {
+                    error_json = ""
+                }
+
+                if (typeof(error_json) === "object"){
+                    let error_array = JSON.parse(response.error)
+                    let errors = 0
+                    error_array.forEach(element =>{
+                        if(element.error != "N/A"){
+                            errors++
+                        }
+                    })
+                
+                    if (errors != 0) {
+                        tabla_consulta.innerHTML = ""
+                        tabla_consulta_container.hidden = false
+                        errorTextField.innerHTML = ""
+                        errorText.hidden = true
+                    error_array.forEach(element => {
+                        
+                        let newRow = tabla_consulta.insertRow(tabla_consulta.rows.length);
+                        if (element.error != "N/A") {
+                            let row = `
+                                <tr class="bg-danger">
+                                    <td>${element.serial_num}</td>
+                                    <td>${element.error}</td>
+                                </tr>
+                                `
+                            newRow.classList.add("bg-danger", "text-white")
+                            return newRow.innerHTML = row;
+                        }
+
+
+                    })
+                    cantidadErrores.innerHTML = ""
+                    cantidadErrores.innerHTML = errors
+
+                    setTimeout(() => { soundWrong(), $('#modalSpinner').modal('hide') }, 500);
+                    $('#modalError').modal({ backdrop: 'static', keyboard: false })
+                    }
+                }else{
+
 
                 errorTextField.innerHTML = response.error
                 errorText.hidden = false
@@ -345,7 +391,7 @@ function createMaster(e) {
 
                 setTimeout(() => { soundWrong(), $('#modalSpinner').modal('hide') }, 500);
                 $('#modalError').modal({ backdrop: 'static', keyboard: false })
-
+                }
             } else {
                 soundOk()
                 errorText.hidden = true
