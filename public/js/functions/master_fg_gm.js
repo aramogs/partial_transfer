@@ -332,7 +332,7 @@ function createMaster(e) {
             }
 
             response = JSON.parse(result.data)
-
+            
 
             if (response.error !== "N/A") {
                 let error_json = ""

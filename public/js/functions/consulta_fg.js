@@ -132,8 +132,9 @@ submitSerial.addEventListener("submit", function (e) {
                         arregloFinal.push(push)
 
                     }
-
-                    arregloFinal.forEach(element => {
+ 
+                    const arregloFinalSortDate = arregloFinal.sort((a, b) => b.recentDate - a.recentDate)
+                    arregloFinalSortDate.forEach(element => {
                         row = `
                         <tr>
                             <td>${element.storage_bin}</td>

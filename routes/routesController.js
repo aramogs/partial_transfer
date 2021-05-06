@@ -23,7 +23,7 @@ controller.login = (req, res) => {
 }
 
 controller.mainMenu_GET = (req,res)=>{
-
+    
     user_id = req.res.locals.authData.id.id
     user_name = req.res.locals.authData.id.username
     res.render('main_menu.ejs', {
