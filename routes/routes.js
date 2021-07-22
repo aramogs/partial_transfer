@@ -22,6 +22,10 @@ router.post('/postSerialesMP',verifyToken, routesController.postSerialsMP_POST);
 router.post("/getInfo",verifyToken, routesController.getInfo_POST);
 router.post("/getUbicaciones",verifyToken, routesController.getUbicaciones_POST);
 router.post("/transferenciaMaterial", verifyToken, routesController.transferenciaMaterial_POST);
+router.get('/conteo_ciclico',verifyToken, routesController.conteo_ciclico_GET);
+router.get('/conteo_ciclico/:storage_type',verifyToken, routesController.conteoC_GET);
+router.post("/getBinStatusReport",verifyToken, routesController.getBinStatusReport_POST);
+router.post("/postCycleSU",verifyToken, routesController.postCycleSU_POST);
 
 // // router.get('*', (req, res) => {
 // //   res.redirect('http://tftdelsrv001:3000/not_found');

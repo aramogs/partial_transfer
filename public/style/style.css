@@ -707,4 +707,8 @@ table td {
 .manu_footer {
   padding: 0 !important;
 }
+
+.textSmall {
+  font-size: x-small;
+}
 /*# sourceMappingURL=style.css.map */

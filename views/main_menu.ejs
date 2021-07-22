@@ -1,121 +1,147 @@
 <%- include ("./static/header")%>
-<%- include ("./static/sidebar") %>
-<%- include ("./static/navbar")%>
+  <%- include ("./static/sidebar") %>
+    <%- include ("./static/navbar")%>
 
 
-<div class="col-lg-12 frame">
+      <div class="col-lg-12 frame">
 
-  <div class="row mt-4">
-    <div class="col-lg-4"></div>
+        <div class="row mt-4">
+          <div class="col-lg-4"></div>
 
-    <div class="col-lg-4">
+          <div class="col-lg-4">
 
-      <div class="card">
-        <div class="card-header d-none d-md-block"><strong>Datos de Usuario</strong></div>
-        <div class="card-body">
-          <table class="table table-sm borderless ">
-            <tbody>
-              <tr>
-                <td><small><strong>ID:</strong></small></td>
-                <td><small id="user_id"><%= user_id %></small> </td>
-              </tr>
-              <tr>
-                <td><small><strong>Nombre:</strong></small></td>
-                <td><small id="user_name"><%= user_name  %></small> </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="card-footer manu_footer">
-          <button type="button" id="btn_logoff" class="btn btn-danger btn-sm btn-block" btn-lg btn-block">Cerrar
-            sesion</button>
-        </div>
-      </div>
+            <div class="card">
+              <div class="card-header d-none d-md-block"><strong>Datos de Usuario</strong></div>
+              <div class="card-body">
+                <table class="table table-sm borderless ">
+                  <tbody>
+                    <tr>
+                      <td><small><strong>ID:</strong></small></td>
+                      <td><small id="user_id">
+                          <%= user_id %>
+                        </small> </td>
+                    </tr>
+                    <tr>
+                      <td><small><strong>Nombre:</strong></small></td>
+                      <td><small id="user_name">
+                          <%= user_name %>
+                        </small> </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="card-footer manu_footer">
+                <button type="button" id="btn_logoff" class="btn btn-danger btn-sm btn-block" btn-lg btn-block">Cerrar
+                  sesion</button>
+              </div>
+            </div>
 
-    </div>
-    <div class="col-lg-4"></div>
-  </div>
-
-  <br>
-  <div class="row">
-    <div class="col-lg-4"></div>
-    <div class="col-lg-4">
-      <h4 class="text-center animate__animated animate__bounceIn" display: inline-block>Menu Principal:</h4>
-
-      <div id="accordion">
-
-        <div class="card bg-dark">
-          <div class="card-header" id="headingOne">
-            <h5 class="mb-0">
-              <button class="btn btn-link btn-block text-left text-white" data-toggle="collapse"
-                data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-                1: Producto Terminado
-              </button>
-            </h5>
           </div>
+          <div class="col-lg-4"></div>
+        </div>
 
-          <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
-            <div class="container">
-              <button id="btn_pt_1" class="btn btn-outline-warning btn-block mt-4 mb-4" data-target="#collapseOne"
-                aria-expanded="true" aria-controls="collapseOne">
-                1: Consulta Ubicaciones PT
-              </button>
+        <br>
+        <div class="row">
+          <div class="col-lg-4"></div>
+          <div class="col-lg-4">
+            <h4 class="text-center animate__animated animate__bounceIn" display: inline-block>Menu Principal:</h4>
 
-              <button id="btn_pt_2" class="btn btn-outline-warning btn-block mt-4 mb-4" data-target="#collapseOne"
-                aria-expanded="true" aria-controls="collapseOne">
-                2: Transferencia PT
-              </button>
+            <div id="accordion">
 
-              <button id="btn_pt_3" class="btn btn-outline-warning btn-block mt-4 mb-4" data-target="#collapseOne"
-              aria-expanded="true" aria-controls="collapseOne">
-              3: Masterizar Handling Units
-            </button>
+              <div class="card bg-dark">
+                <div class="card-header" id="headingOne">
+                  <h5 class="mb-0">
+                    <button class="btn btn-link btn-block text-left text-white" data-toggle="collapse"
+                      data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                      1: Producto Terminado
+                    </button>
+                  </h5>
+                </div>
 
+                <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
+                  <div class="container">
+                    <button id="btn_pt_1" class="btn btn-outline-warning btn-block mt-4 mb-4" data-target="#collapseOne"
+                      aria-expanded="true" aria-controls="collapseOne">
+                      1: Consulta Ubicaciones PT
+                    </button>
+
+                    <button id="btn_pt_2" class="btn btn-outline-warning btn-block mt-4 mb-4" data-target="#collapseOne"
+                      aria-expanded="true" aria-controls="collapseOne">
+                      2: Transferencia PT
+                    </button>
+
+                    <button id="btn_pt_3" class="btn btn-outline-warning btn-block mt-4 mb-4" data-target="#collapseOne"
+                      aria-expanded="true" aria-controls="collapseOne">
+                      3: Masterizar Handling Units
+                    </button>
+
+                  </div>
+                </div>
+              </div>
+
+              <div class="card bg-dark">
+                <div class="card-header" id="headingTwo">
+                  <h5 class="mb-0">
+                    <button class="btn btn-link btn-block text-left text-white collapsed" data-toggle="collapse"
+                      data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                      2: Materia Prima
+                    </button>
+                  </h5>
+                </div>
+
+                <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
+                  <div class="container">
+                    <button id="btn_mp_1" class="btn btn-outline-success btn-block mt-4 mb-4" data-target="#collapseTwo"
+                      aria-expanded="true" aria-controls="collapseTwo">
+                      1: Transferencia Parcial MP
+                    </button>
+
+                    <button id="btn_mp_2" class="btn btn-outline-success btn-block mt-4 mb-4" data-target="#collapseTwo"
+                      aria-expanded="true" aria-controls="collapseTwo">
+                      2: Transferencia Multiple MP
+                    </button>
+                  </div>
+                </div>
+                </div>
+
+                <div class="card bg-dark">
+                  <div class="card-header" id="headingThree">
+                    <h5 class="mb-0">
+                      <button class="btn btn-link btn-block text-left text-white collapsed" data-toggle="collapse"
+                        data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                        3: Conteos Ciclicos
+                      </button>
+                    </h5>
+                  </div>
+
+                  <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordion">
+                    <div class="container">
+                      <button id="btn_cc_1" class="btn btn-outline-light btn-block mt-4 mb-4"
+                        data-target="#collapseThree" aria-expanded="true" aria-controls="collapseThree">
+                        1: Conteo
+                      </button>
+
+                    </div>
+                  </div>
+
+                </div>
+
+              </div>
             </div>
           </div>
-        </div>
+          <div class="col-lg-4"></div>
+      
 
-        <div class="card bg-dark">
-          <div class="card-header" id="headingTwo">
-            <h5 class="mb-0">
-              <button class="btn btn-link btn-block text-left text-white collapsed" data-toggle="collapse"
-                data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                2: Materia Prima
-              </button>
-            </h5>
-          </div>
+        <br><br><br><br><br>
 
-          <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
-            <div class="container">
-              <button id="btn_mp_1" class="btn btn-outline-success btn-block mt-4 mb-4" data-target="#collapseOne"
-                aria-expanded="true" aria-controls="collapseOne">
-                1: Transferencia Parcial MP
-              </button>
-
-              <button id="btn_mp_2" class="btn btn-outline-success btn-block mt-4 mb-4" data-target="#collapseOne"
-                aria-expanded="true" aria-controls="collapseOne">
-                2: Transferencia Multiple MP
-              </button>
-            </div>
-          </div>
-
-        </div>
 
       </div>
-    </div>
-    <div class="col-lg-4"></div>
-  </div>
-
-  <br><br><br><br><br>
 
 
-</div>
+      <%- include ("./static/footer")%>
 
+        <script>
+          $('.collapse').collapse()
+        </script>
 
-<%- include ("./static/footer")%>
-
-<script>
-  $('.collapse').collapse()
-</script>
-
-<script src="/js/functions/main_menu.js"></script>
+        <script src="/js/functions/main_menu.js"></script>
