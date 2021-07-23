@@ -8,8 +8,8 @@
 <nav aria-label="breadcrumb">
   <ol class="breadcrumb bg-dark">
     <li class="breadcrumb-item"><a href="/mainMenu" class="text-white"><span class="fas fa-arrow-circle-left text-white"></span> Menu</a></li>
-    <li class="breadcrumb-item"><a href="/conteo_ciclico" class="text-white"><span class="fas fa-arrow-circle-left text-white"></span> Storage Type</a></li>
-    <li class="breadcrumb-item active text-white-50" aria-current="page"> Storage Bin</li> 
+    <li class="breadcrumb-item"><a href="/conteo_ciclico" class="text-white"><span class="fas fa-arrow-circle-left text-white"></span> SType</a></li>
+    <li class="breadcrumb-item active text-white-50" aria-current="page"> SBin</li> 
   </ol>
 </nav>
 
@@ -59,7 +59,7 @@
           <div class="form-group">
             <label for="storage_bin">Storage Bin</label>
             <input type="text" class="form-control" name="storage_bin" id="storage_bin" aria-describedby="helpId"
-              placeholder="" autocomplete="off">
+              placeholder="" autocomplete="off" class="text-uppercase">
             <small id="helpId" class="form-text text-muted"><i class="fas fa-barcode"
                 style="font-size: 2rem;"></i></small>
           </div>
@@ -98,17 +98,10 @@
 
           <div class="col-lg-12">
 
-            <h5 id="errorText" hidden><span class="fas fa-exclamation-circle text-danger"></span><span
-                id="errorTextField"></span></h5>
+            <h5 id="errorText" hidden><span class="fas fa-exclamation-circle text-danger"></span><span id="errorTextField"></span></h5>
 
             <div id="tabla_consulta_container" class="table-responsive">
               <table id="tabla_consulta" class="table table-hover table-sm  table-striped text-center ">
-                <thead class="thead-dark">
-                  <tr class="header">
-                    <th>SU:</th>
-                    <th>Error:</th>
-                  </tr>
-                </thead>
                 <tbody>
                   <!-- INFO AGREGADA DESDE JAVASCRIPT -->
                 </tbody>
@@ -145,16 +138,14 @@
                     Storage Unit(s): <strong id="storage_units_count"></strong>
                   </div>
                   <div class="col-2">
-                    <button id="btn_verifyCount" type="button" class="btn btn-secondary btn-sm" disabled><small><span class="fa fa-external-link-alt"></span></small></button>
+                    <button id="btn_verifyCount" type="button" class="btn btn-secondary btn-sm" disabled><h5 class="m-0"><span class="fas fa-external-link-square-alt"></span></h5></button>
                   </div>
                 </div>
               </div>
 
               <div class="card-body bg-secondary text-center">
                 <form id="submitSU">
-                  <label class="text-white"><i class="fas fa-barcode "></i> Escanear Storage Units:</label>
-
-                  
+                  <label class="text-white"><i class="fas fa-barcode "></i> Storage Bin: <span id="sbin"></span></label>
 
                   <div class="input-group mb-3">
                     <input type="text" class="form-control" name="" id="inp_verifyCount" autocomplete="off">

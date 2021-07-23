@@ -1,5 +1,6 @@
 let value = false
 let storage_bin = document.getElementById("storage_bin")
+let sbin = document.getElementById("sbin")
 let alerta_prefijo = document.getElementById("alerta_prefijo")
 let alerta_prefijo2 = document.getElementById("alerta_prefijo2")
 let submitBin = document.getElementById("submitBin")
@@ -51,7 +52,7 @@ function cleanInput() {
     not_found_storage_units = []
     btn_verifyCount.classList.remove("bg-success")
     btn_verifyCount.classList.add("bg-secondary")
-    btn_verifyCount.classList.remove("animate__animated", "animate__rotateIn")
+    btn_verifyCount.classList.remove("animate__animated", "animate__tada")
     btn_verifyCount.disabled = true
     storage_bin.focus()
 }
@@ -65,7 +66,7 @@ submitBin.addEventListener("submit", function (e) {
     storage_bin.disabled = true
 
 
-    let data = { "proceso": "cycle_count_status", "storage_type": `${storage_type.innerHTML}`, "storage_bin": `${storage_bin.value}`, "user_id": user_id.innerHTML };
+    let data = { "proceso": "cycle_count_status", "storage_type": `${storage_type.innerHTML}`, "storage_bin": `${storage_bin.value.toUpperCase()}`, "user_id": user_id.innerHTML };
     axios({
         method: 'post',
         url: "/getBinStatusReport",
@@ -101,6 +102,7 @@ submitBin.addEventListener("submit", function (e) {
                     }
                 }
                 storage_units_count.innerHTML = result.length
+                sbin.innerHTML = storage_bin.value.toUpperCase()
                 storage_units.forEach(element => {
                     badge = `<span class="badge badge-secondary  m-1 serialBadge">${parseInt(element)}</span>`
                     current_storage_units.innerHTML = current_storage_units.innerHTML + badge
@@ -149,7 +151,7 @@ submitSU.addEventListener("submit", function (e) {
             btn_verifyCount.disabled = false
             btn_verifyCount.classList.remove("bg-secondary")
             btn_verifyCount.classList.add("bg-success")
-            btn_verifyCount.classList.add("animate__animated", "animate__rotateIn")
+            btn_verifyCount.classList.add("animate__animated", "animate__tada")
             inp_verifyCount.value = ""
         } else {
             if (!listed_storage_units.includes(currentSerial) && !unlisted_storage_units.includes(currentSerial)) {
@@ -162,7 +164,7 @@ submitSU.addEventListener("submit", function (e) {
                 btn_verifyCount.disabled = false
                 btn_verifyCount.classList.remove("bg-secondary")
                 btn_verifyCount.classList.add("bg-success")
-                btn_verifyCount.classList.add("animate__animated", "animate__rotateIn")
+                btn_verifyCount.classList.add("animate__animated", "animate__tada")
                 inp_verifyCount.value = ""
             } else {
                 soundWrong()
@@ -193,7 +195,7 @@ btn_verifyCount.addEventListener("click", () => {
     let data = {
         "proceso": "cycle_count_transfer",
         "storage_type": `${storage_type.innerHTML}`,
-        "storage_bin": `${storage_bin.value}`,
+        "storage_bin": `${storage_bin.value.toUpperCase()}`,
         "user_id": user_id.innerHTML,
         "listed_storage_units": listed_storage_units,
         "unlisted_storage_units": unlisted_storage_units,
