@@ -135,7 +135,7 @@ function sendData() {
             if (!response.data.message) {
                 setTimeout(function () { $('#modalSpinner').modal('hide') }, 1000);
 
-                window.location = `/editarProgramacion/fecha=${myDateString}`
+                window.location = `/editarListado/fecha=${myDateString}`
             } else {
                 setTimeout(function () { $('#modalSpinner').modal('hide') }, 500);
                 $('#modalError').modal({ backdrop: 'static', keyboard: false })

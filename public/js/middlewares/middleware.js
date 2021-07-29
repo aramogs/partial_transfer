@@ -4,7 +4,7 @@ const middleware = {};
 
 middleware.verifyToken = (req, res, next) => {
     if (!req.headers.cookie) {
-        res.redirect("/login/Acreditacion")
+        res.redirect("/login")
     } else {
 
         let cookies = (req.headers.cookie).split(";")

@@ -75,7 +75,7 @@ function fillTable() {
     let data = {"fecha":`${myDateString}`}
     axios({
         method: 'post',
-        url: `/tablaProgramacion`,
+        url: `/tablaListado`,
         data: JSON.stringify(data),
         headers: { 'content-type': 'application/json' }
     }).then((result)=>{ 

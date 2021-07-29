@@ -578,7 +578,7 @@ controller.verificarSAP_POST = (req, res) => {
         .catch((err) => { console.log(err); res.status(200).send({ message: err }) })
 }
 
-controller.editarProgramacion_GET = (req, res) => {
+controller.editarListado_GET = (req, res) => {
 
     user = req.connection.user
     fecha = req.params.fecha
@@ -589,7 +589,7 @@ controller.editarProgramacion_GET = (req, res) => {
                 if (element === "TFT\\TFT.DEL.PAGES_PT_Pedido") access = "ok"
             });
             if (access == "ok") {
-                res.render("editarProgramacion.ejs", { user, fecha })
+                res.render("editarListado.ejs", { user, fecha })
             } else {
                 res.redirect("/acceso_denegado")
             }
@@ -598,7 +598,7 @@ controller.editarProgramacion_GET = (req, res) => {
 
 }
 
-controller.tablaProgramacion_POST = (req, res) => {
+controller.tablaListado_POST = (req, res) => {
 
     let fecha = req.body.fecha
     funcion.getProgramacionFecha(fecha)

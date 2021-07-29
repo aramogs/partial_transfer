@@ -32,8 +32,8 @@ router.get('/cargaListado', middleware.sspi, routesController.cargaListado_GET);
 router.post('/getListado',routesController.getListado_POST);
 router.get('/getTurnos',routesController.getTurnos_GET);
 router.post('/verificarSAP/:id_carga', middleware.sspi, upload.single("excelFile"), routesController.verificarSAP_POST);
-router.get('/editarProgramacion/:fecha?', middleware.sspi, routesController.editarProgramacion_GET);
-router.post('/tablaProgramacion', routesController.tablaProgramacion_POST);
+router.get('/editarListado/:fecha?', middleware.sspi, routesController.editarListado_GET);
+router.post('/tablaListado', routesController.tablaListado_POST);
 
 // // router.get('*', (req, res) => {
 // //   res.redirect('http://tftdelsrv001:3000/not_found');
