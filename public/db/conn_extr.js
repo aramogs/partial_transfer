@@ -3,10 +3,10 @@ const mysql = require('mysql');
 const pool = mysql.createPool({
   connectionLimit: 10,
   supportBigNumbers: true,
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_CONN_BTS,
+  host: process.env.DB_EXTR_HOST,
+  user: process.env.DB_EXTR_USER,
+  password: process.env.DB_EXTR_PASS,
+  database: "extrusion",
 })
 
 

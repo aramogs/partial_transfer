@@ -85,7 +85,7 @@ submitBin.addEventListener("submit", function (e) {
                 soundWrong()
             }
             let response = JSON.parse(result.data)
-            
+
             if (response.error !== "N/A") {
                 soundWrong()
                 errorText2.innerHTML = response.error
@@ -104,8 +104,14 @@ submitBin.addEventListener("submit", function (e) {
                 storage_units_count.innerHTML = result.length
                 sbin.innerHTML = storage_bin.value.toUpperCase()
                 storage_units.forEach(element => {
-                    badge = `<span class="badge badge-secondary  m-1 serialBadge">${parseInt(element)}</span>`
-                    current_storage_units.innerHTML = current_storage_units.innerHTML + badge
+                    console.log(typeof(element));
+                    if (isNaN(element)) {
+                        badge = `<span class="badge badge-warning  m-1 serialBadge">EMPTY</span>`
+                        current_storage_units.innerHTML = current_storage_units.innerHTML + badge
+                    } else {
+                        badge = `<span class="badge badge-secondary  m-1 serialBadge">${parseInt(element)}</span>`
+                        current_storage_units.innerHTML = current_storage_units.innerHTML + badge
+                    }
                 });
 
                 $('#modalSpinner').modal('hide')
@@ -272,7 +278,7 @@ btn_verifyCount.addEventListener("click", () => {
                 } else {
                     setTimeout(() => { $('#modalSpinner').modal('hide') }, 500);
                     setTimeout(() => { $('#modalSuccess').modal({ backdrop: 'static', keyboard: false }) }, 800);
-                    
+
 
                 }
             }

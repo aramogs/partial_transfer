@@ -1,24 +1,51 @@
 <!-- Page Content -->
 <div id="page-content-wrapper">
 
-  <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom d-none d-lg-block">
-    <button class="btnNavbar btn btn-info fas fa-angle-double-left" id="menu-toggle"></button>
+  <nav class="navbar navbar-expand-md navbar-light bg-light">
+    <div class="navbar-collapse collapse w-100 order-1 order-md-0 dual-collapse2">
+      <ul class="navbar-nav mr-auto">
+        <li class="nav-item active">
+          <button class="btnNavbar btn btn-info fas fa-angle-double-left" id="menu-toggle"></button>
+        </li>
 
-    <!-- <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
-      aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button> -->
+      </ul>
+    </div>
 
-      <div class="collapse navbar-collapse" id="navbarSupportedContent">
-        <!-- <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
-          <li class="nav-item dropdown no-arrow">
-            <a class="nav-link  nav-link text-info" href="#" id="userDropdown" role="button" data-toggle="dropdown"
-              aria-haspopup="true" aria-expanded="false">
-              <span class="mr-2 d-none d-lg-inline text-gray-600 small"><i
-                  class="far fa-user-circle fa-lg fa-fw mr-2 text-gray-600"></i> </span>
-            </a>
-          </li>
-        </ul> -->
-      </div>
+    <!-- <div class="mx-auto order-0">
+      <a class="navbar-brand mx-auto" href="#">Center</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".dual-collapse2">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+    </div> -->
+
+    <div class="navbar-collapse collapse w-100 order-3 dual-collapse2">
+      <ul class="navbar-nav ml-auto">
+        <li class="nav-item">
+
+          <a class="nav-link  nav-link text-info" href="#" id="userDropdown" role="button" data-toggle="dropdown"
+            aria-haspopup="true" aria-expanded="false">
+            <span class="mr-2 d-none d-lg-inline text-gray-600 small"><i
+                class="far fa-user-circle fa-lg fa-fw mr-2 text-gray-600"></i></span>
+          </a>
+
+          <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
+            <ul class="list-group">
+              <li class="list-group-item border-0">
+                <span class="fas fa-user-shield text-info"> </span> Supervisor Almacen
+                <ul class="list-group">
+                  <li class="list-group-item border-0">
+                    <a class="dropdown-item" href="/cargaListado">
+                      <span class="fas fa-file-excel text-info"> </span>
+                      Listado de transferencia
+                    </a>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+
+        </li>
+      </ul>
+    </div>
 
   </nav>

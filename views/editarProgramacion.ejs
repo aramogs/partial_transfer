@@ -1,0 +1,405 @@
+<%- include ("./static/header") %>
+    <%- include ("./static/sidebar") %>
+        <%- include ("./static/navbar") %>
+
+            <br>
+            <div class="container-fluid">
+                
+                <h1 class="display-4 text-center csvTitulo"><span class="icoSidebar fas fa-xs fa-edit"></span> Programacion Extrusion</h1>
+                <a href="/">
+                    <div class="img_sidebar" style="background-image: url(/img/TristoneLogo.png); "></div>
+                  </a>
+            </div>
+
+
+            <div class="container-fluid">
+
+                <div class=" card-header text-white bg-dark ">
+                    <div class="row">
+                        <div class="col-lg-12  text-center">
+                            <div class="col-lg-6 offset-lg-3">
+                                <div class="form-group">
+                                    <label>Fecha</label>
+                                    <input type="text" class="form-control text-center" name="date" id="selectFecha"
+                                        aria-describedby="helpId" placeholder="Seleccionar Fecha" autocomplete="off">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <br>
+                <div>
+                    <button formAction="/cancelar_idplan" type="submit" id="btnAgregar" class="btn btn-success"
+                        onClick="agregar()" disabled><span class="fas fa-plus"></span> Agregar</button>
+                </div>
+                <br>
+                <div class="table-responsive">
+                    <div class="containerTable">
+                        <div class="table table-responsive" id="table">
+                            <table id="myTable" class="table table-bordered table-striped table-sm hover text-center">
+                                <thead class="thead-dark">
+
+                                    <th width="5%"><span class="icoSidebar fas fa-mouse-pointer"></span> Accion</th>
+                                    <th width="8%"><span class="icoSidebar fas fa-clipboard"></span> Plan_ID</th>
+                                    <th width="10%"><span class="icoSidebar fas fa-key"></span> SAP</th>
+                                    <th width="5%"><span class="icoSidebar fas fa-hashtag"></span> Cantidad</th>
+                                    <th width="5%"><span class="icoSidebar fas fa-grip-lines"></span> Linea</th>
+                                    <th width="10%"><span class="icoSidebar fas fa-user-cog"></span> Supervisor </th>
+                                    <th width="10%"><span class="icoSidebar fas fa-calendar-alt"></span> Fecha</th>
+                                    <th width="5%"><span class="icoSidebar fas fa-clock"></span> Turno</th>
+                                    <th width="10%"><span class="icoSidebar fas fa-check"></span> Status</th>
+                                    <th><span class="icoSidebar fas fa-pencil-alt"></span> Motivo</th>
+
+                                </thead>
+
+                                <tbody>
+
+                                </tbody>
+
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="modal fade" id="modalMotivo" tabindex="-1" role="dialog"
+                    aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                    <div class="modal-dialog " role="document">
+                        <div class="modal-content">
+
+                            <div class="modal-body">
+
+                                <div class="card">
+                                    <div class="card-header text-center d-none d-lg-block">
+                                        <h4 class="card-mov"><span class="text-danger fas fa-ban"></span> Cancelacion
+                                        </h4>
+                                    </div>
+
+                                    <div class="card-body">
+
+                                        <div class="row">
+                                            <div class="col-5">
+                                                <h7>SAP:</h7>
+                                            </div>
+                                            <div class="col-7">
+                                                <h7 class="text-left"><span class="badge badge-info" id="msap"></span>
+                                                </h7>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-lg-5 col-sm-12">
+                                                <h7 class="text-left">Cantidad: </h7>
+                                            </div>
+                                            <div class="col-lg-7 col-sm-12">
+                                                <h7 class="text-left"><span class="badge badge-info"
+                                                        id="mcantidad"></span></h7>
+                                            </div>
+                                        </div>
+
+                                        <div class="d-none d-lg-block">
+                                            <div class="row ">
+                                                <div class="col-5">
+                                                    <h7 class="text-left">Fecha: </h7>
+                                                </div>
+                                                <div class="col-7">
+                                                    <h7 class="text-left"><span class="badge badge-info"
+                                                            id="mfecha"></span></h7>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <hr>
+
+                                        <div class="row d-none d-lg-block">
+                                            <div class="col-lg-12">
+                                                <h5>Motivo:</h5>
+                                            </div>
+                                        </div>
+
+                                        <form action="/cancelar_idplan" method="POST" id="formMotivo">
+                                            <div class="container">
+                                                <div class="row">
+
+                                                    <div class="input-group mb-3">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text fas fa-ban"
+                                                                id="basic-addon1"></span>
+                                                        </div>
+                                                        <input type="text" class="form-control" name="motivo"
+                                                            id="motivo" placeholder="Ingrese motivo de cancelacion"
+                                                            required autocomplete="off">
+                                                    </div>
+
+                                                </div>
+                                            </div>
+
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary btnCerrar"
+                                    data-dismiss="modal">Cerrar</button>
+                                <button formAction="/cancelar_idplan" type="submit" id="btnCancel_c"
+                                    class="btn btn-info">Guardar</button>
+                            </div>
+                            <input type="text" class="form-control" name="midplan" id="midplan"
+                                aria-describedby="helpId" value="" hidden>
+                            </form>
+
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="modalEditar" tabindex="-1" role="dialog"
+                    aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                    <div class="modal-dialog " role="document">
+                        <div class="modal-content">
+
+                            <div class="modal-body">
+
+                                <div class="card">
+                                    <div class="card-header text-center d-none d-lg-block">
+                                        <!-- <img src="/img/sap.png" alt="SAP" srcset="" class="card-mov"> -->
+                                        <h4 class="card-mov"><span class="text-secondary fas fa-edit"></span>
+                                            Editar
+                                        </h4>
+                                    </div>
+
+                                    <div class="card-body">
+
+                                        <div class="row">
+                                            <div class="col-5">
+                                                <h7>SAP:</h7>
+                                            </div>
+                                            <div class="col-7">
+                                                <h7 class="text-left"><span class="badge badge-info" id="mesap"></span>
+                                                </h7>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-lg-5 col-sm-12">
+                                                <h7 class="text-left">Cantidad: </h7>
+                                            </div>
+                                            <div class="col-lg-7 col-sm-12">
+                                                <h7 class="text-left"><span class="badge badge-info"
+                                                        id="mecantidad"></span></h7>
+                                            </div>
+                                        </div>
+
+                                        <div class="d-none d-lg-block">
+                                            <div class="row ">
+                                                <div class="col-5">
+                                                    <h7 class="text-left">Fecha: </h7>
+                                                </div>
+                                                <div class="col-7">
+                                                    <h7 class="text-left"><span class="badge badge-info"
+                                                            id="mefecha"></span></h7>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <hr>
+
+
+
+                                        <form action="/editar_idplan" method="POST" id="formEditar">
+                                            <div class="container">
+                                                <div class="row">
+
+                                                    <div class="row d-none d-lg-block">
+                                                        <div class="col-lg-12">
+                                                            <h5>Cantidad:</h5>
+                                                        </div>
+                                                    </div>
+                                                    <div class="input-group mb-3">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text fas fa-edit"
+                                                                id="basic-addon1"></span>
+                                                        </div>
+                                                        <input type="number" class="form-control" name="edit_cantidad"
+                                                            id="edit_cantidad" placeholder="" min="1" required>
+                                                    </div>
+
+                                                    <div class="row d-none d-lg-block">
+                                                        <div class="col-lg-12">
+                                                            <h5>Linea:</h5>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="input-group mb-3">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text fas fa-edit"
+                                                                id="basic-addon1"></span>
+                                                        </div>
+                                                        <input type="number" class="form-control" name="edit_linea"
+                                                            id="edit_linea" placeholder="" min="1" max="500" required>
+                                                    </div>
+
+
+
+                                                </div>
+                                            </div>
+
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary btnCerrar"
+                                    data-dismiss="modal">Cerrar</button>
+                                <button formAction="/editar_idplan" type="submit" id="btnCancel_e"
+                                    class="btn btn-info">Guardar</button>
+                            </div>
+                            <input type="text" class="form-control" name="midplane" id="midplane"
+                                aria-describedby="helpId" value="" hidden>
+                            </form>
+
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="modalAgregar" tabindex="-1" role="dialog"
+                    aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                    <div class="modal-dialog " role="document">
+                        <div class="modal-content">
+
+                            <div class="modal-body">
+
+                                <div class="card">
+                                    <div class="card-header text-center d-none d-lg-block">
+                                        <!-- <img src="/img/sap.png" alt="SAP" srcset="" class="card-mov"> -->
+                                        <h4 class="card-mov"><span class="text-secondary fas fa-plus"></span>
+                                            Agregar
+                                        </h4>
+                                    </div>
+
+                                    <div class="card-body">
+
+                                        <form action="/agregar_idplan" method="POST" id="formAgregar">
+                                            <div class="container">
+                                                <div class="row">
+
+                                                    <div class="row d-none d-lg-block">
+                                                        <div class="col-lg-12">
+                                                            <h5>SAP: <label id="msg_add_sap"></label></h5>
+                                                        </div>
+                                                    </div>
+                                                    <div class="input-group mb-3">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text fas fa-plus"
+                                                                id="basic-addon1"></span>
+                                                        </div>
+                                                        <input type="text" class="form-control" name="add_sap"
+                                                            id="add_sap" placeholder="" min="1" max="500" required
+                                                            onkeyup="checkSap()">
+                                                    </div>
+
+                                                    <div class="row d-none d-lg-block">
+                                                        <div class="col-lg-12">
+                                                            <h5>Cantidad: <label id="msg_add_cantidad "></label></h5>
+                                                        </div>
+                                                    </div>
+                                                    <div class="input-group mb-3">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text fas fa-plus"
+                                                                id="basic-addon1"></span>
+                                                        </div>
+                                                        <input type="number" class="form-control" name="add_cantidad"
+                                                            id="add_cantidad" placeholder="" min="1" required>
+                                                    </div>
+
+                                                    <div class="row d-none d-lg-block">
+                                                        <div class="col-lg-12">
+                                                            <h5>Linea: <label id="msg_add_linea"></label></h5>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="input-group mb-3">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text fas fa-plus"
+                                                                id="basic-addon1"></span>
+                                                        </div>
+                                                        <input type="number" class="form-control" name="add_linea"
+                                                            id="add_linea" placeholder="" min="1" max="500" required>
+                                                    </div>
+
+                                                    <div class="row d-none d-lg-block">
+                                                        <div class="col-lg-12">
+                                                            <h5>Turno: <label id="msg_add_turno"></label></h5>
+                                                        </div>
+                                                    </div>
+
+
+                                                    <div class="input-group mb-3">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text fas fa-plus"
+                                                                id="basic-addon1"></span>
+                                                        </div>
+                                                        <select class="form-control text-center" id="add_turno"
+                                                            required>
+
+                                                        </select>
+                                                    </div>
+
+
+
+
+                                                </div>
+                                            </div>
+
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary btnCerrar"
+                                    data-dismiss="modal">Cerrar</button>
+                                <button formAction="/agregar_idplan" type="submit" id="btn_save_agregar"
+                                    class="btn btn-info">Guardar</button>
+                            </div>
+
+                            </form>
+
+                        </div>
+                    </div>
+                </div>
+
+
+
+
+
+
+
+
+                <div class="modal fade" id="modalSpinner" tabindex="-1" aria-labelledby="myModalLabel"
+                    aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header text-center">
+                                <h2 class="modal-title "> <span class="text-secondary  fas fa-stopwatch"></span>
+                                    Cargando</h2>
+                                <div class="spinner-grow spinner-grow-sm text-warning mt-4 cdelay-1" role="status">
+                                    <span class="sr-only">Loading...</span>
+                                </div>
+                                <div class="spinner-grow spinner-grow-sm text-primary mt-4 cdelay-2" role="status">
+                                    <span class="sr-only">Loading...</span>
+                                </div>
+                                <div class="spinner-grow spinner-grow-sm text-secondary mt-4 cdelay-3" role="status">
+                                    <span class="sr-only">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
+
+
+            <%- include ("./static/footer") %>
+
+                <script src="/js/functions/editarProgramacion.js"></script>
