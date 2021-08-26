@@ -40,8 +40,6 @@ middleware.verifyToken = (req, res, next) => {
 }
 
 middleware.loginVerify = (req, res, next) => {
-    let ubicacion = req.params.id
-
     if (!req.headers.cookie) {
         res.render('login.ejs')
     } else {
@@ -62,9 +60,7 @@ middleware.loginVerify = (req, res, next) => {
 
         if (token_name == "accessToken") {
             jwt.verify(token_jwt, 'tristone', (err, authData) => {
-                if (ubicacion === "Acreditacion") res.redirect("/mainMenu")
-                if (ubicacion === "Impresion") res.redirect("/impresion")
-
+               res.redirect("/mainMenu")
             })
         }
 

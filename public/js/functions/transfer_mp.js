@@ -23,6 +23,7 @@ let verifySBin = document.getElementById("verifySBin")
 let btnCerrar_Bin = document.getElementById("btnCerrar_Bin")
 let submitArray_Bin = document.getElementById("submitArray_Bin")
 let spanBin = document.getElementById("spanBin")
+let storage_type = document.getElementById("storage_type")
 
 serial_num.focus()
 btnCerrar.forEach(element => {
@@ -189,7 +190,7 @@ function transferFG(e) {
     let storage_bin = submitArray.value
     $('#myModal').modal('hide')
     $('#modalSpinner').modal({ backdrop: 'static', keyboard: false })
-    let data = { "proceso": "transfer_mp_confirmed", "user_id": user_id.innerHTML, "serial": `${serialsArray}`, "storage_bin": `${storage_bin}` };
+    let data = { "proceso": "transfer_mp_confirmed", "user_id": user_id.innerHTML, "serial": `${serialsArray}`, "storage_bin": `${storage_bin}`, "storage_type": `${storage_type.innerHTML}` };
     axios({
         method: 'post',
         url: "/postSerialesMP",

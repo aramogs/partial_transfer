@@ -85,11 +85,11 @@ funcion.getTurnos = () => {
 
 funcion.getProgramacion = (fecha) => {
     return new Promise((resolve, reject) => {
-        dbEX(`
+        dbC(`
         SELECT DISTINCT
             turno
         FROM
-            production_plan
+            raw_delivery
         WHERE
             fecha = '${fecha}'
         `)
@@ -150,16 +150,121 @@ funcion.insertListadoExcel = (tabla, titulos, valores, sup_num, fecha, turno) =>
 
 }
 
-funcion.getProgramacionFecha = (fecha) => {
+funcion.getListadoFecha = (fecha) => {
     return new Promise((resolve, reject) => {
-        dbEX(`
+        dbC(`
         SELECT 
             *
         FROM
-            production_plan
+            raw_delivery
         WHERE
-            fecha = '${fecha}'
+           fecha like "${fecha}%"
         `)
+            .then((result) => {resolve(result) })
+            .catch((error) => {reject(error) })
+    })
+}
+
+funcion.getInfoIdListado = (id) => {
+    return new Promise((resolve, reject) => {
+        dbC(`
+        SELECT 
+            *
+        FROM
+            raw_delivery
+            
+        WHERE
+            id = ${id}
+        `)
+            .then((result) => { resolve(result) })
+            .catch((error) => { reject(error) })
+    })
+}
+
+funcion.cancelarIdListado = (idplan, motivo) => {
+
+    return new Promise((resolve, reject) => {
+        dbC(`
+        UPDATE 
+            raw_delivery
+        SET
+            status = 'Cancelado', 
+            motivo_cancel ='${motivo}'
+
+        WHERE
+            id= ${idplan}
+        
+        `)
+            .then((result) => { resolve(result) })
+            .catch((error) => { reject(error) })
+    })
+}
+
+funcion.editarIdListado = (idListado, contenedores) => {
+    return new Promise((resolve, reject) => {
+        dbC(`
+        UPDATE 
+            raw_delivery
+        SET
+            contenedores = ${contenedores}
+        WHERE
+            id= ${idListado}
+            `)
+            .then((result) => { resolve(result) })
+            .catch((error) => { reject(error) })
+    })
+}
+
+funcion.getListadoPendiente = (fecha) => {
+    return new Promise((resolve, reject) => {
+        dbC(`
+        SELECT 
+            *
+        FROM
+            raw_delivery
+        WHERE
+           status = "Pendiente"
+        `)
+            .then((result) => {resolve(result) })
+            .catch((error) => {reject(error) })
+    })
+}
+
+funcion.getRawMovements = (raw_id) => {
+    return new Promise((resolve, reject) => {
+        dbC(`
+        SELECT 
+            raw_id,
+            COUNT(
+                CASE WHEN 
+                    sap_result REGEXP '^[0-9]+$' 
+                THEN 
+                    1
+                END) 
+            AS count
+        FROM
+            raw_movement
+        WHERE
+            raw_id = ${raw_id}
+        GROUP BY 
+            raw_id;
+        `)
+            .then((result) => {resolve(result) })
+            .catch((error) => {reject(error) })
+    })
+}
+
+
+funcion.updateProcesado = (raw_id) => {
+    return new Promise((resolve, reject) => {
+        dbC(`
+        UPDATE 
+            raw_delivery
+        SET
+            status = "Procesado"
+        WHERE
+            id= ${raw_id}
+            `)
             .then((result) => { resolve(result) })
             .catch((error) => { reject(error) })
     })

@@ -5,9 +5,9 @@
 
 <nav aria-label="breadcrumb">
   <ol class="breadcrumb">
-    <li class="breadcrumb-item"><a href="/mainMenu" class="text-success"><span
-          class="fas fa-arrow-circle-left text-success"></span> Menu</a></li>
-    <li class="breadcrumb-item active" aria-current="page">Transferencia Multiple MP</li>
+    <li class="breadcrumb-item"><a href="/mainMenu" class="text-success"><span class="fas fa-arrow-circle-left text-success"></span> Menu</a></li>
+    <li class="breadcrumb-item"><a href="/transferMP" class="text-success"><span class="fas fa-arrow-circle-left text-success"></span> SType</a></li>
+    <li class="breadcrumb-item active text-success-50" aria-current="page"> Transferencia Multiple </li> 
   </ol>
 </nav>
 
@@ -31,6 +31,10 @@
                 <td><small><strong>Nombre:</strong></small></td>
                 <td><small id="user_name"><%= user_name  %></small> </td>
               </tr>
+              <tr>
+                <td><small><strong>Storage Type:</strong></small></td>
+                <td><small id="storage_type"><%= storage_type  %></small> </td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -45,7 +49,7 @@
       <form id="submitSerial">
 
         <h4 class="text-center animate__animated animate__bounceIn d-none d-lg-block" display: inline-block>
-          Transferencia Multiple MP:</h4>
+          Transferencia Multiple <%= storage_type  %>:</h4>
         <span class="fas fa-boxes text-success mt-2" style="font-size: 2rem;"></span>
 
         <div class="form-group">

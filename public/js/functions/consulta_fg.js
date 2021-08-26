@@ -93,10 +93,6 @@ submitSerial.addEventListener("submit", function (e) {
 
                 let response = JSON.parse(result.data)
 
-
-                console.log(response);
-
-
                 if (response.error !== "N/A") {
                     soundWrong()
                     errorText.innerHTML = response.error

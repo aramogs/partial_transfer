@@ -155,7 +155,31 @@ controller.movimiento_parcial_GET = (req, res) => {
 controller.transferMP_GET = (req, res) => {
     let user_id = req.res.locals.authData.id.id
     let user_name = req.res.locals.authData.id.username
+    res.render('transfer_mp_st.ejs', {
+        user_id,
+        user_name
+    })
+}
+
+controller.transferMP_ST_GET = (req, res) => {
+    let storage_type = req.params.storage_type
+    let user_id = req.res.locals.authData.id.id
+    let user_name = req.res.locals.authData.id.username
+
+
     res.render('transfer_mp.ejs', {
+        user_id,
+        user_name,
+        storage_type
+    })
+
+
+}
+
+controller.transfer_MP_FIFO_GET = (req, res) => {
+    let user_id = req.res.locals.authData.id.id
+    let user_name = req.res.locals.authData.id.username
+    res.render('movimiento_fifo_st.ejs', {
         user_id,
         user_name
     })
@@ -266,6 +290,7 @@ controller.postSerialsMP_POST = (req, res) => {
     let cantidad = null
     let proceso = req.body.proceso
     let storage_bin = req.body.storage_bin
+    let storage_type = req.body.storage_type
     let user_id = req.res.locals.authData.id.id
 
 
@@ -275,7 +300,8 @@ controller.postSerialsMP_POST = (req, res) => {
             "material": "${material}",
             "cantidad":"${cantidad}", 
             "process":"${proceso}", 
-            "storage_bin": "${storage_bin}", 
+            "storage_bin": "${storage_bin}",
+            "storage_type": "${storage_type}",
             "user_id":"${user_id}"
 
         }`
@@ -557,8 +583,8 @@ controller.verificarSAP_POST = (req, res) => {
         .then(result => {
 
             let titulos = result[0]
-            let valores =JSON.stringify(result[1])
-     
+            let valores = JSON.stringify(result[1])
+
             let send = `{
                 "station":"${estacion}",
                 "serial_num":"${serial}",
@@ -601,12 +627,176 @@ controller.editarListado_GET = (req, res) => {
 controller.tablaListado_POST = (req, res) => {
 
     let fecha = req.body.fecha
-    funcion.getProgramacionFecha(fecha)
+    funcion.getListadoFecha(fecha)
         .then((result) => { res.json(result) })
         .catch((err) => { console.error(err) })
 
 }
 
+controller.idListadoInfo_POST = (req, res) => {
+
+    let id = req.body.id
+    funcion.getInfoIdListado(id)
+        .then((result) => { res.json(result) })
+        .catch((err) => { console.error(err) })
+
+
+}
+
+controller.cancelarIdListado_POST = (req, res) => {
+
+    let idListado = req.body.id
+    let motivo = req.body.motivo
+
+    funcion.cancelarIdListado(idListado, motivo)
+        .then((result) => { res.json(result) })
+        .catch((err) => { console.error(err) })
+
+
+}
+
+controller.editarIdListado_POST = (req, res) => {
+
+    let id = req.body.id
+    let contenedores = req.body.contenedores
+    funcion.editarIdListado(id, contenedores)
+        .then((result) => { res.json(result) })
+        .catch((err) => { console.error(err) })
+
+
+}
+
+controller.checkSap_POST = (req, res) => {
+
+    let sap = req.body.sap
+
+    funcion.checkSap(sap)
+        .then((result) => { res.json(result) })
+        .catch((err) => { console.error(err) })
+
+}
+
+controller.transferMP_FIFO_GET = (req, res) => {
+    let storage_type = req.params.storage_type
+    let user_id = req.res.locals.authData.id.id
+    let user_name = req.res.locals.authData.id.username
+
+    if (storage_type === "MP") {
+        res.render('transfer_mp_FIFO.ejs', {
+            user_id,
+            user_name,
+            storage_type
+        })
+    } else if (storage_type === "MP1") {
+        res.render('transfer_mp_FIFO_V.ejs', {
+            user_id,
+            user_name,
+            storage_type
+        })
+    }
+
+}
+
+//TODO dividir esto en 2 funciones, crear nueva ruta y modificar en javascript la nueva ruta de MP1
+controller.getRawFIFO_POST = (req, res) => {
+
+    let estacion = uuidv4()
+    let serial = null
+    let material = req.body.material
+    let cantidad = null
+    let proceso = req.body.proceso
+    let storage_type = req.body.storage_type
+    let user_id = req.res.locals.authData.id.id
+    let raw_id = req.body.raw_id
+
+    if (raw_id !== undefined) {
+        async function waitForPromise() {
+            let count = funcion.getRawMovements(raw_id)
+            return count
+        }
+        waitForPromise()
+            .then(result => {
+                console.log(result);
+                let count_res = result
+                let send = `{
+                "station":"${estacion}",
+                "serial_num":"${serial}",
+                "material": "${material}",
+                "cantidad":"${cantidad}", 
+                "process":"${proceso}", 
+                "storage_type":"${storage_type}",  
+                "user_id":"${user_id}"
+            }`
+
+                amqpRequest(send)
+                    .then(result => { res.json([result, count_res]) })
+                    .catch(err => { res.json(err) })
+            })
+            .catch((err) => { console.log(err); res.status(200).send({ message: err }) })
+    } else {
+        let send = `{
+            "station":"${estacion}",
+            "serial_num":"${serial}",
+            "material": "${material}",
+            "cantidad":"${cantidad}", 
+            "process":"${proceso}", 
+            "storage_type":"${storage_type}",  
+            "user_id":"${user_id}"
+        }`
+
+        amqpRequest(send)
+            .then(result => { res.json(result) })
+            .catch(err => { res.json(err) })
+    }
+}
+
+controller.postSerialsMP_RAW_POST = (req, res) => {
+    let estacion = uuidv4()
+    let serial = req.body.serial
+    let material = null
+    let cantidad = null
+    let proceso = req.body.proceso
+    let storage_type = req.body.storage_type
+    let user_id = req.res.locals.authData.id.id
+    let raw_id = req.body.raw_id
+    let shift = req.body.shift
+    let clear = req.body.clear
+
+    if (clear !== "null") {
+        async function waitForPromise() {
+            let procesado = funcion.updateProcesado(raw_id)
+            return procesado
+        }
+        waitForPromise()
+            .catch((err) => { console.log(err); res.status(200).send({ message: err }) })
+    }
+
+    let send = `{
+            "station":"${estacion}",
+            "serial_num":"${serial}",
+            "material": "${material}",
+            "cantidad":"${cantidad}", 
+            "process":"${proceso}", 
+            "storage_type":"${storage_type}",
+            "raw_id":"${raw_id}",
+            "shift":"${shift}",
+            "user_id":"${user_id}"
+
+        }`
+
+    amqpRequest(send)
+        .then((result) => { res.json(result) })
+        .catch((err) => { res.json(err) })
+}
+
+
+controller.getRawListado_GET = (req, res) => {
+
+    funcion.getListadoPendiente()
+        .then((result) => { res.json(result) })
+        .catch((err) => { console.error(err) })
+
+}
 
 function amqpRequest(send) {
     return new Promise((resolve, reject) => {

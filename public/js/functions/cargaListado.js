@@ -131,11 +131,10 @@ function sendData() {
         headers: { 'Content-Type': 'multipart/form-data', 'Accept': 'application/json', }
     })
         .then((response) => {
-            console.log(response);
             if (!response.data.message) {
                 setTimeout(function () { $('#modalSpinner').modal('hide') }, 1000);
 
-                window.location = `/editarListado/fecha=${myDateString}`
+                window.location = `/editarListado/?fecha=${myDateString}`
             } else {
                 setTimeout(function () { $('#modalSpinner').modal('hide') }, 500);
                 $('#modalError').modal({ backdrop: 'static', keyboard: false })

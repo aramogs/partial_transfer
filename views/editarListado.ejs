@@ -28,12 +28,11 @@
                     </div>
 
                 </div>
-                <br>
+                <!-- <br>
                 <div>
-                    <button formAction="/cancelar_idplan" type="submit" id="btnAgregar" class="btn btn-success"
-                        onClick="agregar()" disabled><span class="fas fa-plus"></span> Agregar</button>
+                    <button  type="submit" id="btnAgregar" class="btn btn-success" disabled><span class="fas fa-plus"></span> Agregar</button>
                 </div>
-                <br>
+                <br> -->
                 <div class="table-responsive">
                     <div class="containerTable">
                         <div class="table table-responsive" id="table">
@@ -41,10 +40,9 @@
                                 <thead class="thead-dark">
 
                                     <th width="5%"><span class="icoSidebar fas fa-mouse-pointer"></span> Accion</th>
-                                    <th width="8%"><span class="icoSidebar fas fa-clipboard"></span> Plan_ID</th>
+                                    <th width="8%"><span class="icoSidebar fas fa-clipboard"></span> ID</th>
                                     <th width="10%"><span class="icoSidebar fas fa-key"></span> SAP</th>
                                     <th width="5%"><span class="icoSidebar fas fa-hashtag"></span> Cantidad</th>
-                                    <th width="5%"><span class="icoSidebar fas fa-grip-lines"></span> Linea</th>
                                     <th width="10%"><span class="icoSidebar fas fa-user-cog"></span> Supervisor </th>
                                     <th width="10%"><span class="icoSidebar fas fa-calendar-alt"></span> Fecha</th>
                                     <th width="5%"><span class="icoSidebar fas fa-clock"></span> Turno</th>
@@ -90,11 +88,11 @@
 
                                         <div class="row">
                                             <div class="col-lg-5 col-sm-12">
-                                                <h7 class="text-left">Cantidad: </h7>
+                                                <h7 class="text-left">Contenedores: </h7>
                                             </div>
                                             <div class="col-lg-7 col-sm-12">
                                                 <h7 class="text-left"><span class="badge badge-info"
-                                                        id="mcantidad"></span></h7>
+                                                        id="mContenedores"></span></h7>
                                             </div>
                                         </div>
 
@@ -117,7 +115,7 @@
                                             </div>
                                         </div>
 
-                                        <form action="/cancelar_idplan" method="POST" id="formMotivo">
+                                        <form  method="POST" id="formMotivo">
                                             <div class="container">
                                                 <div class="row">
 
@@ -142,10 +140,10 @@
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary btnCerrar"
                                     data-dismiss="modal">Cerrar</button>
-                                <button formAction="/cancelar_idplan" type="submit" id="btnCancel_c"
+                                <button  type="submit" id="btnCancel_c"
                                     class="btn btn-info">Guardar</button>
                             </div>
-                            <input type="text" class="form-control" name="midplan" id="midplan"
+                            <input type="text" class="form-control" name="midListado" id="midListado"
                                 aria-describedby="helpId" value="" hidden>
                             </form>
 
@@ -205,7 +203,7 @@
 
 
 
-                                        <form action="/editar_idplan" method="POST" id="formEditar">
+                                        <form  method="POST" id="formEditar">
                                             <div class="container">
                                                 <div class="row">
 
@@ -219,26 +217,9 @@
                                                             <span class="input-group-text fas fa-edit"
                                                                 id="basic-addon1"></span>
                                                         </div>
-                                                        <input type="number" class="form-control" name="edit_cantidad"
-                                                            id="edit_cantidad" placeholder="" min="1" required>
+                                                        <input type="number" class="form-control" name="edit_contenedores"
+                                                            id="edit_contenedores" placeholder="" min="1" required>
                                                     </div>
-
-                                                    <div class="row d-none d-lg-block">
-                                                        <div class="col-lg-12">
-                                                            <h5>Linea:</h5>
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="input-group mb-3">
-                                                        <div class="input-group-prepend">
-                                                            <span class="input-group-text fas fa-edit"
-                                                                id="basic-addon1"></span>
-                                                        </div>
-                                                        <input type="number" class="form-control" name="edit_linea"
-                                                            id="edit_linea" placeholder="" min="1" max="500" required>
-                                                    </div>
-
-
 
                                                 </div>
                                             </div>
@@ -251,10 +232,10 @@
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary btnCerrar"
                                     data-dismiss="modal">Cerrar</button>
-                                <button formAction="/editar_idplan" type="submit" id="btnCancel_e"
+                                <button type="submit" id="btnCancel_e"
                                     class="btn btn-info">Guardar</button>
                             </div>
-                            <input type="text" class="form-control" name="midplane" id="midplane"
+                            <input type="text" class="form-control" name="midListadoe" id="midListadoe"
                                 aria-describedby="helpId" value="" hidden>
                             </form>
 
@@ -262,7 +243,7 @@
                     </div>
                 </div>
 
-                <div class="modal fade" id="modalAgregar" tabindex="-1" role="dialog"
+                <!-- <div class="modal fade" id="modalAgregar" tabindex="-1" role="dialog"
                     aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
                     <div class="modal-dialog " role="document">
                         <div class="modal-content">
@@ -271,7 +252,7 @@
 
                                 <div class="card">
                                     <div class="card-header text-center d-none d-lg-block">
-                                        <!-- <img src="/img/sap.png" alt="SAP" srcset="" class="card-mov"> -->
+                                   
                                         <h4 class="card-mov"><span class="text-secondary fas fa-plus"></span>
                                             Agregar
                                         </h4>
@@ -279,7 +260,7 @@
 
                                     <div class="card-body">
 
-                                        <form action="/agregar_idplan" method="POST" id="formAgregar">
+                                        <form  method="POST" id="formAgregar">
                                             <div class="container">
                                                 <div class="row">
 
@@ -300,7 +281,7 @@
 
                                                     <div class="row d-none d-lg-block">
                                                         <div class="col-lg-12">
-                                                            <h5>Cantidad: <label id="msg_add_cantidad "></label></h5>
+                                                            <h5>Contenedores: <label id="msg_add_contenedores "></label></h5>
                                                         </div>
                                                     </div>
                                                     <div class="input-group mb-3">
@@ -308,24 +289,10 @@
                                                             <span class="input-group-text fas fa-plus"
                                                                 id="basic-addon1"></span>
                                                         </div>
-                                                        <input type="number" class="form-control" name="add_cantidad"
-                                                            id="add_cantidad" placeholder="" min="1" required>
+                                                        <input type="number" class="form-control" name="add_contenedores"
+                                                            id="add_contenedores" placeholder="" min="1" required>
                                                     </div>
 
-                                                    <div class="row d-none d-lg-block">
-                                                        <div class="col-lg-12">
-                                                            <h5>Linea: <label id="msg_add_linea"></label></h5>
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="input-group mb-3">
-                                                        <div class="input-group-prepend">
-                                                            <span class="input-group-text fas fa-plus"
-                                                                id="basic-addon1"></span>
-                                                        </div>
-                                                        <input type="number" class="form-control" name="add_linea"
-                                                            id="add_linea" placeholder="" min="1" max="500" required>
-                                                    </div>
 
                                                     <div class="row d-none d-lg-block">
                                                         <div class="col-lg-12">
@@ -359,7 +326,7 @@
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary btnCerrar"
                                     data-dismiss="modal">Cerrar</button>
-                                <button formAction="/agregar_idplan" type="submit" id="btn_save_agregar"
+                                <button  type="submit" id="btn_save_agregar"
                                     class="btn btn-info">Guardar</button>
                             </div>
 
@@ -367,7 +334,7 @@
 
                         </div>
                     </div>
-                </div>
+                </div> -->
 
 
 

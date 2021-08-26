@@ -104,7 +104,7 @@ submitBin.addEventListener("submit", function (e) {
                 storage_units_count.innerHTML = result.length
                 sbin.innerHTML = storage_bin.value.toUpperCase()
                 storage_units.forEach(element => {
-                    console.log(typeof(element));
+
                     if (isNaN(element)) {
                         badge = `<span class="badge badge-warning  m-1 serialBadge">EMPTY</span>`
                         current_storage_units.innerHTML = current_storage_units.innerHTML + badge

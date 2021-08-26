@@ -3,8 +3,8 @@
         <%- include ("./static/navbar")%>
 
             <nav aria-label="breadcrumb">
-                <ol class="breadcrumb bg-dark">
-                    <li class="breadcrumb-item"><a href="/mainMenu" class="text-white"><span class="fas fa-arrow-circle-left text-white"></span> Menu</a></li>
+                <ol class="breadcrumb ">
+                    <li class="breadcrumb-item"><a href="/mainMenu" class="text-success"><span class="fas fa-arrow-circle-left "></span> Menu</a></li>
                     <li class="breadcrumb-item active" aria-current="page">Seleccionar Storage Type</li>
                 </ol>
             </nav>
@@ -48,41 +48,30 @@
 
 
                             <h4 class="text-center animate__animated animate__bounceIn d-none d-md-block mt-2 mb-4"
-                                display: inline-block>Seleccionar Storage Type:</h4>
+                                display: inline-block>Seleccionar Bodega:</h4>
 
 
                             <ul class="list-group mt-4">
-                                <li class="list-group-item bg-dark">
+                                <li class="list-group-item ">
 
-                                    <button id=btn_cl_1 class="btn btn-outline-light m-2">
+                                    <button id=btn_cl_1 class="btn btn-block btn-outline-success m-2">
                                         <div class="row">
-                                            <div class="col-6 m-auto border-right borderbtn-outline-light">
-                                               <h1><i class="fas fa-pallet"></i></h1>
-                                            </div>
-                                            <div class="col-6 m-auto">
-                                                <h4 class=" ">FG</h4>
-                                            </div>
-                                        </div>
-                                    </button>
-
-                                    <button id=btn_cl_2 class="btn btn-outline-light m-2">
-                                        <div class="row">
-                                            <div class="col-6 m-auto border-right borderbtn-outline-light">
+                                            <div class="col-6 m-auto border-right borderbtn-outline-success">
                                                <h1><i class="fas fa-industry"></i></h1>
                                             </div>
                                             <div class="col-6 m-auto">
-                                                <h4 class=" ">MP</h4>
+                                                <h4 class=" ">MP / Tristone</h4>
                                             </div>
                                         </div>
                                     </button>
 
-                                    <button id=btn_cl_3 class="btn btn-outline-light m-2">
+                                    <button id=btn_cl_2 class="btn btn-block btn-outline-success m-2">
                                         <div class="row">
-                                            <div class="col-6 m-auto border-right borderbtn-outline-light">
+                                            <div class="col-6 m-auto border-right borderbtn-outline-success">
                                                <h1><i class="fas fa-warehouse"></i></h1>
                                             </div>
                                             <div class="col-6 m-auto">
-                                                <h4 class=" ">MP1</h4>
+                                                <h4 class=" "> MP1 / Viñedos</h4>
                                             </div>
                                         </div>
                                     </button>
@@ -108,4 +97,4 @@
 
             <%- include ("./static/footer")%>
 
-            <script src="/js/functions/conteo_ciclico_st.js"></script>
+            <script src="/js/functions/transfer_mp_st.js"></script>
