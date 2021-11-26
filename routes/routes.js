@@ -21,6 +21,8 @@ router.post('/postSeriales',middleware.verifyToken, routesController.postSerials
 router.get('/movimiento_parcial', middleware.verifyToken, routesController.movimiento_parcial_GET);
 router.get('/transferMP',middleware.verifyToken, routesController.transferMP_GET);
 router.get('/transferMP/:storage_type',middleware.verifyToken, routesController.transferMP_ST_GET);
+router.get('/consultaEXT',middleware.verifyToken, routesController.consultaEXT_GET);
+router.get('/transferEXT',middleware.verifyToken, routesController.transferEXT_GET);
 router.post('/postSerialesMP',middleware.verifyToken, routesController.postSerialsMP_POST);
 router.post("/getInfo",middleware.verifyToken, routesController.getInfo_POST);
 router.post("/getUbicaciones",middleware.verifyToken, routesController.getUbicaciones_POST);

@@ -32,8 +32,15 @@ let storage_units = []
 let listed_storage_units = []
 let unlisted_storage_units = []
 let not_found_storage_units = []
+let nav3014 = document.getElementById("nav3014")
+let nav3015 = document.getElementById("nav3015")
 storage_bin.focus()
 
+if (storage_type.innerHTML === "EXT") {
+    nav3014.style.display = "none"
+}else{
+    nav3015.style.display = "none"
+}
 
 
 btnCerrar.forEach(element => {

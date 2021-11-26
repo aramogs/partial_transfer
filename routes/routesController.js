@@ -185,6 +185,24 @@ controller.transfer_MP_FIFO_GET = (req, res) => {
     })
 }
 
+controller.consultaEXT_GET = (req, res) => {
+    let user_id = req.res.locals.authData.id.id
+    let user_name = req.res.locals.authData.id.username
+    res.render('consulta_ext.ejs', {
+        user_id,
+        user_name
+    })
+}
+
+controller.transferEXT_GET = (req, res) => {
+    let user_id = req.res.locals.authData.id.id
+    let user_name = req.res.locals.authData.id.username
+    res.render('transfer_ext.ejs', {
+        user_id,
+        user_name
+    })
+}
+
 controller.conteo_ciclico_GET = (req, res) => {
     let user_id = req.res.locals.authData.id.id
     let user_name = req.res.locals.authData.id.username
