@@ -69,6 +69,8 @@ middleware.loginVerify = (req, res, next) => {
             jwt.verify(token_jwt, 'tristone', (err, authData) => {
                res.redirect("/mainMenu")
             })
+        }else{
+            res.render('login.ejs')
         }
 
     }
