@@ -28,6 +28,13 @@ middleware.verifyToken = (req, res, next) => {
 
                 } else {
 
+                    res.clearCookie("accessToken");
+                    res.cookie("accessToken",token_jwt,{
+                        maxAge: 900000 /*15 Minutos*/ ,
+                        httpOnly: false,
+                        secure: process.env.NODE_ENV === 'production' ? true : false
+                    })
+
                     res.locals.authData = authData
                     next()
                 }

@@ -60,7 +60,7 @@ function cleanInput() {
     btn_verifyCount.classList.remove("bg-success")
     btn_verifyCount.classList.add("bg-secondary")
     btn_verifyCount.classList.remove("animate__animated", "animate__tada")
-    btn_verifyCount.disabled = true
+    // btn_verifyCount.disabled = true
     storage_bin.focus()
 }
 
@@ -115,6 +115,7 @@ submitBin.addEventListener("submit", function (e) {
                     if (isNaN(element)) {
                         badge = `<span class="badge badge-warning  m-1 serialBadge">EMPTY</span>`
                         current_storage_units.innerHTML = current_storage_units.innerHTML + badge
+                        btn_verifyCount.disabled = true
                     } else {
                         badge = `<span class="badge badge-secondary  m-1 serialBadge">${parseInt(element)}</span>`
                         current_storage_units.innerHTML = current_storage_units.innerHTML + badge

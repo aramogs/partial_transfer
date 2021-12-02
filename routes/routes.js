@@ -46,6 +46,8 @@ router.get('/transfer_MP_FIFO/:storage_type',middleware.verifyToken, routesContr
 router.post('/getRawFIFO', middleware.verifyToken, routesController.getRawFIFO_POST);
 router.post('/postSerialesMP_RAW',middleware.verifyToken, routesController.postSerialsMP_RAW_POST);
 router.get('/getRawListado', middleware.verifyToken, routesController.getRawListado_GET);
+router.get('/consultaMP',middleware.verifyToken, routesController.consultaMP_GET);
+router.get('/consultaMP/:storage_type',middleware.verifyToken, routesController.consultaMP_ST_GET);
 // // router.get('*', (req, res) => {
 // //   res.redirect('http://tftdelsrv001:3000/not_found');
 // // });

@@ -69,7 +69,7 @@ controller.userAccess_POST = (req, res) => {
 function accessToken(user_id, user_name) {
     return new Promise((resolve, reject) => {
         const id = { id: `${user_id}`, username: `${user_name}` }
-        jwt.sign({ id }, `tristone`, { expiresIn: '1h' }, (err, token) => {
+        jwt.sign({ id }, `tristone`, { /*expiresIn: '1h'*/ }, (err, token) => {
             resolve(token)
             reject(err)
         })
@@ -79,7 +79,7 @@ function accessToken(user_id, user_name) {
 
 function cookieSet(req, res, result) {
 
-    let minutes = 60;
+    let minutes = 15;
     const time = minutes * 60 * 1000;
 
     res.cookie('accessToken', result,
@@ -332,10 +332,11 @@ controller.postSerialsMP_POST = (req, res) => {
 controller.getUbicaciones_POST = (req, res) => {
     let estacion = uuidv4()
     let serial = req.body.serial
-    let material = null
+    let material = req.body.material
     let cantidad = null
     let proceso = req.body.proceso
     let user_id = req.res.locals.authData.id.id
+    let storage_type = req.body.storage_type
 
 
     let send = `{
@@ -343,7 +344,8 @@ controller.getUbicaciones_POST = (req, res) => {
             "serial_num":"${serial}",
             "material": "${material}",
             "cantidad":"${cantidad}", 
-            "process":"${proceso}",  
+            "process":"${proceso}", 
+            "storage_type": "${storage_type}", 
             "user_id":"${user_id}"
         }`
 
@@ -450,10 +452,11 @@ controller.postCycleSU_POST = (req, res) => {
     let unlisted_storage_units = req.body.unlisted_storage_units
     let not_found_storage_units = req.body.not_found_storage_units
 
-
-    funcion.insertListed_storage_units(storage_type, storage_bin.toUpperCase(), listed_storage_units, user_id)
-    // .then((result) => { console.info(result) })
-    // .catch((err) => { console.info(err) })
+    if (listed_storage_units.length !== 0) {
+        funcion.insertListed_storage_units(storage_type, storage_bin.toUpperCase(), listed_storage_units, user_id)
+            .then((result) => { console.info(result) })
+            .catch((err) => { console.error(err) })
+    }
 
     let send = `{
             "station":"${estacion}",
@@ -869,6 +872,25 @@ function amqpRequest(send) {
     })
 }
 
+controller.consultaMP_GET = (req, res) => {
+    let user_id = req.res.locals.authData.id.id
+    let user_name = req.res.locals.authData.id.username
+    res.render('consulta_mp_st.ejs', {
+        user_id,
+        user_name
+    })
+}
+
+controller.consultaMP_ST_GET = (req, res) => {
+    let storage_type = req.params.storage_type
+    let user_id = req.res.locals.authData.id.id
+    let user_name = req.res.locals.authData.id.username
+    res.render('consulta_mp.ejs', {
+        user_id,
+        user_name,
+        storage_type
+    })
+}
 
 
 

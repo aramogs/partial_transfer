@@ -45,7 +45,7 @@ funcion.insertListed_storage_units = (storage_type, storage_bin, storage_units, 
         .then((result) => {
             resolve(result.affectedRows)
         })
-        .catch((error) => { console.error(error); reject(error) })
+        .catch((error) => { reject(error) })
 
     })
 
