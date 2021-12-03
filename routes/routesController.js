@@ -9,7 +9,8 @@ const jwt = require('jsonwebtoken');
 const Excel = require('exceljs');
 //Require Funciones
 const funcion = require('../public/js/functions/controllerFunctions');
-const { promiseImpl } = require('ejs');
+//Require Redis
+const redis = require('redis');
 
 
 
@@ -298,11 +299,46 @@ controller.postSerials_POST = (req, res) => {
         .catch((err) => { res.json(err) })
 }
 
+controller.postSerialsFG_POST = (req, res) => {
+    let estacion = req.body.estacion
+    let serial = req.body.serial
+    let material = null
+    let cantidad = null
+    let proceso = req.body.proceso
+    let storage_bin = req.body.storage_bin
+    let user_id = req.res.locals.authData.id.id
 
 
+    let send = `{
+            "station":"${estacion}",
+            "serial_num":"${serial}",
+            "material": "${material}",
+            "cantidad":"${cantidad}", 
+            "process":"${proceso}", 
+            "storage_bin": "${storage_bin}", 
+            "user_id":"${user_id}"
+        }`
+
+    amqpRequest(send)
+        .then((result) => { res.json(result) })
+        .catch((err) => { res.json(err) })
+}
+
+controller.verify_hashRedis_POST = (req, res) => {
+
+    let estacion_hash = req.body.estacion
+    async function getStatus() {
+        const redis_client = redis.createClient();
+        redis_client.on('error',err=>(console.log("error",err)))
+        redis_client.get(estacion_hash, function(err, reply) { res.json(reply) });
+        redis_client.quit()
+        
+    }
+    getStatus()
+}
 
 controller.postSerialsMP_POST = (req, res) => {
-    let estacion = uuidv4()
+    let estacion = req.body.estacion
     let serial = req.body.serial
     let material = null
     let cantidad = null

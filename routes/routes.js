@@ -18,6 +18,8 @@ router.get('/master_fg_gm',middleware.verifyToken, routesController.master_FG_GM
 router.post('/master_request_gm',middleware.verifyToken, routesController.master_request_GM_POST);
 router.post('/master_request_gm_create',middleware.verifyToken, routesController.master_request_GM_CREATE_POST);
 router.post('/postSeriales',middleware.verifyToken, routesController.postSerials_POST);
+router.post('/postSerialesRedis',middleware.verifyToken, routesController.postSerialsFG_POST);
+router.post('/verify_hashRedis', routesController.verify_hashRedis_POST);
 router.get('/movimiento_parcial', middleware.verifyToken, routesController.movimiento_parcial_GET);
 router.get('/transferMP',middleware.verifyToken, routesController.transferMP_GET);
 router.get('/transferMP/:storage_type',middleware.verifyToken, routesController.transferMP_ST_GET);

@@ -180,8 +180,39 @@ function verifyBin(e) {
     }
 }
 
+function uuidv4() {
+    return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
+        (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+    );
+}
+
+function verify_hashRedis() {
+    let data = { "estacion": `${estacion}` };
+    axios({
+        method: 'post',
+        url: "/verify_hashRedis",
+        data: JSON.stringify(data),
+        headers: {
+            'Content-Type': 'application/json'
+        }
+
+    })
+        .then(result => {
+            if (result.data !== null) {
+                result_array = (result.data).split("\n")
+                beginOF.innerHTML = result_array.length
+                endOF.innerHTML = serialsArray.length
+            }
+        })
+        .catch(err => {
+            console.error(err);
+        })
+}
+
 function transferEXT(e) {
     // e.preventDefault()
+    beginOF.innerHTML = 0
+    endOF.innerHTML = serialsArray.length
     $('#modalStorage').modal('hide')
     setTimeout(() => {
         soundOk()
@@ -189,12 +220,14 @@ function transferEXT(e) {
     soundOk()
     let storage_bin = submitArray.value
     $('#myModal').modal('hide')
-    $('#modalSpinner').modal({ backdrop: 'static', keyboard: false })
-
-    let data = { "proceso": "transfer_EXT_confirmed", "user_id": user_id.innerHTML, "serial": `${serialsArray}`, "storage_bin": `${storage_bin}` };
+    // $('#modalSpinner').modal({ backdrop: 'static', keyboard: false })
+    $('#modalCountDown').modal({ backdrop: 'static', keyboard: false })
+    estacion = uuidv4()
+    let data = {"estacion": `${estacion}`, "proceso": "transfer_EXT_confirmed", "user_id": user_id.innerHTML, "serial": `${serialsArray}`, "storage_bin": `${storage_bin}` };
+    let interval = setInterval(verify_hashRedis, 800);
     axios({
         method: 'post',
-        url: "/postSeriales",
+        url: "/postSerialesRedis",
         headers: {
             'Content-Type': 'application/json'
         },
@@ -222,8 +255,8 @@ function transferEXT(e) {
                 serialsArray = []
                 currentST.innerHTML = ""
                 btn_transferEXT.disabled = true
-
-                setTimeout(() => { soundWrong(), $('#modalSpinner').modal('hide') }, 500);
+                clearInterval(interval);
+                setTimeout(() => { soundWrong(), $('#modalCountDown').modal('hide') }, 500);
                 $('#modalError').modal({ backdrop: 'static', keyboard: false })
 
             } else {
@@ -261,10 +294,18 @@ function transferEXT(e) {
 
                     })
                     cantidadErrores.innerHTML = errors
-                    $('#modalSpinner').modal('hide')
-                    $('#modalError').modal({ backdrop: 'static', keyboard: false })
+                    // $('#modalSpinner').modal('hide')
+                    // $('#modalError').modal({ backdrop: 'static', keyboard: false })
+                    setTimeout(function () {
+                        clearInterval(interval);
+                        $('#modalCountDown').modal('hide')
+                        $('#modalError').modal({ backdrop: 'static', keyboard: false })
+                    }, 500);
                 } else {
-                    $('#modalSpinner').modal('hide')
+                    // $('#modalSpinner').modal('hide')
+                    // $('#modalSuccess').modal({ backdrop: 'static', keyboard: false })
+                    clearInterval(interval);
+                    $('#modalCountDown').modal('hide')
                     $('#modalSuccess').modal({ backdrop: 'static', keyboard: false })
                 }
             }
