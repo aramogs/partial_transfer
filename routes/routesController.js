@@ -328,7 +328,7 @@ controller.verify_hashRedis_POST = (req, res) => {
 
     let estacion_hash = req.body.estacion
     async function getStatus() {
-        const redis_client = redis.createClient();
+        const redis_client = redis.createClient({host: `${process.env.DB_REDIS_SERVER}`});
         redis_client.on('error',err=>(console.log("error",err)))
         redis_client.get(estacion_hash, function(err, reply) { res.json(reply) });
         redis_client.quit()
