@@ -15,7 +15,14 @@
 
 <nav aria-label="breadcrumb" id="nav3015">
   <ol class="breadcrumb">
-    <li class="breadcrumb-item"><a href="http://10.56.99.21:3015/mainMenu" class="text-warning"><span class="fas fa-arrow-circle-left text-warning"></span> Menu</a></li>
+    <li class="breadcrumb-item"><a href="http://10.56.99.201:3015/mainMenu" class="text-warning"><span class="fas fa-arrow-circle-left text-warning"></span> Menu</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Conteo Ciclico</li>
+  </ol>
+</nav>
+
+<nav aria-label="breadcrumb" id="nav3017">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="http://10.56.99.201:3017/mainMenu" class="text-info"><span class="fas fa-arrow-circle-left text-info"></span> Menu</a></li>
     <li class="breadcrumb-item active" aria-current="page">Conteo Ciclico</li>
   </ol>
 </nav>
@@ -43,6 +50,10 @@
               <tr>
                 <td><small><strong>Storage Type:</strong></small></td>
                 <td><small id="storage_type"><%= storage_type  %></small> </td>
+              </tr>
+              <tr >
+                <td><small><strong>Dispositivo:</strong></small></td>
+                <td><small id="estacion"><%= estacion  %></small> </td>
               </tr>
             </tbody>
           </table>
@@ -263,6 +274,37 @@
     </div>
   </div>
 </div>
+
+<!-- Modal CountDown -->
+<div class="modal fade" id="modalCountDown" tabindex="-1"  aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+
+          <h2 class="modal-title "> <span class="text-secondary  fas fa-stopwatch"></span>
+            Procesando</h2>
+          <div class="spinner-grow spinner-grow-sm text-warning mt-4 cdelay-1" role="status">
+            <span class="sr-only">Loading...</span>
+          </div>
+          <div class="spinner-grow spinner-grow-sm text-primary mt-4 cdelay-2" role="status">
+            <span class="sr-only">Loading...</span>
+          </div>
+          <div class="spinner-grow spinner-grow-sm text-secondary mt-4 cdelay-3" role="status">
+            <span class="sr-only">Loading...</span>
+          </div>
+        </div>
+          <div class="modal-body">
+            <div class="row ">
+                <div class="col-lg-12 text-center">
+                  <h2 class=""> <span id="beginOF"></span> - <span id="endOF"></span></h2>
+                </div>
+            </div>
+         </div>
+     
+    </div>
+  </div>
+</div>
+
 
 <%- include ("./static/footer") %>
 <script type="text/javascript" src="/js/functions/conteoC.js"></script>

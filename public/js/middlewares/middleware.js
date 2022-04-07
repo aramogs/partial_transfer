@@ -2,6 +2,8 @@ const jwt = require('jsonwebtoken');
 const nodeSSPI = require('node-sspi');
 const middleware = {};
 
+const macfromip = require('macfromip');
+
 middleware.verifyToken = (req, res, next) => {
     if (!req.headers.cookie) {
         res.redirect("/login")
@@ -84,6 +86,22 @@ middleware.sspi = (req, res, next) => {
     nodeSSPIObj.authenticate(req, res, function (err) {
         res.finished || next()
     });
+}
+
+middleware.macFromIP = (req, res, next) => {
+    const regex = /::ffff:/gm;   
+    let ip = (req.ip).replace(regex, "")
+    let localIp = (req.hostname).replace(regex, "")
+
+    if (ip === "::1" || ip === localIp) {
+        res.locals.macIP = {"mac":"x2:xx:xx:xx:xx:xx", "ip": "10.56.99.201"}; next()
+    }else{
+        macfromip.getMac(ip,(err, mac)=>{
+
+            if(err == "The IP address cannot be self"){/* DO NOTHING*/}
+            res.locals.macIP = {"mac":mac, "ip": ip}; next()
+        });   
+    }
 }
 
 module.exports = middleware;

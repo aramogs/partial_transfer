@@ -27,12 +27,12 @@ router.get('/consultaEXT',middleware.verifyToken, routesController.consultaEXT_G
 router.get('/transferEXT',middleware.verifyToken, routesController.transferEXT_GET);
 router.post('/postSerialesMP',middleware.verifyToken, routesController.postSerialsMP_POST);
 router.post("/getInfo",middleware.verifyToken, routesController.getInfo_POST);
-router.post("/getUbicaciones",middleware.verifyToken, routesController.getUbicaciones_POST);
+router.post("/getUbicaciones",middleware.verifyToken, middleware.macFromIP, routesController.getUbicaciones_POST);
 router.post("/transferenciaMaterial", middleware.verifyToken, routesController.transferenciaMaterial_POST);
 router.get('/conteo_ciclico',middleware.verifyToken, routesController.conteo_ciclico_GET);
-router.get('/conteo_ciclico/:storage_type',middleware.verifyToken, routesController.conteoC_GET);
-router.post("/getBinStatusReport",middleware.verifyToken, routesController.getBinStatusReport_POST);
-router.post("/postCycleSU",middleware.verifyToken, routesController.postCycleSU_POST);
+router.get('/conteo_ciclico/:storage_type',middleware.verifyToken, middleware.macFromIP, routesController.conteoC_GET);
+router.post("/getBinStatusReport",middleware.verifyToken, middleware.macFromIP, routesController.getBinStatusReport_POST);
+router.post("/postCycleSU",middleware.verifyToken, middleware.macFromIP, routesController.postCycleSU_POST);
 router.get('/cargaListado', middleware.sspi, routesController.cargaListado_GET);
 router.post('/getListado',routesController.getListado_POST);
 router.get('/getTurnos',routesController.getTurnos_GET);
@@ -50,6 +50,16 @@ router.post('/postSerialesMP_RAW',middleware.verifyToken, routesController.postS
 router.get('/getRawListado', middleware.verifyToken, routesController.getRawListado_GET);
 router.get('/consultaMP',middleware.verifyToken, routesController.consultaMP_GET);
 router.get('/consultaMP/:storage_type',middleware.verifyToken, routesController.consultaMP_ST_GET);
+
+// ##############Extrusion##################
+router.post("/getUbicacionesEXT",middleware.verifyToken, middleware.macFromIP, routesController.getUbicacionesEXT_POST);
+router.post('/postSerialesRedisEXT',middleware.verifyToken, routesController.postSerialsEXT_POST);
+
+// ##############Vulcanized##################
+router.get('/consultaVUL',middleware.verifyToken, routesController.consultaVUL_GET);
+router.get('/transferVUL',middleware.verifyToken, middleware.macFromIP, routesController.transferVUL_GET);
+router.post('/transferVUL_Confirmed',middleware.verifyToken, middleware.macFromIP, routesController.transferVUL_Confirmed);
+router.post("/getUbicacionesVUL",middleware.verifyToken, middleware.macFromIP, routesController.getUbicacionesVUL_POST);
 // // router.get('*', (req, res) => {
 // //   res.redirect('http://tftdelsrv001:3000/not_found');
 // // });

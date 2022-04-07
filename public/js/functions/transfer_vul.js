@@ -4,7 +4,7 @@ let btnCerrar = document.querySelectorAll(".btnCerrar")
 let submitSerial = document.getElementById("submitSerial")
 let currentST = document.getElementById("currentST")
 let submitArray = document.getElementById("submitArray")
-let btn_transferEXT = document.getElementById("btn_transferEXT")
+let btn_transferVUL = document.getElementById("btn_transferVUL")
 let contadorSeriales = document.getElementById("contadorSeriales")
 let contadorWarning = document.getElementById("contadorWarning")
 let tabla_consulta = document.getElementById('tabla_consulta').getElementsByTagName('tbody')[0];
@@ -23,6 +23,7 @@ let verifySBin = document.getElementById("verifySBin")
 let btnCerrar_Bin = document.getElementById("btnCerrar_Bin")
 let submitArray_Bin = document.getElementById("submitArray_Bin")
 let spanBin = document.getElementById("spanBin")
+let estacion = document.getElementById("estacion").innerHTML
 
 
 serial_num.focus()
@@ -32,13 +33,13 @@ btnCerrar.forEach(element => {
 
 submitSerial.addEventListener("submit", listAdd)
 
-btn_transferEXT.addEventListener("click", () => { $('#myModal').modal({ backdrop: 'static', keyboard: false }) })
+btn_transferVUL.addEventListener("click", () => { $('#myModal').modal({ backdrop: 'static', keyboard: false }) })
 
 submitArray_form.addEventListener("submit", verifyBinModal)
 
 submitArray_Bin.addEventListener("submit", verifyBin)
 
-btnCerrar_Success.addEventListener("click", () => { location.href = "/consultaEXT" })
+btnCerrar_Success.addEventListener("click", () => { location.href = "/consultaVUL" })
 
 btnCerrar_Error.addEventListener("click", cleanInput())
 
@@ -98,9 +99,9 @@ function listAdd(e) {
         currentST.appendChild(append)
         serial_num.value = ""
 
-        btn_transferEXT.disabled = false
-        btn_transferEXT.classList.remove("btn-secondary")
-        btn_transferEXT.classList.add("btn-warning")
+        btn_transferVUL.disabled = false
+        btn_transferVUL.classList.remove("btn-secondary")
+        btn_transferVUL.classList.add("btn-warning")
 
 
     } else {
@@ -171,7 +172,7 @@ function verifyBin(e) {
     e.preventDefault()
 
     if (submitArray.value == verifySBin.value) {
-        transferEXT()
+        transferVUL()
     } else {
         setTimeout(() => {
             verifySBin.value = ""
@@ -180,13 +181,7 @@ function verifyBin(e) {
     }
 }
 
-function uuidv4() {
-    return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
-        (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
-    );
-}
-
-function verify_hashRedis() {
+function verify_hashRedis(serialsArray_) {
     let data = { "estacion": `${estacion}` };
     axios({
         method: 'post',
@@ -199,8 +194,12 @@ function verify_hashRedis() {
     })
         .then(result => {
             if (result.data !== null) {
+                let temp_array = []
                 result_array = (result.data).split("\n")
-                beginOF.innerHTML = result_array.length
+                result_array.forEach(element => {
+                   if(serialsArray_.includes(element)){temp_array.push(element)}
+                });
+                beginOF.innerHTML = temp_array.length
                 endOF.innerHTML = serialsArray.length
             }
         })
@@ -209,7 +208,8 @@ function verify_hashRedis() {
         })
 }
 
-function transferEXT(e) {
+
+function transferVUL(e) {
     // e.preventDefault()
     beginOF.innerHTML = 0
     endOF.innerHTML = serialsArray.length
@@ -222,12 +222,12 @@ function transferEXT(e) {
     $('#myModal').modal('hide')
     // $('#modalSpinner').modal({ backdrop: 'static', keyboard: false })
     $('#modalCountDown').modal({ backdrop: 'static', keyboard: false })
-    estacion = uuidv4()
-    let data = {"estacion": `${estacion}`, "proceso": "transfer_EXT_confirmed", "user_id": user_id.innerHTML, "serial": `${serialsArray}`, "storage_bin": `${storage_bin}` };
-    let interval = setInterval(verify_hashRedis, 800);
+
+    let data = {"estacion": ``, "proceso": "transfer_vul_confirmed", "user_id": user_id.innerHTML, "serial": `${serialsArray}`, "storage_bin": `${storage_bin}` };
+    let interval = setInterval(()=>verify_hashRedis(serialsArray), 800);
     axios({
         method: 'post',
-        url: "/postSerialesRedisEXT",
+        url: "/transferVUL_Confirmed",
         headers: {
             'Content-Type': 'application/json'
         },
@@ -254,7 +254,7 @@ function transferEXT(e) {
                 tabla_consulta_container.hidden = true
                 serialsArray = []
                 currentST.innerHTML = ""
-                btn_transferEXT.disabled = true
+                btn_transferVUL.disabled = true
                 clearInterval(interval);
                 setTimeout(() => { soundWrong(), $('#modalCountDown').modal('hide') }, 500);
                 $('#modalError').modal({ backdrop: 'static', keyboard: false })

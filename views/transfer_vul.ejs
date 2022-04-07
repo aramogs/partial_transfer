@@ -5,8 +5,8 @@
 
 <nav aria-label="breadcrumb">
   <ol class="breadcrumb">
-    <li class="breadcrumb-item"><a href="http://10.56.99.201:3015/mainMenu" class="text-info"><span class="fas fa-arrow-circle-left text-info"></span> Menu</a></li>
-    <li class="breadcrumb-item active" aria-current="page">Transferencia EXT</li>
+    <li class="breadcrumb-item"><a href="http://10.56.99.201:3017/mainMenu" class="text-info"><span class="fas fa-arrow-circle-left text-info"></span> Menu</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Transferencia VUL</li>
   </ol>
 </nav>
 
@@ -30,6 +30,10 @@
                 <td><small><strong>Nombre:</strong></small></td>
                 <td><small id="user_name"><%= user_name  %></small> </td>
               </tr>
+              <tr >
+                <td><small><strong>Dispositivo:</strong></small></td>
+                <td><small id="estacion"><%= estacion  %></small> </td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -44,7 +48,7 @@
       <form id="submitSerial">
 
         <h4 class="text-center animate__animated animate__bounceIn d-none d-lg-block" display: inline-block>
-          Transferencia EXT:</h4>
+          Transferencia VUL:</h4>
         <span class="fas fa-boxes text-info mt-2" style="font-size: 2rem;"></span>
 
         <div class="form-group">
@@ -79,7 +83,7 @@
               <small id="user_id"><%= user_id %></small>
             </div>
             <div class="col-2">
-              <button id="btn_transferEXT" type="button" class="btn btn-secondary btn-sm" disabled><small><span
+              <button id="btn_transferVUL" type="button" class="btn btn-secondary btn-sm" disabled><small><span
                     class="fa fa-external-link-alt"></span></small></button>
             </div>
           </div>
@@ -334,7 +338,7 @@
 </div>
 
 <%- include ("./static/footer") %>
-<script type="text/javascript" src="/js/functions/transfer_EXT.js"></script>
+<script type="text/javascript" src="/js/functions/transfer_VUL.js"></script>
 
 </body>
 

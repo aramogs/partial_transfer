@@ -214,13 +214,15 @@ controller.conteo_ciclico_GET = (req, res) => {
 }
 
 controller.conteoC_GET = (req, res) => {
+    let estacion = req.res.locals.macIP.mac
     let storage_type = req.params.storage_type
     let user_id = req.res.locals.authData.id.id
     let user_name = req.res.locals.authData.id.username
     res.render('conteoC.ejs', {
         user_id,
         user_name,
-        storage_type
+        storage_type,
+        estacion
     })
 }
 
@@ -242,7 +244,7 @@ controller.master_request_GM_POST = (req, res) => {
             "user_id":"${user_id}"
         }`
 
-    amqpRequest(send)
+    amqpRequest(send, "rpc_queue")
         .then((result) => { res.json(result) })
         .catch((err) => { res.json(err) })
 }
@@ -269,7 +271,7 @@ controller.master_request_GM_CREATE_POST = (req, res) => {
             "single_container":"${single_container}"
         }`
 
-    amqpRequest(send)
+    amqpRequest(send, "rpc_queue")
         .then((result) => { res.json(result) })
         .catch((err) => { res.json(err) })
 }
@@ -294,7 +296,7 @@ controller.postSerials_POST = (req, res) => {
             "user_id":"${user_id}"
         }`
 
-    amqpRequest(send)
+    amqpRequest(send, "rpc_queue")
         .then((result) => { res.json(result) })
         .catch((err) => { res.json(err) })
 }
@@ -319,18 +321,18 @@ controller.postSerialsFG_POST = (req, res) => {
             "user_id":"${user_id}"
         }`
 
-    amqpRequest(send)
+    amqpRequest(send, "rpc_queue")
         .then((result) => { res.json(result) })
         .catch((err) => { res.json(err) })
 }
 
 controller.verify_hashRedis_POST = (req, res) => {
 
-    let estacion_hash = req.body.estacion
+    let estacion_hash = (req.body.estacion).replace(/:/g, "-")
     async function getStatus() {
         const redis_client = redis.createClient({host: `${process.env.DB_REDIS_SERVER}`});
         redis_client.on('error',err=>(console.log("error",err)))
-        redis_client.get(estacion_hash, function(err, reply) { res.json(reply) });
+        redis_client.get(estacion_hash, function(err, reply) { res.json(reply)});
         redis_client.quit()
         
     }
@@ -360,13 +362,13 @@ controller.postSerialsMP_POST = (req, res) => {
 
         }`
 
-    amqpRequest(send)
+    amqpRequest(send, "rpc_queue")
         .then((result) => { res.json(result) })
         .catch((err) => { res.json(err) })
 }
 
 controller.getUbicaciones_POST = (req, res) => {
-    let estacion = uuidv4()
+    let estacion = req.res.locals.macIP.mac
     let serial = req.body.serial
     let material = req.body.material
     let cantidad = null
@@ -385,7 +387,7 @@ controller.getUbicaciones_POST = (req, res) => {
             "user_id":"${user_id}"
         }`
 
-    amqpRequest(send)
+    amqpRequest(send, "rpc_queue")
         .then((result) => { res.json(result) })
         .catch((err) => { res.json(err) })
 }
@@ -409,7 +411,7 @@ controller.getInfo_POST = (req, res) => {
         }`
 
 
-    amqpRequest(send)
+    amqpRequest(send, "rpc_queue")
         .then((result) => { res.json(result) })
         .catch((err) => { res.json(err) })
 }
@@ -438,16 +440,15 @@ controller.transferenciaMaterial_POST = (req, res) => {
             "material_description": "${material_description}",
             "cantidad_restante":"${cantidad_restante}", 
             "user_id":"${user_id}"
- 
         }`
 
-    amqpRequest(send)
+    amqpRequest(send, "rpc_queue")
         .then((result) => { res.json(result) })
         .catch((err) => { res.json(err) })
 }
 
 controller.getBinStatusReport_POST = (req, res) => {
-    let estacion = uuidv4()
+    let estacion = req.res.locals.macIP.mac
     let serial = null
     let proceso = req.body.proceso
     let material = null
@@ -468,13 +469,13 @@ controller.getBinStatusReport_POST = (req, res) => {
     }`
 
 
-    amqpRequest(send)
+    amqpRequest(send, "rpc_cycle")
         .then((result) => { res.json(result) })
         .catch((err) => { res.json(err) })
 }
 
 controller.postCycleSU_POST = (req, res) => {
-    let estacion = uuidv4()
+    let estacion = req.res.locals.macIP.mac
     let serial = null
     let material = null
     let cantidad = null
@@ -509,7 +510,7 @@ controller.postCycleSU_POST = (req, res) => {
 
 
 
-    amqpRequest(send)
+    amqpRequest(send, "rpc_cycle")
         .then((result) => { res.json(result) })
         .catch((err) => { res.json(err) })
 }
@@ -654,7 +655,7 @@ controller.verificarSAP_POST = (req, res) => {
                 "numeros_sap": ${valores}
             }`
 
-            amqpRequest(send)
+            amqpRequest(send, "rpc_queue")
                 .then((result) => { res.json(result) })
                 .catch((err) => { res.json(err) })
         })
@@ -785,7 +786,7 @@ controller.getRawFIFO_POST = (req, res) => {
                 "user_id":"${user_id}"
             }`
 
-                amqpRequest(send)
+                amqpRequest(send, "rpc_queue")
                     .then(result => { res.json([result, count_res]) })
                     .catch(err => { res.json(err) })
             })
@@ -801,7 +802,7 @@ controller.getRawFIFO_POST = (req, res) => {
             "user_id":"${user_id}"
         }`
 
-        amqpRequest(send)
+        amqpRequest(send, "rpc_queue")
             .then(result => { res.json(result) })
             .catch(err => { res.json(err) })
     }
@@ -841,7 +842,7 @@ controller.postSerialsMP_RAW_POST = (req, res) => {
 
         }`
 
-    amqpRequest(send)
+    amqpRequest(send, "rpc_queue")
         .then((result) => { res.json(result) })
         .catch((err) => { res.json(err) })
 }
@@ -855,7 +856,7 @@ controller.getRawListado_GET = (req, res) => {
 
 }
 
-function amqpRequest(send) {
+function amqpRequest(send, queue) {
     return new Promise((resolve, reject) => {
         var args = process.argv.slice(2);
         if (args.length == 0) {
@@ -897,8 +898,7 @@ function amqpRequest(send) {
                         noAck: true
                     });
 
-                    channel.sendToQueue('rpc_queue',
-                        Buffer.from(send.toString()), {
+                    channel.sendToQueue(queue, Buffer.from(send.toString()), {
                         correlationId: correlationId,
                         replyTo: q.queue
                     });
@@ -928,6 +928,125 @@ controller.consultaMP_ST_GET = (req, res) => {
     })
 }
 
+controller.consultaVUL_GET = (req, res) => {
+    let user_id = req.res.locals.authData.id.id
+    let user_name = req.res.locals.authData.id.username
+    res.render('consulta_vul.ejs', {
+        user_id,
+        user_name
+    })
+}
 
+controller.transferVUL_GET = (req, res) => {
+    let estacion = req.res.locals.macIP.mac
+    let user_id = req.res.locals.authData.id.id
+    let user_name = req.res.locals.authData.id.username
+    res.render('transfer_vul.ejs', {
+        user_id,
+        user_name,
+        estacion
+    })
+}
+
+controller.transferVUL_Confirmed = (req, res) => {
+    let estacion = req.res.locals.macIP.mac
+    let serial = req.body.serial
+    let material = null
+    let cantidad = null
+    let proceso = req.body.proceso
+    let storage_bin = req.body.storage_bin
+    let user_id = req.res.locals.authData.id.id
+
+
+    let send = `{
+            "station":"${estacion}",
+            "serial_num":"${serial}",
+            "material": "${material}",
+            "cantidad":"${cantidad}", 
+            "process":"${proceso}", 
+            "storage_bin": "${storage_bin}", 
+            "user_id":"${user_id}"
+        }`
+
+    amqpRequest(send, "rpc_vul")
+        .then((result) => { res.json(result) })
+        .catch((err) => { res.json(err) })
+}
+
+
+controller.getUbicacionesVUL_POST = (req, res) => {
+    let estacion = req.res.locals.macIP.mac
+    let serial = req.body.serial
+    let material = req.body.material
+    let cantidad = null
+    let proceso = req.body.proceso
+    let user_id = req.res.locals.authData.id.id
+    let storage_type = req.body.storage_type
+
+
+    let send = `{
+            "station":"${estacion}",
+            "serial_num":"${serial}",
+            "material": "${material}",
+            "cantidad":"${cantidad}", 
+            "process":"${proceso}", 
+            "storage_type": "${storage_type}", 
+            "user_id":"${user_id}"
+        }`
+
+    amqpRequest(send, "rpc_vul")
+        .then((result) => { res.json(result) })
+        .catch((err) => { res.json(err) })
+}
+
+controller.getUbicacionesEXT_POST = (req, res) => {
+    let estacion = req.res.locals.macIP.mac
+    let serial = req.body.serial
+    let material = req.body.material
+    let cantidad = null
+    let proceso = req.body.proceso
+    let user_id = req.res.locals.authData.id.id
+    let storage_type = req.body.storage_type
+
+
+    let send = `{
+            "station":"${estacion}",
+            "serial_num":"${serial}",
+            "material": "${material}",
+            "cantidad":"${cantidad}", 
+            "process":"${proceso}", 
+            "storage_type": "${storage_type}", 
+            "user_id":"${user_id}"
+        }`
+
+    amqpRequest(send, "rpc_ext")
+        .then((result) => { res.json(result) })
+        .catch((err) => { res.json(err) })
+}
 
 module.exports = controller;
+
+controller.postSerialsEXT_POST = (req, res) => {
+    let estacion = req.body.estacion
+    let serial = req.body.serial
+    let material = null
+    let cantidad = null
+    let proceso = req.body.proceso
+    let storage_bin = req.body.storage_bin
+    let user_id = req.res.locals.authData.id.id
+
+
+    let send = `{
+            "station":"${estacion}",
+            "serial_num":"${serial}",
+            "material": "${material}",
+            "cantidad":"${cantidad}", 
+            "process":"${proceso}", 
+            "storage_bin": "${storage_bin}", 
+            "user_id":"${user_id}"
+        }`
+
+    amqpRequest(send, "rpc_ext")
+        .then((result) => { res.json(result) })
+        .catch((err) => { res.json(err) })
+}

@@ -34,12 +34,23 @@ let unlisted_storage_units = []
 let not_found_storage_units = []
 let nav3014 = document.getElementById("nav3014")
 let nav3015 = document.getElementById("nav3015")
+let nav3017 = document.getElementById("nav3017")
+let estacion = document.getElementById("estacion").innerHTML
+
 storage_bin.focus()
 
 if (storage_type.innerHTML === "EXT") {
     nav3014.style.display = "none"
-}else{
+    nav3015.style.display = "block"
+    nav3017.style.display = "none"
+} else if (storage_type.innerHTML === "VUL") {
+    nav3014.style.display = "none"
     nav3015.style.display = "none"
+    nav3017.style.display = "block"
+} else {
+    nav3014.style.display = "block"
+    nav3015.style.display = "none"
+    nav3017.style.display = "none"
 }
 
 
@@ -192,29 +203,49 @@ submitSU.addEventListener("submit", function (e) {
 
 })
 
+function verify_hashRedis(serialsArray_) {
+    let data = { "estacion": `ciclicovul-${estacion}` };
+    axios({
+        method: 'post',
+        url: "/verify_hashRedis",
+        data: JSON.stringify(data),
+        headers: {
+            'Content-Type': 'application/json'
+        }
+
+    })
+        .then(result => {
+            if (result.data !== null) {
+                let temp_array = []
+                result_array = (result.data).split("\n")
+                result_array.forEach(element => {
+                   if(serialsArray_.includes(parseInt(element))){temp_array.push(element);}
+                });
+                beginOF.innerHTML = temp_array.length
+                endOF.innerHTML = storage_units.length
+            }
+        })
+        .catch(err => {
+            console.error(err);
+        })
+}
+
 btn_verifyCount.addEventListener("click", () => {
     $('#myModal').modal('hide')
     setTimeout(() => {
         soundOk()
     }, 150);
     soundOk()
-    $('#modalSpinner').modal({ backdrop: 'static', keyboard: false })
+    // $('#modalSpinner').modal({ backdrop: 'static', keyboard: false })
+    $('#modalCountDown').modal({ backdrop: 'static', keyboard: false })
     storage_units.forEach(storageU => {
         if (!listed_storage_units.includes(parseInt(storageU)) && !unlisted_storage_units.includes(parseInt(storageU))) {
             not_found_storage_units.push(parseInt(storageU))
         }
     })
 
-
-    let data = {
-        "proceso": "cycle_count_transfer",
-        "storage_type": `${storage_type.innerHTML}`,
-        "storage_bin": `${storage_bin.value.toUpperCase()}`,
-        "user_id": user_id.innerHTML,
-        "listed_storage_units": listed_storage_units,
-        "unlisted_storage_units": unlisted_storage_units,
-        "not_found_storage_units": not_found_storage_units
-    }
+    let data = {"proceso": "cycle_count_transfer", "storage_type": `${storage_type.innerHTML}`, "storage_bin": `${storage_bin.value.toUpperCase()}`, "user_id": user_id.innerHTML, "listed_storage_units": listed_storage_units, "unlisted_storage_units": unlisted_storage_units, "not_found_storage_units": not_found_storage_units}
+    let interval = setInterval(()=>verify_hashRedis(storage_units), 800);
     axios({
         method: 'post',
         url: "/postCycleSU",
@@ -240,10 +271,10 @@ btn_verifyCount.addEventListener("click", () => {
                 errorTextField.innerHTML = response.error
                 errorText.hidden = false
                 tabla_consulta_container.hidden = true
-                serialsArray = []
+                storage_units = []
                 currentST.innerHTML = ""
                 btn_transferFG.disabled = true
-
+                clearInterval(interval);
                 setTimeout(() => { soundWrong(), $('#modalSpinner').modal('hide') }, 500);
                 $('#modalError').modal({ backdrop: 'static', keyboard: false })
 
@@ -264,6 +295,31 @@ btn_verifyCount.addEventListener("click", () => {
                     }
                 });
 
+                // if (errors != 0) {
+                //     tabla_consulta.innerHTML = ""
+                //     objectStringArray.forEach(element => {
+                //         let newRow = tabla_consulta.insertRow(tabla_consulta.rows.length);
+                //         if (typeof (element.result) != "number") {
+                //             let row = `
+                //                 <tr class="bg-danger">
+                //                     <td>${element.serial_num}</td>
+                //                     <td>${element.result}</td>
+                //                 </tr>
+                //                 `
+                //             newRow.classList.add("bg-danger", "text-white")
+                //             return newRow.innerHTML = row;
+                //         }
+
+                //     })
+                //     cantidadErrores.innerHTML = errors
+                //     $('#modalSpinner').modal('hide')
+                //     $('#modalError').modal({ backdrop: 'static', keyboard: false })
+                // } else {
+                //     setTimeout(() => { $('#modalSpinner').modal('hide') }, 500);
+                //     setTimeout(() => { $('#modalSuccess').modal({ backdrop: 'static', keyboard: false }) }, 800);
+
+
+                // }
                 if (errors != 0) {
                     tabla_consulta.innerHTML = ""
                     objectStringArray.forEach(element => {
@@ -279,15 +335,22 @@ btn_verifyCount.addEventListener("click", () => {
                             return newRow.innerHTML = row;
                         }
 
+
                     })
                     cantidadErrores.innerHTML = errors
-                    $('#modalSpinner').modal('hide')
-                    $('#modalError').modal({ backdrop: 'static', keyboard: false })
+                    // $('#modalSpinner').modal('hide')
+                    // $('#modalError').modal({ backdrop: 'static', keyboard: false })
+                    setTimeout(function () {
+                        clearInterval(interval);
+                        $('#modalCountDown').modal('hide')
+                        $('#modalError').modal({ backdrop: 'static', keyboard: false })
+                    }, 500);
                 } else {
-                    setTimeout(() => { $('#modalSpinner').modal('hide') }, 500);
-                    setTimeout(() => { $('#modalSuccess').modal({ backdrop: 'static', keyboard: false }) }, 800);
-
-
+                    // $('#modalSpinner').modal('hide')
+                    // $('#modalSuccess').modal({ backdrop: 'static', keyboard: false })
+                    clearInterval(interval);
+                    $('#modalCountDown').modal('hide')
+                    $('#modalSuccess').modal({ backdrop: 'static', keyboard: false })
                 }
             }
         })

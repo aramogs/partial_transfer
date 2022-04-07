@@ -72,10 +72,10 @@ submitSerial.addEventListener("submit", function (e) {
             serial_ = serial.substring(1)
         }
 
-        let data = { "proceso": "transfer_ext", "serial": `${serial_}`, "user_id": user_id.innerHTML, "storage_type": `` };
+        let data = { "proceso": "transfer_vul", "serial": `${serial_}`, "user_id": user_id.innerHTML, "storage_type": `` };
         axios({
             method: 'post',
-            url: "/getUbicacionesEXT",
+            url: "/getUbicacionesVUL",
             headers: {
                 'Content-Type': 'application/json'
             },
