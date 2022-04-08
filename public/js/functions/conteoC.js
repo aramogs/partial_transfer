@@ -79,69 +79,75 @@ function cleanInput() {
 submitBin.addEventListener("submit", function (e) {
     e.preventDefault()
 
+    if (storage_bin.value.trim() == "") {
+        cleanInput()
+        soundWrong()
+    } else {
 
-    $('#modalSpinner').modal({ backdrop: 'static', keyboard: false })
-    storage_bin.disabled = true
 
 
-    let data = { "proceso": "cycle_count_status", "storage_type": `${storage_type.innerHTML}`, "storage_bin": `${storage_bin.value.toUpperCase()}`, "user_id": user_id.innerHTML };
-    axios({
-        method: 'post',
-        url: "/getBinStatusReport",
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        data: JSON.stringify(data)
-    })
-        .then((result) => {
+        $('#modalSpinner').modal({ backdrop: 'static', keyboard: false })
+        storage_bin.disabled = true
 
-            if ((result.data).includes("<!DOCTYPE html>")) {
 
-                setTimeout(() => {
-                    location.href = "/login"
-                }, 1000);
-                soundWrong()
-            }
-            let response = JSON.parse(result.data)
-
-            if (response.error !== "N/A") {
-                soundWrong()
-                errorText2.innerHTML = response.error
-                setTimeout(() => { $('#modalSpinner').modal('hide') }, 500);
-                $('#modalError2').modal({ backdrop: 'static', keyboard: false })
-            } else {
-
-                soundOk()
-                let result = response.storage_units
-
-                for (let i = 0; i < result.length; i++) {
-                    if (storage_units.indexOf(result[i].storage_unit) === -1) {
-                        storage_units.push(parseInt(result[i].storage_unit))
-                    }
-                }
-                storage_units_count.innerHTML = result.length
-                sbin.innerHTML = storage_bin.value.toUpperCase()
-                storage_units.forEach(element => {
-
-                    if (isNaN(element)) {
-                        badge = `<span class="badge badge-warning  m-1 serialBadge">EMPTY</span>`
-                        current_storage_units.innerHTML = current_storage_units.innerHTML + badge
-                        btn_verifyCount.disabled = true
-                    } else {
-                        badge = `<span class="badge badge-secondary  m-1 serialBadge">${parseInt(element)}</span>`
-                        current_storage_units.innerHTML = current_storage_units.innerHTML + badge
-                    }
-                });
-
-                $('#modalSpinner').modal('hide')
-                $('#myModal').modal({ backdrop: 'static', keyboard: false })
-                setTimeout(() => { inp_verifyCount.focus() }, 500);
-
-            }
-
+        let data = { "proceso": "cycle_count_status", "storage_type": `${storage_type.innerHTML}`, "storage_bin": `${storage_bin.value.toUpperCase()}`, "user_id": user_id.innerHTML };
+        axios({
+            method: 'post',
+            url: "/getBinStatusReport",
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            data: JSON.stringify(data)
         })
-        .catch((err) => { console.error(err) })
+            .then((result) => {
 
+                if ((result.data).includes("<!DOCTYPE html>")) {
+
+                    setTimeout(() => {
+                        location.href = "/login"
+                    }, 1000);
+                    soundWrong()
+                }
+                let response = JSON.parse(result.data)
+
+                if (response.error !== "N/A") {
+                    soundWrong()
+                    errorText2.innerHTML = response.error
+                    setTimeout(() => { $('#modalSpinner').modal('hide') }, 500);
+                    $('#modalError2').modal({ backdrop: 'static', keyboard: false })
+                } else {
+
+                    soundOk()
+                    let result = response.storage_units
+
+                    for (let i = 0; i < result.length; i++) {
+                        if (storage_units.indexOf(result[i].storage_unit) === -1) {
+                            storage_units.push(parseInt(result[i].storage_unit))
+                        }
+                    }
+                    storage_units_count.innerHTML = result.length
+                    sbin.innerHTML = storage_bin.value.toUpperCase()
+                    storage_units.forEach(element => {
+
+                        if (isNaN(element)) {
+                            badge = `<span class="badge badge-warning  m-1 serialBadge">EMPTY</span>`
+                            current_storage_units.innerHTML = current_storage_units.innerHTML + badge
+                            btn_verifyCount.disabled = true
+                        } else {
+                            badge = `<span class="badge badge-secondary  m-1 serialBadge">${parseInt(element)}</span>`
+                            current_storage_units.innerHTML = current_storage_units.innerHTML + badge
+                        }
+                    });
+
+                    $('#modalSpinner').modal('hide')
+                    $('#myModal').modal({ backdrop: 'static', keyboard: false })
+                    setTimeout(() => { inp_verifyCount.focus() }, 500);
+
+                }
+
+            })
+            .catch((err) => { console.error(err) })
+    }
 })
 
 
@@ -219,7 +225,7 @@ function verify_hashRedis(serialsArray_) {
                 let temp_array = []
                 result_array = (result.data).split("\n")
                 result_array.forEach(element => {
-                   if(serialsArray_.includes(parseInt(element))){temp_array.push(element);}
+                    if (serialsArray_.includes(parseInt(element))) { temp_array.push(element); }
                 });
                 beginOF.innerHTML = temp_array.length
                 endOF.innerHTML = storage_units.length
@@ -244,8 +250,8 @@ btn_verifyCount.addEventListener("click", () => {
         }
     })
 
-    let data = {"proceso": "cycle_count_transfer", "storage_type": `${storage_type.innerHTML}`, "storage_bin": `${storage_bin.value.toUpperCase()}`, "user_id": user_id.innerHTML, "listed_storage_units": listed_storage_units, "unlisted_storage_units": unlisted_storage_units, "not_found_storage_units": not_found_storage_units}
-    let interval = setInterval(()=>verify_hashRedis(storage_units), 800);
+    let data = { "proceso": "cycle_count_transfer", "storage_type": `${storage_type.innerHTML}`, "storage_bin": `${storage_bin.value.toUpperCase()}`, "user_id": user_id.innerHTML, "listed_storage_units": listed_storage_units, "unlisted_storage_units": unlisted_storage_units, "not_found_storage_units": not_found_storage_units }
+    let interval = setInterval(() => verify_hashRedis(storage_units), 800);
     axios({
         method: 'post',
         url: "/postCycleSU",

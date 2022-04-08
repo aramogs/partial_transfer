@@ -123,7 +123,7 @@ submitCantidad.addEventListener("submit", function (e) {
     $('#myModal').modal('hide')
     btnTransferir.disabled = true
 
-    let data = { "proceso": "partial_transfer_confirmed", "serial": `${Bserial.innerText}`, "material": `${Bmaterial.innerText}`, "material_description": `${Bdescription.innerText}` , "cantidad": `${cantidadSubmit.value}`, "cantidad_restante": `${(parseInt(Bstock.innerText) - cantidadSubmit.value )}`, "user_id": user_id.innerHTML };
+    let data = { "proceso": "partial_transfer_confirmed", "serial": `${Bserial.innerText}`, "material": `${Bmaterial.innerText}`, "material_description": JSON.stringify(Bdescription.innerText).replace(/(^"|"$)/g, '') , "cantidad": `${cantidadSubmit.value}`, "cantidad_restante": `${(parseInt(Bstock.innerText) - cantidadSubmit.value )}`, "user_id": user_id.innerHTML };
     axios({
         method: 'post',
         url: "/transferenciaMaterial",

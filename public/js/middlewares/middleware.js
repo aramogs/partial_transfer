@@ -31,8 +31,8 @@ middleware.verifyToken = (req, res, next) => {
                 } else {
 
                     res.clearCookie("accessToken");
-                    res.cookie("accessToken",token_jwt,{
-                        maxAge: 900000 /*15 Minutos*/ ,
+                    res.cookie("accessToken", token_jwt, {
+                        maxAge: 900000 /*15 Minutos*/,
                         httpOnly: false,
                         secure: process.env.NODE_ENV === 'production' ? true : false
                     })
@@ -69,9 +69,9 @@ middleware.loginVerify = (req, res, next) => {
 
         if (token_name == "accessToken") {
             jwt.verify(token_jwt, 'tristone', (err, authData) => {
-               res.redirect("/mainMenu")
+                res.redirect("/mainMenu")
             })
-        }else{
+        } else {
             res.render('login.ejs')
         }
 
@@ -88,19 +88,28 @@ middleware.sspi = (req, res, next) => {
     });
 }
 
+function validMac(mac) {
+    return /^[0-9a-f]{1,2}([.:-])[0-9a-f]{1,2}(?:\1[0-9a-f]{1,2}){4}$/.test(mac)
+}
+
 middleware.macFromIP = (req, res, next) => {
-    const regex = /::ffff:/gm;   
+    const regex = /::ffff:/gm;
     let ip = (req.ip).replace(regex, "")
     let localIp = (req.hostname).replace(regex, "")
 
     if (ip === "::1" || ip === localIp) {
-        res.locals.macIP = {"mac":"x2:xx:xx:xx:xx:xx", "ip": "10.56.99.21"}; next()
-    }else{
-        macfromip.getMac(ip,(err, mac)=>{
+        res.locals.macIP = { "mac": "00:00:00:00:00:00", "ip": "10.56.99.21" }; next()
+    } else {
+        macfromip.getMac(ip, (err, mac) => {
 
-            if(err == "The IP address cannot be self"){/* DO NOTHING*/}
-            res.locals.macIP = {"mac":mac, "ip": ip}; next()
-        });   
+            if (err == "The IP address cannot be self") {/* DO NOTHING*/ }
+
+            if (!validMac(mac) || mac == "d8-ce-3a-88-c3-72") {
+                res.render('mac_invalida.ejs', { mac })
+            } else {
+                res.locals.macIP = { "mac": mac, "ip": ip }; next()
+            }
+        });
     }
 }
 
