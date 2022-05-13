@@ -104,7 +104,7 @@ middleware.macFromIP = (req, res, next) => {
 
             if (err == "The IP address cannot be self") {/* DO NOTHING*/ }
 
-            if (!validMac(mac) || mac == "d8-ce-3a-88-c3-72") {
+            if (!validMac(mac)) {
                 res.render('mac_invalida.ejs', { mac })
             } else {
                 res.locals.macIP = { "mac": mac, "ip": ip }; next()

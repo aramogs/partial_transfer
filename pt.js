@@ -32,10 +32,12 @@ if (process.env.NODE_ENV == "DEV") {
   reload(app).then(function (reloadReturned) {
     var server = app.listen(app.get('port'), function(){
       console.info('Express node_env: ' + process.env.NODE_ENV  + " Port: "+server.address().port);
+      server.on('connection', () =>{server.setTimeout(20*60*1000)})
     })
   }).catch((err) => { console.error('Reload could not start', err) });
 }else{
   var server = app.listen(app.get('port'), function(){
     console.info('Express node_env: ' + process.env.NODE_ENV  + " Port: "+server.address().port);
+    server.on('connection', () =>{server.setTimeout(20*60*1000)})
   });
 }
