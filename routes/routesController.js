@@ -330,11 +330,11 @@ controller.verify_hashRedis_POST = (req, res) => {
 
     let estacion_hash = (req.body.estacion).replace(/:/g, "-")
     async function getStatus() {
-        const redis_client = redis.createClient({host: `${process.env.DB_REDIS_SERVER}`});
-        redis_client.on('error',err=>(console.log("error",err)))
-        redis_client.get(estacion_hash, function(err, reply) { res.json(reply)});
+        const redis_client = redis.createClient({ host: `${process.env.DB_REDIS_SERVER}` });
+        redis_client.on('error', err => (console.log("error", err)))
+        redis_client.get(estacion_hash, function (err, reply) { res.json(reply) });
         redis_client.quit()
-        
+
     }
     getStatus()
 }
@@ -489,13 +489,13 @@ controller.postCycleSU_POST = (req, res) => {
     let unlisted_storage_units = req.body.unlisted_storage_units
     let not_found_storage_units = req.body.not_found_storage_units
 
-    if (listed_storage_units.length !== 0) {
-        funcion.insertListed_storage_units(storage_type, storage_bin.toUpperCase(), listed_storage_units, user_id)
-            .then((result) => { console.info(result) })
-            .catch((err) => { console.error(err) })
-    }
+        if (listed_storage_units.length !== 0) {
+            funcion.insertListed_storage_units(storage_type, storage_bin.toUpperCase(), listed_storage_units, user_id)
+                .then((result) => { console.info(result) })
+                .catch((err) => { console.error(err) })
+        }
 
-    let send = `{
+        let send = `{
             "station":"${estacion}",
             "serial_num":"${serial}",
             "material": "${material}",
@@ -504,15 +504,16 @@ controller.postCycleSU_POST = (req, res) => {
             "storage_bin": "${storage_bin}",  
             "user_id":"${user_id}",
             "storage_type":"${storage_type}", 
+            "listed_storage_units": "${listed_storage_units}", 
             "unlisted_storage_units": "${unlisted_storage_units}", 
             "not_found_storage_units": "${not_found_storage_units}" 
         }`
 
 
 
-    amqpRequest(send, "rpc_cycle")
-        .then((result) => { res.json(result) })
-        .catch((err) => { res.json(err) })
+        amqpRequest(send, "rpc_cycle")
+            .then((result) => { res.json(result) })
+            .catch((err) => { res.json(err) })
 }
 
 

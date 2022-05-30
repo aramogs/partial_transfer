@@ -22,7 +22,7 @@ let btnTransferir = document.getElementById("btnTransferir")
 let user_id = document.getElementById("user_id")
 
 let tabla_consulta = document.getElementById('tabla_consulta').getElementsByTagName('tbody')[0];
-
+let material = ""
 serial_num.focus()
 
 serial_num.addEventListener("keyup", check_qualifier)
@@ -34,7 +34,12 @@ btnCerrar.forEach(element => {
 function check_qualifier() {
    
     serial = serial_num.value;
-    if (serial.charAt(0) !== "S" && serial.charAt(0) !== "s") {
+    
+    if (serial.charAt(0) === "P" || serial.charAt(0) === "p" ) {
+        soundOk()
+        value = true
+        material = (serial_num.value).substring(1)
+    } else if (serial.charAt(0) !== "S" && serial.charAt(0) !== "s" ) {
         soundWrong()
         alerta_prefijo.classList.remove("animate__flipOutX", "animate__animated")
         alerta_prefijo.classList.add("animate__flipInX", "animate__animated")
@@ -51,6 +56,7 @@ function check_qualifier() {
 
 function cleanInput() {
     serial_num.disabled = false
+    material = ""
     serial_num.value = ""
     value = false
 }
@@ -71,8 +77,11 @@ submitSerial.addEventListener("submit", function (e) {
         } else {
             serial_ = serial.substring(1)
         }
+        if(material != ""){
+            serial_ = ""
+        }
 
-        let data = { "proceso": "transfer_vul", "serial": `${serial_}`, "user_id": user_id.innerHTML, "storage_type": `` };
+        let data = { "proceso": "transfer_vul", "serial": `${serial_}`, "material": `${material}`,"user_id": user_id.innerHTML, "storage_type": `` };
         axios({
             method: 'post',
             url: "/getUbicacionesVUL",

@@ -132,7 +132,7 @@ submitBin.addEventListener("submit", function (e) {
                         if (isNaN(element)) {
                             badge = `<span class="badge badge-warning  m-1 serialBadge">EMPTY</span>`
                             current_storage_units.innerHTML = current_storage_units.innerHTML + badge
-                            btn_verifyCount.disabled = true
+                            btn_verifyCount.disabled = false
                         } else {
                             badge = `<span class="badge badge-secondary  m-1 serialBadge">${parseInt(element)}</span>`
                             current_storage_units.innerHTML = current_storage_units.innerHTML + badge
@@ -270,7 +270,12 @@ btn_verifyCount.addEventListener("click", () => {
                 soundWrong()
             }
 
-            response = JSON.parse(result.data)
+            
+            setTimeout(() => {
+                response = JSON.parse(result.data)
+
+            
+
 
             if (response.error !== "N/A") {
 
@@ -278,7 +283,7 @@ btn_verifyCount.addEventListener("click", () => {
                 errorText.hidden = false
                 tabla_consulta_container.hidden = true
                 storage_units = []
-                currentST.innerHTML = ""
+                // currentST.innerHTML = ""
                 btn_transferFG.disabled = true
                 clearInterval(interval);
                 setTimeout(() => { soundWrong(), $('#modalSpinner').modal('hide') }, 500);
@@ -359,6 +364,7 @@ btn_verifyCount.addEventListener("click", () => {
                     $('#modalSuccess').modal({ backdrop: 'static', keyboard: false })
                 }
             }
+        }, 500);
         })
         .catch((err) => {
             console.error(err);

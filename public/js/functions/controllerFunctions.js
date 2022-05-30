@@ -51,6 +51,22 @@ funcion.insertListed_storage_units = (storage_type, storage_bin, storage_units, 
 
 }
 
+funcion.insertListed_OKBIN = (storage_type, storage_bin, storage_units, emp_num) => {
+    return new Promise((resolve, reject) => {
+  
+
+        let sql  = `INSERT INTO cycle_count (storage_type, storage_bin, storage_unit, emp_num, status) VALUES ?`;
+
+        dbC(sql, [[storage_type, storage_bin, "", emp_num, ""]])
+        .then((result) => {
+            resolve(result.affectedRows)
+        })
+        .catch((error) => { reject(error) })
+
+    })
+
+}
+
 funcion.getListado = (fecha) => {
     return new Promise((resolve, reject) => {
         dbC(`
