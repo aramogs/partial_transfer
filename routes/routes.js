@@ -53,7 +53,7 @@ router.get('/consultaMP/:storage_type',middleware.verifyToken, routesController.
 
 // ##############Extrusion##################
 router.post("/getUbicacionesEXT",middleware.verifyToken, middleware.macFromIP, routesController.getUbicacionesEXT_POST);
-router.post('/postSerialesRedisEXT',middleware.verifyToken, routesController.postSerialsEXT_POST);
+router.post('/postSerialesRedisEXT',middleware.verifyToken, middleware.macFromIP, routesController.postSerialsEXT_POST);
 
 // ##############Vulcanized##################
 router.get('/consultaVUL',middleware.verifyToken, routesController.consultaVUL_GET);

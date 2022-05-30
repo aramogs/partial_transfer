@@ -1028,7 +1028,7 @@ controller.getUbicacionesEXT_POST = (req, res) => {
 module.exports = controller;
 
 controller.postSerialsEXT_POST = (req, res) => {
-    let estacion = req.body.estacion
+    let estacion = req.res.locals.macIP.mac
     let serial = req.body.serial
     let material = null
     let cantidad = null
