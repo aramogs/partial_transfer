@@ -71,7 +71,7 @@ function consultarMaterial() {
     let data = { "proceso": "location_mp_material", "material": `${material_}`, "user_id": user_id.innerHTML, "storage_type": `${storage_type}` };
     axios({
         method: 'post',
-        url: "/getUbicaciones",
+        url: "/getUbicacionesMP",
         headers: {
             'Content-Type': 'application/json'
         },
@@ -167,7 +167,7 @@ submitSerial.addEventListener("submit", function (e) {
         let data = { "proceso": "location_mp_serial", "serial": `${serial_}`, "user_id": user_id.innerHTML ,"storage_type": `${storage_type}`};
         axios({
             method: 'post',
-            url: "/getUbicaciones",
+            url: "/getUbicacionesMP",
             headers: {
                 'Content-Type': 'application/json'
             },

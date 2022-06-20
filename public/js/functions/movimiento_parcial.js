@@ -74,7 +74,7 @@ submitSerial.addEventListener("submit", function (e) {
         let data = { "proceso": "partial_transfer", "serial": `${serial.substring(1)}`,"user_id": user_id.innerHTML };
         axios({
             method: 'post',
-            url: "/getInfo",
+            url: "/getInfoMP",
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -126,7 +126,7 @@ submitCantidad.addEventListener("submit", function (e) {
     let data = { "proceso": "partial_transfer_confirmed", "serial": `${Bserial.innerText}`, "material": `${Bmaterial.innerText}`, "material_description": JSON.stringify(Bdescription.innerText).replace(/(^"|"$)/g, '') , "cantidad": `${cantidadSubmit.value}`, "cantidad_restante": `${(parseInt(Bstock.innerText) - cantidadSubmit.value )}`, "user_id": user_id.innerHTML };
     axios({
         method: 'post',
-        url: "/transferenciaMaterial",
+        url: "/transferenciaMaterialMP",
         headers: {
             'Content-Type': 'application/json'
         },

@@ -79,7 +79,6 @@ submitSerial.addEventListener("submit", function (e) {
         data: JSON.stringify(data)
     })
         .then((result) => {
-            console.log(result);
             if ((result.data).includes("<!DOCTYPE html>")) {
 
                 setTimeout(() => {
@@ -92,9 +91,27 @@ submitSerial.addEventListener("submit", function (e) {
 
             if (response.error !== "N/A") {
                 soundWrong()
-                errorText.innerHTML = response.error
-                setTimeout(() => { $('#modalSpinner').modal('hide') }, 500);
-                $('#modalError').modal({ backdrop: 'static', keyboard: false })
+                // errorText.innerHTML = response.error
+                // setTimeout(() => { $('#modalSpinner').modal('hide') }, 500);
+                // $('#modalError').modal({ backdrop: 'static', keyboard: false })
+                tabla_consulta2.innerHTML = ""
+                function emptyfunc() {
+                    
+                
+                        let newRow = tabla_consulta2.insertRow(tabla_consulta2.rows.length);
+                            let row = `
+                                <tr class="bg-danger">
+                                    <td>N/A</td>
+                                    <td>${response.error}</td>
+                                </tr>
+                                `
+                            newRow.classList.add("bg-danger", "text-white")
+                            return newRow.innerHTML = row;
+                    }
+                    emptyfunc()
+                    // cantidadErrores.innerHTML = errors
+                    $('#modalSpinner').modal('hide')
+                    $('#modalError').modal({ backdrop: 'static', keyboard: false })
             } else {
 
 

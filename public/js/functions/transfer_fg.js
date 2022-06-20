@@ -231,7 +231,7 @@ function transferFG(e) {
     let interval = setInterval(verify_hashRedis, 800);
     axios({
         method: 'post',
-        url: "/postSerialesRedis",
+        url: "/postSerialesRedisFG",
         headers: {
             'Content-Type': 'application/json'
         },

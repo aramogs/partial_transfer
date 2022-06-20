@@ -227,7 +227,7 @@ controller.conteoC_GET = (req, res) => {
 }
 
 controller.master_request_GM_POST = (req, res) => {
-    let estacion = uuidv4()
+    let estacion = req.res.locals.macIP.mac
     let serial = req.body.serial
     let material = null
     let cantidad = null
@@ -244,13 +244,13 @@ controller.master_request_GM_POST = (req, res) => {
             "user_id":"${user_id}"
         }`
 
-    amqpRequest(send, "rpc_queue")
+    amqpRequest(send, "rpc_fg_gm")
         .then((result) => { res.json(result) })
         .catch((err) => { res.json(err) })
 }
 
 controller.master_request_GM_CREATE_POST = (req, res) => {
-    let estacion = uuidv4()
+    let estacion = req.res.locals.macIP.mac
     let serial = req.body.serial
     let material = null
     let cantidad = null
@@ -271,38 +271,38 @@ controller.master_request_GM_CREATE_POST = (req, res) => {
             "single_container":"${single_container}"
         }`
 
-    amqpRequest(send, "rpc_queue")
+    amqpRequest(send, "rpc_fg_gm")
         .then((result) => { res.json(result) })
         .catch((err) => { res.json(err) })
 }
 
-controller.postSerials_POST = (req, res) => {
-    let estacion = uuidv4()
-    let serial = req.body.serial
-    let material = null
-    let cantidad = null
-    let proceso = req.body.proceso
-    let storage_bin = req.body.storage_bin
-    let user_id = req.res.locals.authData.id.id
+// controller.postSerials_POST = (req, res) => {
+//     let estacion = uuidv4()
+//     let serial = req.body.serial
+//     let material = null
+//     let cantidad = null
+//     let proceso = req.body.proceso
+//     let storage_bin = req.body.storage_bin
+//     let user_id = req.res.locals.authData.id.id
 
 
-    let send = `{
-            "station":"${estacion}",
-            "serial_num":"${serial}",
-            "material": "${material}",
-            "cantidad":"${cantidad}", 
-            "process":"${proceso}", 
-            "storage_bin": "${storage_bin}", 
-            "user_id":"${user_id}"
-        }`
+//     let send = `{
+//             "station":"${estacion}",
+//             "serial_num":"${serial}",
+//             "material": "${material}",
+//             "cantidad":"${cantidad}", 
+//             "process":"${proceso}", 
+//             "storage_bin": "${storage_bin}", 
+//             "user_id":"${user_id}"
+//         }`
 
-    amqpRequest(send, "rpc_queue")
-        .then((result) => { res.json(result) })
-        .catch((err) => { res.json(err) })
-}
+//     amqpRequest(send, "rpc_queue")
+//         .then((result) => { res.json(result) })
+//         .catch((err) => { res.json(err) })
+// }
 
 controller.postSerialsFG_POST = (req, res) => {
-    let estacion = req.body.estacion
+    let estacion = req.res.locals.macIP.mac
     let serial = req.body.serial
     let material = null
     let cantidad = null
@@ -321,7 +321,7 @@ controller.postSerialsFG_POST = (req, res) => {
             "user_id":"${user_id}"
         }`
 
-    amqpRequest(send, "rpc_queue")
+    amqpRequest(send, "rpc_fg")
         .then((result) => { res.json(result) })
         .catch((err) => { res.json(err) })
 }
@@ -340,7 +340,7 @@ controller.verify_hashRedis_POST = (req, res) => {
 }
 
 controller.postSerialsMP_POST = (req, res) => {
-    let estacion = req.body.estacion
+    let estacion = req.res.locals.macIP.mac
     let serial = req.body.serial
     let material = null
     let cantidad = null
@@ -362,7 +362,7 @@ controller.postSerialsMP_POST = (req, res) => {
 
         }`
 
-    amqpRequest(send, "rpc_queue")
+    amqpRequest(send, "rpc_rm")
         .then((result) => { res.json(result) })
         .catch((err) => { res.json(err) })
 }
@@ -387,13 +387,38 @@ controller.getUbicaciones_POST = (req, res) => {
             "user_id":"${user_id}"
         }`
 
-    amqpRequest(send, "rpc_queue")
+    amqpRequest(send, "rpc_rm")
         .then((result) => { res.json(result) })
         .catch((err) => { res.json(err) })
 }
 
-controller.getInfo_POST = (req, res) => {
-    let estacion = uuidv4()
+controller.getUbicacionesFG_POST = (req, res) => {
+    let estacion = req.res.locals.macIP.mac
+    let serial = req.body.serial
+    let material = req.body.material
+    let cantidad = null
+    let proceso = req.body.proceso
+    let user_id = req.res.locals.authData.id.id
+    let storage_type = req.body.storage_type
+
+
+    let send = `{
+            "station":"${estacion}",
+            "serial_num":"${serial}",
+            "material": "${material}",
+            "cantidad":"${cantidad}", 
+            "process":"${proceso}", 
+            "storage_type": "${storage_type}", 
+            "user_id":"${user_id}"
+        }`
+
+    amqpRequest(send, "rpc_fg")
+        .then((result) => { res.json(result) })
+        .catch((err) => { res.json(err) })
+}
+
+controller.getInfoMP_POST = (req, res) => {
+    let estacion = req.res.locals.macIP.mac
     let serial = req.body.serial
     let material = null
     let cantidad = null
@@ -411,7 +436,7 @@ controller.getInfo_POST = (req, res) => {
         }`
 
 
-    amqpRequest(send, "rpc_queue")
+    amqpRequest(send, "rpc_rm")
         .then((result) => { res.json(result) })
         .catch((err) => { res.json(err) })
 }
@@ -419,8 +444,8 @@ controller.getInfo_POST = (req, res) => {
 
 
 
-controller.transferenciaMaterial_POST = (req, res) => {
-    let estacion = uuidv4()
+controller.transferenciaMaterialMP_POST = (req, res) => {
+    let estacion = req.res.locals.macIP.mac
     let serial = req.body.serial
     let material = req.body.material
     let cantidad = req.body.cantidad
@@ -442,7 +467,7 @@ controller.transferenciaMaterial_POST = (req, res) => {
             "user_id":"${user_id}"
         }`
 
-    amqpRequest(send, "rpc_queue")
+    amqpRequest(send, "rpc_rm")
         .then((result) => { res.json(result) })
         .catch((err) => { res.json(err) })
 }
@@ -619,7 +644,7 @@ const arreglosExcel = (bufferExcel) => {
 controller.verificarSAP_POST = (req, res) => {
     let body = JSON.parse(req.body.data)
 
-    let estacion = uuidv4()
+    let estacion = req.res.locals.macIP.mac
     let serial = null
     let material = null
     let cantidad = null
@@ -656,7 +681,7 @@ controller.verificarSAP_POST = (req, res) => {
                 "numeros_sap": ${valores}
             }`
 
-            amqpRequest(send, "rpc_queue")
+            amqpRequest(send, "rpc_rm")
                 .then((result) => { res.json(result) })
                 .catch((err) => { res.json(err) })
         })
@@ -759,7 +784,7 @@ controller.transferMP_FIFO_GET = (req, res) => {
 //TODO dividir esto en 2 funciones, crear nueva ruta y modificar en javascript la nueva ruta de MP1
 controller.getRawFIFO_POST = (req, res) => {
 
-    let estacion = uuidv4()
+    let estacion = req.res.locals.macIP.mac
     let serial = null
     let material = req.body.material
     let cantidad = null
@@ -787,7 +812,7 @@ controller.getRawFIFO_POST = (req, res) => {
                 "user_id":"${user_id}"
             }`
 
-                amqpRequest(send, "rpc_queue")
+                amqpRequest(send, "rpc_rm")
                     .then(result => { res.json([result, count_res]) })
                     .catch(err => { res.json(err) })
             })
@@ -803,14 +828,14 @@ controller.getRawFIFO_POST = (req, res) => {
             "user_id":"${user_id}"
         }`
 
-        amqpRequest(send, "rpc_queue")
+        amqpRequest(send, "rpc_rm")
             .then(result => { res.json(result) })
             .catch(err => { res.json(err) })
     }
 }
 
 controller.postSerialsMP_RAW_POST = (req, res) => {
-    let estacion = uuidv4()
+    let estacion = req.res.locals.macIP.mac
     let serial = req.body.serial
     let material = null
     let cantidad = null
@@ -820,6 +845,7 @@ controller.postSerialsMP_RAW_POST = (req, res) => {
     let raw_id = req.body.raw_id
     let shift = req.body.shift
     let clear = req.body.clear
+    let serials_obsoletos = req.body.serials_obsoletos
 
     if (clear !== "null") {
         async function waitForPromise() {
@@ -839,11 +865,11 @@ controller.postSerialsMP_RAW_POST = (req, res) => {
             "storage_type":"${storage_type}",
             "raw_id":"${raw_id}",
             "shift":"${shift}",
-            "user_id":"${user_id}"
-
+            "user_id":"${user_id}",
+            "serials_obsoletos": "${serials_obsoletos}"
         }`
 
-    amqpRequest(send, "rpc_queue")
+    amqpRequest(send, "rpc_rm")
         .then((result) => { res.json(result) })
         .catch((err) => { res.json(err) })
 }

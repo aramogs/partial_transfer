@@ -75,7 +75,7 @@ submitSerial.addEventListener("submit", function (e) {
         let data = { "proceso": "transfer_fg", "serial": `${serial_}`, "user_id": user_id.innerHTML, "storage_type": `` };
         axios({
             method: 'post',
-            url: "/getUbicaciones",
+            url: "/getUbicacionesFG",
             headers: {
                 'Content-Type': 'application/json'
             },

@@ -31,6 +31,8 @@ let storage_type = document.getElementById("storage_type")
 let tabla_consulta = document.getElementById('tabla_consulta').getElementsByTagName('tbody')[0];
 let tabla_consulta2 = document.getElementById('tabla_consulta2').getElementsByTagName('tbody')[0];
 let cScan = document.getElementById("cScan")
+let cPartNum = document.getElementById("cPartNum")
+let cDescription = document.getElementById("cDescription")
 
 let tabla_consulta_container = document.getElementById("tabla_consulta_container")
 
@@ -38,6 +40,7 @@ let tabla_consulta_container = document.getElementById("tabla_consulta_container
 let contenedores = 0
 let id = ""
 let serials = []
+let serials_obsoletos = []
 let array_fifo = []
 let currentSU = ""
 let selected_serials = []
@@ -69,11 +72,11 @@ $(document).ready(function () {
             }
 
             response.forEach(element => {
-
                 table.row.add([
-                    `<button id="${element.id}" onClick="submitMaterial(this)" class="btn btn-outline-dark btn-sm btn-block">${element.numero_sap}-${element.turno}</button>`,
+                    `<button id="${element.id}" onClick="submitMaterial(this)" class="btn btn-outline-dark btn-sm ">${element.numero_sap}-${element.turno}</button>`,
                     element.contenedores,
-                    element.descripcion_sap
+                    element.descripcion_sap,
+                    moment(element.fecha).format('MM/DD/YYYY')
                 ]).draw(false);
             });
         })
@@ -92,26 +95,26 @@ function submitMaterial(e) {
     let material = e.innerHTML.replace(regexBefore, "")
     turno = e.innerHTML.replace(regexAfter, "")
     contenedores = e.parentElement.nextElementSibling.innerHTML
-
+    descripcion = e.parentElement.nextElementSibling.nextElementSibling.innerHTML
     id = e.id
     serials = []
 
     $('#modalSpinner').modal({ backdrop: 'static', keyboard: false })
 
 
-    let data = { "proceso": "raw_fifo_verify", "material": `${material}`, "user_id": user_id.innerHTML, "storage_type": `${storage_type.innerHTML}`, "raw_id": `${id}` };
+    let datax = { "proceso": "raw_fifo_verify", "material": `${material}`, "user_id": user_id.innerHTML, "storage_type": `${storage_type.innerHTML}`, "raw_id": `${id}` };
     axios({
         method: 'post',
         url: "/getRawFIFO",
         headers: {
             'Content-Type': 'application/json'
         },
-        data: JSON.stringify(data)
+        data: JSON.stringify(datax)
     })
         .then((result) => {
 
             let response = JSON.parse(result.data[0])
-
+            console.log(response);
             if ((result.data).includes("<!DOCTYPE html>")) {
 
                 setTimeout(() => {
@@ -147,31 +150,78 @@ function submitMaterial(e) {
                 })
 
                 array_fifo.forEach(element => {
-                    row = `
+
+                    let newRow = tabla_consulta.insertRow(tabla_consulta.rows.length);
+                    newRow.setAttribute("id", `${element.storage_unit}`)
+                   
+                    if ((element.storage_bin).toUpperCase().includes("CICLI")) {
+                        newRow.setAttribute("class", "bg-secondary text-white")
+                        row = `
                         <tr id="${element.storage_unit}">
                             <td>${element.storage_bin}</td>
                             <td>${element.storage_unit}</td>
                             <td>${element.gr_date}</td>
+                            <td><button type="button" class="cycleButton btn btn-sm btn-secondary fas fa-recycle " disabled></button></td>
                         </tr>
                         `
-
-                    let newRow = tabla_consulta.insertRow(tabla_consulta.rows.length);
-                    newRow.setAttribute("id", `${element.storage_unit}`)
-                    if ((element.storage_bin).toUpperCase().includes("CICLI")) {
-                        newRow.setAttribute("class","bg-secondary text-white")
+                    }else{
+                        row = `
+                        <tr id="${element.storage_unit}">
+                            <td>${element.storage_bin}</td>
+                            <td>${element.storage_unit}</td>
+                            <td>${element.gr_date}</td>
+                            <td><button type="button" class="cycleButton btn btn-sm btn-warning fas fa-recycle"></button></td>
+                        </tr>
+                        `
                     }
+                   
+
+                    
                     return newRow.innerHTML = row;
                 });
 
+                cPartNum.innerHTML = material
+                cDescription.innerHTML = descripcion
                 $('#modalSpinner').modal('hide')
                 $('#myModal').modal({ backdrop: 'static', keyboard: false })
 
                 setTimeout(() => { inp_verifyFIFO.focus() }, 500);
+
+
             }
 
         })
         .catch((err) => { console.error(err) })
+        .finally(() => {
+            setTimeout(() => {
+                cycleButtons = document.getElementsByClassName("cycleButton")
+                for (let i = 0; i < cycleButtons.length; i++) {
+                    cycleButtons[i].addEventListener("click", (e) => { cycleAdd(e) })
 
+                }
+            }, 500);
+
+        })
+
+}
+
+function cycleAdd(e) {
+    e.preventDefault()
+    e.target.parentElement.parentElement.classList.add("bg-warning")
+    e.target.classList.add("text-white")
+    e.target.disabled = true
+    let serial_obsoleto = e.target.parentElement.parentElement.id
+    serials_obsoletos.push(serial_obsoleto)
+
+    Object.entries(dates).forEach(entry => {
+        const [key, value] = entry;
+        if (moment(key, 'MM/DD/YYYY') <= moment(lower_date, 'MM/DD/YYYY') && value > 0) {
+            lower_date = key
+        }
+    });
+
+    dates[`${lower_date}`] = dates[`${lower_date}`] - 1;
+    lower_date = "12/12/9999"
 }
 
 submitSerials.addEventListener("submit", function (e) {
@@ -206,6 +256,10 @@ submitSerials.addEventListener("submit", function (e) {
         soundWrong()
         inp_verifyFIFO.value = ""
         lower_date = "12/12/9999"
+    } else if (serials_obsoletos.includes(serial)) {
+        soundWrong()
+        inp_verifyFIFO.value = ""
+        lower_date = "12/12/9999"
     } else {
         soundOk()
         currentCount = currentCount + 1
@@ -213,13 +267,16 @@ submitSerials.addEventListener("submit", function (e) {
         dates[`${lower_date}`] = dates[`${lower_date}`] - 1;
         inp_verifyFIFO.value = ""
         currentSU.classList.add("bg-success", "text-white")
+
+        // Deshabilitando el boton para enviar a ciclicos
+        currentSU.childNodes[7].children[0].classList.remove("btn-warning")
+        currentSU.childNodes[7].children[0].classList.add("btn-success")
+        currentSU.childNodes[7].children[0].disabled = true
+
         btnTransferir.disabled = false
         selected_serials.push(serial)
         lower_date = "12/12/9999"
     }
-
-
-
 })
 
 function transferSU() {
@@ -229,7 +286,7 @@ function transferSU() {
 
     $('#myModal').modal('hide')
     $('#modalSpinner').modal({ backdrop: 'static', keyboard: false })
-    let data = { "proceso": "raw_mp_confirmed_v", "user_id": user_id.innerHTML, "serial": `${selected_serials}`, "storage_type": `${storage_type.innerHTML}`, "raw_id": `${id}`, "shift": `${turno}`, "clear": `${clear}` };
+    let data = { "proceso": "raw_mp_confirmed_v", "user_id": user_id.innerHTML, "serial": `${selected_serials}`, "storage_type": `${storage_type.innerHTML}`, "raw_id": `${id}`, "shift": `${turno}`, "clear": `${clear}`, "serials_obsoletos": `${serials_obsoletos}` };
     axios({
         method: 'post',
         url: "/postSerialesMP_RAW",
