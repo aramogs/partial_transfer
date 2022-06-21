@@ -120,9 +120,11 @@ controller.consultaFG_GET = (req, res) => {
 controller.transferFG_GET = (req, res) => {
     let user_id = req.res.locals.authData.id.id
     let user_name = req.res.locals.authData.id.username
+    let estacion = req.res.locals.macIP.mac
     res.render('transfer_fg.ejs', {
         user_id,
-        user_name
+        user_name,
+        estacion
     })
 }
 

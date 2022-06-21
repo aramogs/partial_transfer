@@ -23,7 +23,7 @@ let verifySBin = document.getElementById("verifySBin")
 let btnCerrar_Bin = document.getElementById("btnCerrar_Bin")
 let submitArray_Bin = document.getElementById("submitArray_Bin")
 let spanBin = document.getElementById("spanBin")
-let estacion = ""
+let estacion = document.getElementById("estacion").innerHTML
 let beginOF = document.getElementById("beginOF")
 let endOF = document.getElementById("endOF")
 
@@ -225,7 +225,7 @@ function transferFG(e) {
     $('#myModal').modal('hide')
     // $('#modalSpinner').modal({ backdrop: 'static', keyboard: false })
     $('#modalCountDown').modal({ backdrop: 'static', keyboard: false })
-    estacion = uuidv4()
+    
 
     let data = { "estacion": `${estacion}`, "proceso": "transfer_fg_confirmed", "user_id": user_id.innerHTML, "serial": `${serialsArray}`, "storage_bin": `${storage_bin}` };
     let interval = setInterval(verify_hashRedis, 800);

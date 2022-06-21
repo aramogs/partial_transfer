@@ -54,7 +54,7 @@ router.post('/checkSap',routesController.checkSap_POST);
 
 // ##############Finish Goods##################
 router.get('/consultaFG',middleware.verifyToken, routesController.consultaFG_GET);
-router.get('/transferFG',middleware.verifyToken, routesController.transferFG_GET);
+router.get('/transferFG',middleware.verifyToken, middleware.macFromIP, routesController.transferFG_GET);
 router.get('/masterFG',middleware.verifyToken, routesController.masterFG_GET);
 
 router.post("/getUbicacionesFG",middleware.verifyToken, middleware.macFromIP, routesController.getUbicacionesFG_POST);
