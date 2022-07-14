@@ -25,7 +25,7 @@ let submitArray_Bin = document.getElementById("submitArray_Bin")
 let spanBin = document.getElementById("spanBin")
 let storage_type = document.getElementById("storage_type")
 
-let estacion = ""
+let estacion = document.getElementById("estacion").innerHTML
 let beginOF = document.getElementById("beginOF")
 let endOF = document.getElementById("endOF")
 
@@ -227,7 +227,7 @@ function transferFG(e) {
     // $('#modalSpinner').modal({ backdrop: 'static', keyboard: false })
     $('#modalCountDown').modal({ backdrop: 'static', keyboard: false })
 
-    estacion = uuidv4()
+    // estacion = uuidv4()
     let data = { "estacion": `${estacion}`,"proceso": "transfer_mp_confirmed", "user_id": user_id.innerHTML, "serial": `${serialsArray}`, "storage_bin": `${storage_bin}`, "storage_type": `${storage_type.innerHTML}` };
     let interval = setInterval(verify_hashRedis, 800);
     axios({

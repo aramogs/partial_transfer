@@ -31,7 +31,7 @@ router.get('/movimiento_parcial', middleware.verifyToken, routesController.movim
 router.post("/getInfoMP",middleware.verifyToken, middleware.macFromIP, routesController.getInfoMP_POST);
 router.post("/transferenciaMaterialMP", middleware.verifyToken, middleware.macFromIP, routesController.transferenciaMaterialMP_POST);
 router.get('/transferMP',middleware.verifyToken, routesController.transferMP_GET);
-router.get('/transferMP/:storage_type',middleware.verifyToken, routesController.transferMP_ST_GET);
+router.get('/transferMP/:storage_type',middleware.verifyToken, middleware.macFromIP, routesController.transferMP_ST_GET);
 router.post('/postSerialesMP',middleware.verifyToken, middleware.macFromIP, routesController.postSerialsMP_POST);
 router.get('/transfer_MP_FIFO',middleware.verifyToken, routesController.transfer_MP_FIFO_GET);
 router.get('/transfer_MP_FIFO/:storage_type',middleware.verifyToken, routesController.transferMP_FIFO_GET);

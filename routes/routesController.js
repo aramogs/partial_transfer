@@ -168,12 +168,13 @@ controller.transferMP_ST_GET = (req, res) => {
     let storage_type = req.params.storage_type
     let user_id = req.res.locals.authData.id.id
     let user_name = req.res.locals.authData.id.username
-
+    let estacion = req.res.locals.macIP.mac
 
     res.render('transfer_mp.ejs', {
         user_id,
         user_name,
-        storage_type
+        storage_type,
+        estacion
     })
 
 
