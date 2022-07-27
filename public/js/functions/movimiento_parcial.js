@@ -12,7 +12,7 @@ let Bmaterial = document.getElementById("Bmaterial")
 let Bstock = document.getElementById("Bstock")
 let Bdescription = document.getElementById("Bdescription")
 let Bweigth = document.getElementById("Bweigth")
-
+let Blote = document.getElementById("Blote")
 
 let errorText = document.getElementById("errorText")
 let btnCerrar = document.querySelectorAll(".btnCerrar")
@@ -105,6 +105,7 @@ submitSerial.addEventListener("submit", function (e) {
                     Bstock.innerHTML = response.cantidad
                     Bdescription.innerHTML = response.material_description
                     Bweigth.innerHTML = response.material_w
+                    Blote.innerHTML = response.certificate_number
                     $('#modalSpinner').modal('hide')
                     $('#myModal').modal({ backdrop: 'static', keyboard: false })
                     
@@ -123,7 +124,7 @@ submitCantidad.addEventListener("submit", function (e) {
     $('#myModal').modal('hide')
     btnTransferir.disabled = true
 
-    let data = { "proceso": "partial_transfer_confirmed", "serial": `${Bserial.innerText}`, "material": `${Bmaterial.innerText}`, "material_description": JSON.stringify(Bdescription.innerText).replace(/(^"|"$)/g, '') , "cantidad": `${cantidadSubmit.value}`, "cantidad_restante": `${(parseInt(Bstock.innerText) - cantidadSubmit.value )}`, "user_id": user_id.innerHTML };
+    let data = { "proceso": "partial_transfer_confirmed", "serial": `${Bserial.innerText}`, "material": `${Bmaterial.innerText}`, "material_description": JSON.stringify(Bdescription.innerText).replace(/(^"|"$)/g, '') , "cantidad": `${cantidadSubmit.value}`, "cantidad_restante": `${(parseInt(Bstock.innerText) - cantidadSubmit.value )}`, "user_id": user_id.innerHTML, "certificate_number": Blote.innerHTML };
     axios({
         method: 'post',
         url: "/transferenciaMaterialMP",

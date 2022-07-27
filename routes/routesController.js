@@ -454,7 +454,7 @@ controller.transferenciaMaterialMP_POST = (req, res) => {
     let cantidad = req.body.cantidad
     let proceso = req.body.proceso
     let material_description = req.body.material_description
-
+    let certificate_number = req.body.certificate_number
 
     let cantidad_restante = req.body.cantidad_restante
     let user_id = req.body.user_id
@@ -467,7 +467,8 @@ controller.transferenciaMaterialMP_POST = (req, res) => {
             "process":"${proceso}", 
             "material_description": "${material_description}",
             "cantidad_restante":"${cantidad_restante}", 
-            "user_id":"${user_id}"
+            "user_id":"${user_id}",
+            "certificate_number": "${certificate_number}"
         }`
 
     amqpRequest(send, "rpc_rm")
