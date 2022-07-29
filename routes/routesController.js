@@ -12,6 +12,7 @@ const funcion = require('../public/js/functions/controllerFunctions');
 //Require Redis
 const redis = require('redis');
 
+const axios = require('axios');
 
 
 controller.index_GET = (req, res) => {
@@ -518,13 +519,13 @@ controller.postCycleSU_POST = (req, res) => {
     let unlisted_storage_units = req.body.unlisted_storage_units
     let not_found_storage_units = req.body.not_found_storage_units
 
-        if (listed_storage_units.length !== 0) {
-            funcion.insertListed_storage_units(storage_type, storage_bin.toUpperCase(), listed_storage_units, user_id)
-                .then((result) => { console.info(result) })
-                .catch((err) => { console.error(err) })
-        }
+    if (listed_storage_units.length !== 0) {
+        funcion.insertListed_storage_units(storage_type, storage_bin.toUpperCase(), listed_storage_units, user_id)
+            .then((result) => { console.info(result) })
+            .catch((err) => { console.error(err) })
+    }
 
-        let send = `{
+    let send = `{
             "station":"${estacion}",
             "serial_num":"${serial}",
             "material": "${material}",
@@ -540,9 +541,9 @@ controller.postCycleSU_POST = (req, res) => {
 
 
 
-        amqpRequest(send, "rpc_cycle")
-            .then((result) => { res.json(result) })
-            .catch((err) => { res.json(err) })
+    amqpRequest(send, "rpc_cycle")
+        .then((result) => { res.json(result) })
+        .catch((err) => { res.json(err) })
 }
 
 
@@ -884,6 +885,22 @@ controller.getRawListado_GET = (req, res) => {
     funcion.getListadoPendiente()
         .then((result) => { res.json(result) })
         .catch((err) => { console.error(err) })
+
+}
+
+controller.reprintLabel_POST = (req, res) => {
+
+    let data = { "labels": `${req.body.labels}`, "printer": `${req.body.printer}` ,"cantidad": `${req.body.quantity}`, "descripcion": `${req.body.material_description}`, "lote": `${req.body.certificate_number}`, "material": `${req.body.material}`, serial: `${req.body.serial_num}` };
+    axios({
+        method: 'POST',
+        url: "http://10.56.99.30:8086/Integration/TRAB/Execute/",
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        data: JSON.stringify(data)
+    })
+    // .then((result) => { res.json(result) })
+    // .catch((err) => { console.error(err) })
 
 }
 

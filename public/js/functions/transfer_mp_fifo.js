@@ -5,7 +5,7 @@ let alerta_prefijo2 = document.getElementById("alerta_prefijo2")
 let submitSerial = document.getElementById("submitSerial")
 let inp_verifyFIFO = document.getElementById("inp_verifyFIFO")
 let submitMaterial = document.getElementById("submitMaterial")
-
+let tableReprint = document.getElementById("tableReprint").getElementsByTagName('tbody')[0];
 // let submitCantidad = document.getElementById("submitCantidad")
 // let cantidadSubmit = document.getElementById("cantidadSubmit")
 // let alerta_cantidad = document.getElementById("alerta_cantidad")
@@ -22,6 +22,7 @@ let errorTextField = document.getElementById("errorTextField")
 let cantidadErrores = document.getElementById("cantidadErrores")
 let errorText = document.getElementById("errorText")
 let btnCerrar = document.querySelectorAll(".btnCerrar")
+let btnReprint = document.getElementById("btnReprint")
 
 let successText = document.getElementById("successText")
 let btnTransferir = document.getElementById("btnTransferir")
@@ -36,7 +37,8 @@ let selected_serials = []
 let dates = {}
 let currentSU = ""
 let lower_date = "12/12/9999"
-
+let objectStringArray = {}
+let printer = ""
 part_num.focus()
 
 
@@ -96,22 +98,22 @@ submitSerial.addEventListener("submit", function (e) {
                 // $('#modalError').modal({ backdrop: 'static', keyboard: false })
                 tabla_consulta2.innerHTML = ""
                 function emptyfunc() {
-                    
-                
-                        let newRow = tabla_consulta2.insertRow(tabla_consulta2.rows.length);
-                            let row = `
+
+
+                    let newRow = tabla_consulta2.insertRow(tabla_consulta2.rows.length);
+                    let row = `
                                 <tr class="bg-danger">
                                     <td>N/A</td>
                                     <td>${response.error}</td>
                                 </tr>
                                 `
-                            newRow.classList.add("bg-danger", "text-white")
-                            return newRow.innerHTML = row;
-                    }
-                    emptyfunc()
-                    // cantidadErrores.innerHTML = errors
-                    $('#modalSpinner').modal('hide')
-                    $('#modalError').modal({ backdrop: 'static', keyboard: false })
+                    newRow.classList.add("bg-danger", "text-white")
+                    return newRow.innerHTML = row;
+                }
+                emptyfunc()
+                // cantidadErrores.innerHTML = errors
+                $('#modalSpinner').modal('hide')
+                $('#modalError').modal({ backdrop: 'static', keyboard: false })
             } else {
 
 
@@ -259,43 +261,57 @@ function transferSU() {
 
             } else {
                 soundOk()
+                printer = response.printer
                 errorText.hidden = true
                 tabla_consulta_container.hidden = false
                 let result = response.result
                 let result_mod = ""
 
                 result_mod = result.replace("[", "").replace("]", "").replace(/'/g, '"')
-                let objectStringArray = (new Function("return [" + result_mod + "];")());
+                objectStringArray = (new Function("return [" + result_mod + "];")());
                 let errors = 0
-
-                objectStringArray.forEach(element => {
-                    if (typeof (element.result) != "number") {
-                        errors++
-                    }
-                });
-
+                
                 if (errors != 0) {
-                    tabla_consulta2.innerHTML = ""
+
                     objectStringArray.forEach(element => {
+
                         let newRow = tabla_consulta2.insertRow(tabla_consulta2.rows.length);
                         if (typeof (element.result) != "number") {
                             let row = `
-                                <tr class="bg-danger">
-                                    <td>${element.serial_num}</td>
-                                    <td>${element.result}</td>
-                                </tr>
-                                `
+                                    <tr class="bg-danger">
+                                        <td>${element.serial_num}</td>
+                                        <td>${element.result}</td>
+                                    </tr>
+                                    `
                             newRow.classList.add("bg-danger", "text-white")
                             return newRow.innerHTML = row;
                         }
 
+                        if (typeof (element.result) != "number") {
+                            errors++
+                        }
+                    });
 
-                    })
                     cantidadErrores.innerHTML = errors
                     $('#modalSpinner').modal('hide')
                     $('#modalError').modal({ backdrop: 'static', keyboard: false })
                 } else {
                     $('#modalSpinner').modal('hide')
+
+                    tableReprint.innerHTML = ""
+                    objectStringArray.forEach(element => {
+                        let newRow = tableReprint.insertRow(tableReprint.rows.length);
+
+                        let row = `
+                                <tr>
+                                    <td style="width:60% !important">${element.serial_num}</td>
+                                    <td "class="text-center"><input  type="number" class="form-control input-sm"  id="reprint_${element.serial_num}"></td>
+                                </tr>
+                                `
+                        newRow.classList.add("text-center")
+                        return newRow.innerHTML = row;
+                    })
+
                     $('#modalSuccess').modal({ backdrop: 'static', keyboard: false })
                 }
             }
@@ -305,3 +321,29 @@ function transferSU() {
         })
 
 }
+
+btnReprint.addEventListener("click", function (e) {
+    e.preventDefault()
+
+    objectStringArray.forEach(element => {
+
+        let labels = document.getElementById(`reprint_${element.serial_num}`).value
+
+        let data = {"labels": `${labels}`, "printer": `${printer}`, "quantity": `${element.quantity}`, "material_description": `${element.material_description}`, "certificate_number": `${element.certificate_number}`, "material": `${element.material}`, serial_num: `${element.serial_num}`  };
+
+        axios({
+            method: 'POST',
+            url: "/reprintLabel",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            data: JSON.stringify(data)
+        })
+        cleanInput()
+
+
+
+    });
+
+
+})

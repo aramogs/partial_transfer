@@ -39,7 +39,7 @@ submitArray_form.addEventListener("submit", verifyBinModal)
 
 submitArray_Bin.addEventListener("submit", verifyBin)
 
-btnCerrar_Success.addEventListener("click", () => { location.href = "/consultaVUL" })
+btnCerrar_Success.addEventListener("click", () => { cleanInput() })
 
 btnCerrar_Error.addEventListener("click", cleanInput())
 

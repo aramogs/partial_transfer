@@ -51,6 +51,7 @@ router.post('/idListadoInfo',routesController.idListadoInfo_POST);
 router.post('/cancelarIdListado',routesController.cancelarIdListado_POST);
 router.post('/editarIdListado',routesController.editarIdListado_POST);
 router.post('/checkSap',routesController.checkSap_POST);
+router.post('/reprintLabel',routesController.reprintLabel_POST);
 
 // ##############Finish Goods##################
 router.get('/consultaFG',middleware.verifyToken, routesController.consultaFG_GET);

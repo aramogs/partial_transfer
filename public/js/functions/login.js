@@ -22,7 +22,7 @@ submitPassword.addEventListener("submit", (e) => {
             if (response != "unathorized") {
                 soundOk()
                 setTimeout(() => {
-                    window.location.replace(window.location.origin + "/mainMenu")
+                    window.location.replace(window.location.origin + "/mainMenu")     
                 }, 200);
                 
             } else {
