@@ -143,6 +143,7 @@
             <div class="modal-body">
               <form id="submitMaterial">
                 <h6>Escanear Storage Unit(s):</h6>
+                <h6>Numero SAP: <span id="cPartNum" class="badge badge-secondary"></h6>
                 <div class="input-group mb-3">
                   <input type="text" class="form-control" name="" id="inp_verifyFIFO" autocomplete="off">
                   <div class="input-group-append">
@@ -154,20 +155,21 @@
                   </div>
                 </div>
               </form>
-
+              <div class="container table-responsive">
               <table id="tabla_consulta" class="table table-hover  text-center table-bordered table-sm table-striped">
                 <thead class="thead-dark">
                   <tr class="header">
                     <th scope="col">SBin</th>
                     <th scope="col">SUnit</th>
                     <th scope="col">FIFO</th>
+                    <th scope="col"><span class="fas fa-box-open"""></span></th>
                   </tr>
                 </thead>
                 <tbody>
                   <!-- INFO AGREGADA DESDE JAVASCRIPT -->
                 </tbody>
               </table>
-
+              </div>
             </div>
 
             <div class="modal-footer">

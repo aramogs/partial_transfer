@@ -31,7 +31,10 @@ let storage_type = document.getElementById("storage_type")
 
 let tabla_consulta = document.getElementById('tabla_consulta').getElementsByTagName('tbody')[0];
 let tabla_consulta2 = document.getElementById('tabla_consulta2').getElementsByTagName('tbody')[0];
+let cPartNum = document.getElementById("cPartNum")
+
 let tabla_consulta_container = document.getElementById("tabla_consulta_container")
+let serials_obsoletos = []
 let array_fifo = []
 let selected_serials = []
 let dates = {}
@@ -54,6 +57,8 @@ function cleanInput() {
     part_num.disabled = false
     part_num.value = ""
     value = false
+    selected_serials = []
+    serials_obsoletos = []
 }
 
 
@@ -130,23 +135,37 @@ submitSerial.addEventListener("submit", function (e) {
                     }
                 })
 
-                result.forEach(element => {
-                    row = `
+                array_fifo.forEach(element => {
+
+                    let newRow = tabla_consulta.insertRow(tabla_consulta.rows.length);
+                    newRow.setAttribute("id", `${element.storage_unit}`)
+
+                    if ((element.storage_bin).toUpperCase().includes("CICLI")) {
+                        newRow.setAttribute("class", "bg-secondary text-white")
+                        row = `
                         <tr id="${element.storage_unit}">
                             <td>${element.storage_bin}</td>
                             <td>${element.storage_unit}</td>
                             <td>${element.gr_date}</td>
+                            <td><button type="button" class="cycleButton btn btn-sm btn-warning fas fa-recycle" disabled></button></td>
                         </tr>
                         `
-
-                    let newRow = tabla_consulta.insertRow(tabla_consulta.rows.length);
-                    newRow.setAttribute("id", `${element.storage_unit}`)
-                    if ((element.storage_bin).toUpperCase().includes("CICLI")) {
-                        newRow.setAttribute("class", "bg-secondary text-white")
+                    } else {
+                        row = `
+                        <tr id="${element.storage_unit}">
+                            <td>${element.storage_bin}</td>
+                            <td>${element.storage_unit}</td>
+                            <td>${element.gr_date}</td>
+                            <td><button type="button" class="cycleButton btn btn-sm btn-warning fas fa-recycle"></button></td>
+                        </tr>
+                        `
                     }
+
+
+
                     return newRow.innerHTML = row;
                 });
-
+                cPartNum.innerHTML = part_num.value
                 $('#modalSpinner').modal('hide')
                 $('#myModal').modal({ backdrop: 'static', keyboard: false })
 
@@ -155,6 +174,17 @@ submitSerial.addEventListener("submit", function (e) {
 
         })
         .catch((err) => { console.error(err) })
+        .finally(() => {
+            setTimeout(() => {
+                cycleButtons = document.getElementsByClassName("cycleButton")
+                for (let i = 0; i < cycleButtons.length; i++) {
+                    cycleButtons[i].addEventListener("click", (e) => { cycleAdd(e) })
+
+                }
+            }, 500);
+
+        })
+
 
 })
 
@@ -178,13 +208,13 @@ function check_qualifier() {
     }
 }
 
-
-submitMaterial.addEventListener("submit", function (e) {
-
+function cycleAdd(e) {
     e.preventDefault()
-    check_qualifier()
-    let serial = (inp_verifyFIFO.value).substring(1);
-
+    e.target.parentElement.parentElement.classList.add("bg-warning")
+    e.target.classList.add("text-white")
+    e.target.disabled = true
+    let serial_obsoleto = e.target.parentElement.parentElement.id
+    serials_obsoletos.push(serial_obsoleto)
 
     Object.entries(dates).forEach(entry => {
         const [key, value] = entry;
@@ -193,7 +223,24 @@ submitMaterial.addEventListener("submit", function (e) {
         }
     });
 
+    dates[`${lower_date}`] = dates[`${lower_date}`] - 1;
+    lower_date = "12/12/9999"
+}
+
+submitMaterial.addEventListener("submit", function (e) {
+
+    e.preventDefault()
+    check_qualifier()
+    let serial = (inp_verifyFIFO.value).substring(1);
     currentSU = document.getElementById(`${serial}`)
+
+    Object.entries(dates).forEach(entry => {
+        const [key, value] = entry;
+        if (moment(key, 'MM/DD/YYYY') <= moment(lower_date, 'MM/DD/YYYY') && value > 0) {
+            lower_date = key
+        }
+    });
+
 
     if (currentSU === null) {
         soundWrong()
@@ -206,13 +253,22 @@ submitMaterial.addEventListener("submit", function (e) {
     } else if (moment(`"${currentSU.cells[2].innerHTML}"`, 'MM/DD/YYYY').format('MM/DD/YYYY') != moment(lower_date, 'MM/DD/YYYY').format('MM/DD/YYYY')) {
         soundWrong()
         inp_verifyFIFO.value = ""
-
+    } else if (serials_obsoletos.includes(serial)) {
+        soundWrong()
+        inp_verifyFIFO.value = ""
+        lower_date = "12/12/9999"
     } else {
 
         dates[`${lower_date}`] = dates[`${lower_date}`] - 1;
         soundOk()
         inp_verifyFIFO.value = ""
         currentSU.classList.add("bg-success", "text-white")
+
+        // Deshabilitando el boton para enviar a ciclicos
+        currentSU.childNodes[7].children[0].classList.remove("btn-warning")
+        currentSU.childNodes[7].children[0].classList.add("btn-success")
+        currentSU.childNodes[7].children[0].disabled = true
+
         btnTransferir.disabled = false
         selected_serials.push(serial)
         lower_date = "12/12/9999"
@@ -227,7 +283,7 @@ function transferSU() {
 
     $('#myModal').modal('hide')
     $('#modalSpinner').modal({ backdrop: 'static', keyboard: false })
-    let data = { "proceso": "raw_mp_confirmed", "user_id": user_id.innerHTML, "serial": `${selected_serials}`, "storage_type": `${storage_type.innerHTML}`, "raw_id": 0 };
+    let data = { "proceso": "raw_mp_confirmed", "user_id": user_id.innerHTML, "serial": `${selected_serials}`, "storage_type": `${storage_type.innerHTML}`, "raw_id": 0, "serials_obsoletos": `${serials_obsoletos}` };
     axios({
         method: 'post',
         url: "/postSerialesMP_RAW",
@@ -270,7 +326,7 @@ function transferSU() {
                 result_mod = result.replace("[", "").replace("]", "").replace(/'/g, '"')
                 objectStringArray = (new Function("return [" + result_mod + "];")());
                 let errors = 0
-                
+
                 if (errors != 0) {
 
                     objectStringArray.forEach(element => {
@@ -329,7 +385,7 @@ btnReprint.addEventListener("click", function (e) {
 
         let labels = document.getElementById(`reprint_${element.serial_num}`).value
 
-        let data = {"labels": `${labels}`, "printer": `${printer}`, "quantity": `${element.quantity}`, "material_description": `${element.material_description}`, "certificate_number": `${element.certificate_number}`, "material": `${element.material}`, serial_num: `${element.serial_num}`  };
+        let data = { "labels": `${labels}`, "printer": `${printer}`, "quantity": `${element.quantity}`, "material_description": `${element.material_description}`, "certificate_number": `${element.certificate_number}`, "material": `${element.material}`, serial_num: `${element.serial_num}` };
 
         axios({
             method: 'POST',

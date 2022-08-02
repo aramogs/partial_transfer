@@ -49,7 +49,6 @@ middleware.verifyToken = (req, res, next) => {
 }
 
 middleware.loginVerify = (req, res, next) => {
-    console.log(req.path);
     if (!req.headers.cookie) {
         res.render('login.ejs')
     } else {
