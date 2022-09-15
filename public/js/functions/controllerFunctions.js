@@ -246,6 +246,23 @@ funcion.getListadoPendiente = (fecha) => {
     })
 }
 
+funcion.getListadoProcesado = (fecha) => {
+    return new Promise((resolve, reject) => {
+        dbC(`
+        SELECT 
+            *
+        FROM
+            raw_delivery
+        WHERE
+           status = "Procesado"
+        AND
+            DATE(fecha) = CURDATE()
+        `)
+            .then((result) => {resolve(result) })
+            .catch((error) => {reject(error) })
+    })
+}
+
 funcion.getRawMovements = (raw_id) => {
     return new Promise((resolve, reject) => {
         dbC(`

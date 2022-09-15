@@ -888,6 +888,14 @@ controller.getRawListado_GET = (req, res) => {
 
 }
 
+controller.getRawListadoProcesado_GET = (req, res) => {
+
+    funcion.getListadoProcesado()
+        .then((result) => { res.json(result) })
+        .catch((err) => { console.error(err) })
+
+}
+
 controller.reprintLabel_POST = (req, res) => {
 
     let data = { "labels": `${req.body.labels}`, "printer": `${req.body.printer}` ,"cantidad": `${req.body.quantity}`, "descripcion": `${req.body.material_description}`, "lote": `${req.body.certificate_number}`, "material": `${req.body.material}`, serial: `${req.body.serial_num}` };

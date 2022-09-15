@@ -33,7 +33,7 @@ let tabla_consulta2 = document.getElementById('tabla_consulta2').getElementsByTa
 let cScan = document.getElementById("cScan")
 let cPartNum = document.getElementById("cPartNum")
 let cDescription = document.getElementById("cDescription")
-
+let btnExtraMaterial = document.getElementById("btnExtraMaterial")
 let tabla_consulta_container = document.getElementById("tabla_consulta_container")
 
 ///////////////////////////////////////
@@ -48,9 +48,11 @@ let dates = {}
 let turno = ""
 let lower_date = "12/12/9999"
 let table = $('#tableListado').DataTable({ dom: 'frt' })
+let tableExtraMaterial = $('#tableExtraMaterial').DataTable({ dom: '' })
 let regexBefore = /\-(.*)/
 let regexAfter = /^(.*?)\-/
 let currentCount = 0
+let procesoActual = ""
 ///////////////////////////////////////
 
 $(document).ready(function () {
@@ -73,7 +75,7 @@ $(document).ready(function () {
 
             response.forEach(element => {
                 table.row.add([
-                    `<button id="${element.id}" onClick="submitMaterial(this)" class="btn btn-outline-dark btn-sm ">${element.numero_sap}-${element.turno}</button>`,
+                    `<button id="${element.id}" onClick="submitMaterial(this, 'inicio')" class="btn btn-outline-dark btn-sm ">${element.numero_sap}-${element.turno}</button>`,
                     element.contenedores,
                     element.descripcion_sap,
                     moment(element.fecha).format('MM/DD/YYYY')
@@ -85,13 +87,14 @@ $(document).ready(function () {
 })
 
 btnTransferir.addEventListener("click", transferSU)
+btnExtraMaterial.addEventListener("click", extraMaterial)
 
 btnCerrar.forEach(element => {
     element.addEventListener("click", cleanInput)
 })
 
-function submitMaterial(e) {
-
+function submitMaterial(e , proceso) {
+    procesoActual = proceso
     let material = e.innerHTML.replace(regexBefore, "")
     turno = e.innerHTML.replace(regexAfter, "")
     contenedores = e.parentElement.nextElementSibling.innerHTML
@@ -100,7 +103,7 @@ function submitMaterial(e) {
     serials = []
 
     $('#modalSpinner').modal({ backdrop: 'static', keyboard: false })
-
+    setTimeout(() => { $('#modalExtraMaterial').modal('hide') }, 500);
 
     let datax = { "proceso": "raw_fifo_verify", "material": `${material}`, "user_id": user_id.innerHTML, "storage_type": `${storage_type.innerHTML}`, "raw_id": `${id}` };
     axios({
@@ -114,7 +117,6 @@ function submitMaterial(e) {
         .then((result) => {
 
             let response = JSON.parse(result.data[0])
-            console.log(response);
             if ((result.data).includes("<!DOCTYPE html>")) {
 
                 setTimeout(() => {
@@ -252,7 +254,7 @@ submitSerials.addEventListener("submit", function (e) {
         soundWrong()
         inp_verifyFIFO.value = ""
         lower_date = "12/12/9999"
-    } else if (parseInt(cScan.innerHTML) >= contenedores) {
+    } else if (parseInt(cScan.innerHTML) >= contenedores && procesoActual != "extraMaterial") {
         soundWrong()
         inp_verifyFIFO.value = ""
         lower_date = "12/12/9999"
@@ -365,6 +367,37 @@ function transferSU() {
         .catch((err) => {
             console.error(err);
         })
+
+}
+
+function extraMaterial() {
+
+    axios({
+        method: 'get',
+        url: "/getRawListadoProcesado",
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+        .then((result) => {
+            let response = result.data
+            if ((response).includes("<!DOCTYPE html>")) {
+                setTimeout(() => {
+                    location.href = "/login"
+                }, 1000);
+                soundWrong()
+            }
+            $('#modalExtraMaterial').modal({ backdrop: 'static', keyboard: false })
+            response.forEach(element => {
+                tableExtraMaterial.row.add([
+                    `<button id="${element.id}" onClick="submitMaterial(this, 'extraMaterial')" class="btn btn-outline-dark btn-sm ">${element.numero_sap}-${element.turno}</button>`,
+                    element.contenedores,
+                    element.descripcion_sap,
+                    moment(element.fecha).format('MM/DD/YYYY')
+                ]).draw(false);
+            });
+        })
+        .catch((err) => { console.error(err) })
 
 }
 

@@ -40,6 +40,7 @@ router.get('/consultaMP/:storage_type',middleware.verifyToken, routesController.
 router.post('/postSerialesMP_RAW',middleware.verifyToken,  middleware.macFromIP, routesController.postSerialsMP_RAW_POST);
 router.post('/getRawFIFO', middleware.verifyToken,  middleware.macFromIP, routesController.getRawFIFO_POST);
 router.get('/getRawListado', middleware.verifyToken, routesController.getRawListado_GET);
+router.get('/getRawListadoProcesado', middleware.verifyToken, routesController.getRawListadoProcesado_GET);
 router.post("/getUbicacionesMP",middleware.verifyToken, middleware.macFromIP, routesController.getUbicaciones_POST);
 router.get('/cargaListado', middleware.sspi, routesController.cargaListado_GET);
 router.post('/getListado',routesController.getListado_POST);
