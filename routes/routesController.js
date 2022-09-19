@@ -805,7 +805,6 @@ controller.getRawFIFO_POST = (req, res) => {
         }
         waitForPromise()
             .then(result => {
-                console.log(result);
                 let count_res = result
                 let send = `{
                 "station":"${estacion}",

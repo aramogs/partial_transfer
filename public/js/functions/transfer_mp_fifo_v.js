@@ -137,6 +137,7 @@ function submitMaterial(e , proceso) {
                     currentCount = 0
                 } else {
                     currentCount = result.data[1][0].count
+                    console.log(result.data[1]);
                 }
 
                 tabla_consulta.innerHTML = ""
@@ -282,7 +283,7 @@ submitSerials.addEventListener("submit", function (e) {
 })
 
 function transferSU() {
-
+    btnTransferir.disabled = true
     let clear = null
     if (parseInt(currentCount) == parseInt(contenedores)) clear = "ok"
 
