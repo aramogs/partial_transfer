@@ -48,7 +48,7 @@ let dates = {}
 let turno = ""
 let lower_date = "12/12/9999"
 let table = $('#tableListado').DataTable({ dom: 'frt' })
-let tableExtraMaterial = $('#tableExtraMaterial').DataTable({ dom: '' })
+let tableExtraMaterial = $('#tableExtraMaterial').DataTable({ dom: 'frtp' })
 let regexBefore = /\-(.*)/
 let regexAfter = /^(.*?)\-/
 let currentCount = 0
@@ -382,6 +382,7 @@ function extraMaterial() {
     })
         .then((result) => {
             let response = result.data
+            console.log(response);
             if ((response).includes("<!DOCTYPE html>")) {
                 setTimeout(() => {
                     location.href = "/login"
@@ -390,6 +391,7 @@ function extraMaterial() {
             }
             $('#modalExtraMaterial').modal({ backdrop: 'static', keyboard: false })
             response.forEach(element => {
+                console.log(element);
                 tableExtraMaterial.row.add([
                     `<button id="${element.id}" onClick="submitMaterial(this, 'extraMaterial')" class="btn btn-outline-dark btn-sm ">${element.numero_sap}-${element.turno}</button>`,
                     element.contenedores,
