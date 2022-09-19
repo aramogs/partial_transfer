@@ -137,7 +137,6 @@ function submitMaterial(e , proceso) {
                     currentCount = 0
                 } else {
                     currentCount = result.data[1][0].count
-                    console.log(result.data[1]);
                 }
 
                 tabla_consulta.innerHTML = ""
@@ -382,7 +381,6 @@ function extraMaterial() {
     })
         .then((result) => {
             let response = result.data
-            console.log(response);
             if ((response).includes("<!DOCTYPE html>")) {
                 setTimeout(() => {
                     location.href = "/login"
@@ -391,7 +389,6 @@ function extraMaterial() {
             }
             $('#modalExtraMaterial').modal({ backdrop: 'static', keyboard: false })
             response.forEach(element => {
-                console.log(element);
                 tableExtraMaterial.row.add([
                     `<button id="${element.id}" onClick="submitMaterial(this, 'extraMaterial')" class="btn btn-outline-dark btn-sm ">${element.numero_sap}-${element.turno}</button>`,
                     element.contenedores,
