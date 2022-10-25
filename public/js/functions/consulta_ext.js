@@ -130,7 +130,7 @@ function process_input(e) {
 
     } else if (serial_mandrel.charAt(0).toUpperCase() === "S") {
         
-        if (serial_mandrel.length == 11) {
+        if (serial_mandrel.length >= 10) {
             $('#modalSpinner').modal({ backdrop: 'static', keyboard: false })
             serial_num.disabled = true
 
