@@ -897,7 +897,7 @@ controller.getRawListadoProcesado_GET = (req, res) => {
 
 controller.reprintLabel_POST = (req, res) => {
 
-    let data = { "labels": `${req.body.labels}`, "printer": `${req.body.printer}` ,"cantidad": `${req.body.quantity}`, "descripcion": `${req.body.material_description}`, "lote": `${req.body.certificate_number}`, "material": `${req.body.material}`, serial: `${req.body.serial_num}` };
+    let data = { "labels": `${req.body.labels}`, "printer": `${req.body.printer}`, "cantidad": `${req.body.quantity}`, "descripcion": `${req.body.material_description}`, "lote": `${req.body.certificate_number}`, "material": `${req.body.material}`, serial: `${req.body.serial_num}` };
     axios({
         method: 'POST',
         url: "http://10.56.99.30:8086/Integration/TRAB/Execute/",
@@ -1054,29 +1054,60 @@ controller.getUbicacionesVUL_POST = (req, res) => {
         .catch((err) => { res.json(err) })
 }
 
-controller.getUbicacionesEXT_POST = (req, res) => {
+controller.getUbicacionesEXTMandrel_POST = (req, res) => {
+
     let estacion = req.res.locals.macIP.mac
-    let serial = req.body.serial
-    let material = req.body.material
-    let cantidad = null
+    let mandrel = req.body.mandrel
     let proceso = req.body.proceso
     let user_id = req.res.locals.authData.id.id
-    let storage_type = req.body.storage_type
+
+
+    funcion.sapFromMandrel(mandrel)
+        .then((result) => {
+            if (result.length == 0) {
+                res.json(JSON.stringify({ "result": "N/A", "error": "Check Mandrel Number" }))
+            } else {
+                let send = `{
+                    "station":"${estacion}",
+                    "material": "${(result[0].no_sap)}",
+                    "process":"${proceso}", 
+                    "user_id":"${user_id}"
+                }`
+
+                amqpRequest(send, "rpc_ext")
+                    .then((result) => { res.json(result) })
+                    .catch((err) => { res.json(err) })
+            }
+
+        })
+        .catch((err) => { res.json(err) })
+
+
+
+}
+
+controller.getUbicacionesEXTSerial_POST = (req, res) => {
+    let estacion = req.res.locals.macIP.mac
+    let serial_num = req.body.serial
+    let proceso = req.body.proceso
+    let user_id = req.res.locals.authData.id.id
+
 
 
     let send = `{
             "station":"${estacion}",
-            "serial_num":"${serial}",
-            "material": "${material}",
-            "cantidad":"${cantidad}", 
+            "serial_num": "${serial_num}",
             "process":"${proceso}", 
-            "storage_type": "${storage_type}", 
             "user_id":"${user_id}"
         }`
 
     amqpRequest(send, "rpc_ext")
         .then((result) => { res.json(result) })
         .catch((err) => { res.json(err) })
+
+
+
+
 }
 
 module.exports = controller;

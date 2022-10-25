@@ -4,6 +4,7 @@ const db = require('../../db/conn_empleados');
 const dbC = require('../../db/conn_cycle');
 const dbEX = require('../../db/conn_extr');
 const dbA = require('../../db/conn_areas');
+const dbBartender = require('../../db/conn_b10_bartender');
 
 funcion.getUsers = (user) => {
     return new Promise((resolve, reject) => {
@@ -303,4 +304,19 @@ funcion.updateProcesado = (raw_id) => {
     })
 }
 
+
+funcion.sapFromMandrel = (mandrel) =>{
+    return new Promise((resolve, reject) =>{
+        dbBartender(`
+        SELECT
+            no_sap
+        FROM
+            extr
+        WHERE
+            cust_part = "${mandrel}"
+        `)
+        .then((result) => { resolve(result) })
+        .catch((error) => { reject(error)})
+    })
+}
 module.exports = funcion;
