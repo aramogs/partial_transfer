@@ -41,7 +41,7 @@ function process_input(e) {
 
     if (serial_mandrel.charAt(0).toUpperCase() === "M") {
 
-        if (serial_mandrel.length > 8) {
+        if (serial_mandrel.length > 5) {
             $('#modalSpinner').modal({ backdrop: 'static', keyboard: false })
             serial_num.disabled = true
             let data = { "proceso": "transfer_ext_mandrel", "mandrel": `${serial_mandrel.substring(1)}`, "user_id": user_id.innerHTML };
