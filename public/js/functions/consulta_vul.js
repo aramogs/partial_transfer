@@ -129,14 +129,14 @@ function process_input(e) {
         }
 
     } else if (serial_mandrel_material.charAt(0).toUpperCase() === "S") {
-        if (serial_mandrel_material.length > 8) {
+        if (serial_mandrel_material.substring(1).length > 8) {
             $('#modalSpinner').modal({ backdrop: 'static', keyboard: false })
             serial_num.disabled = true
             let _serial
             if (serial_mandrel_material.substring(1).length < 10) {
                 _serial = `0${serial_mandrel_material.substring(1)}`
             } else{
-                _serial = serial_mandrel_material
+                _serial = serial_mandrel_material.substring(1)
             }
 
 
