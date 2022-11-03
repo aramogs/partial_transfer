@@ -78,7 +78,9 @@ router.post('/postSerialesRedisEXT',middleware.verifyToken, middleware.macFromIP
 router.get('/consultaVUL',middleware.verifyToken, routesController.consultaVUL_GET);
 router.get('/transferVUL',middleware.verifyToken, middleware.macFromIP, routesController.transferVUL_GET);
 router.post('/transferVUL_Confirmed',middleware.verifyToken, middleware.macFromIP, routesController.transferVUL_Confirmed);
-router.post("/getUbicacionesVUL",middleware.verifyToken, middleware.macFromIP, routesController.getUbicacionesVUL_POST);
+router.post("/getUbicacionesVULMaterial",middleware.verifyToken, middleware.macFromIP, routesController.getUbicacionesVULMaterial_POST);
+router.post("/getUbicacionesVULMandrel",middleware.verifyToken, middleware.macFromIP, routesController.getUbicacionesVULMandrel_POST);
+router.post("/getUbicacionesVULSerial",middleware.verifyToken, middleware.macFromIP, routesController.getUbicacionesVULSerial_POST);
 // // router.get('*', (req, res) => {
 // //   res.redirect('http://tftdelsrv001:3000/not_found');
 // // });

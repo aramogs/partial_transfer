@@ -1028,8 +1028,108 @@ controller.transferVUL_Confirmed = (req, res) => {
         .catch((err) => { res.json(err) })
 }
 
+controller.getUbicacionesVULSerial_POST = (req, res) => {
+    
+    let estacion = (req.res.locals.macIP.mac).replace(/:/g, "-")
+    let serial = req.body.serial
+    let material = req.body.material
+    let cantidad = null
+    let proceso = req.body.proceso
+    let user_id = req.res.locals.authData.id.id
+    let storage_type = req.body.storage_type
 
-controller.getUbicacionesVUL_POST = (req, res) => {
+    console.log(estacion);
+    let send = `{
+            "station":"${estacion}",
+            "serial_num":"${serial}",
+            "material": "${material}",
+            "cantidad":"${cantidad}", 
+            "process":"${proceso}", 
+            "storage_type": "${storage_type}", 
+            "user_id":"${user_id}"
+        }`
+        console.log("!!!!!!!!!!!!!!!!!!!!!!!",req.res.locals.macIP.mac)
+        console.log(req.res.locals.macIP.mac.replace(/:/g, "-"))
+    amqpRequest(send, "rpc_vul")
+        .then((result) => { res.json(result) })
+        .catch((err) => { res.json(err) })
+}
+
+controller.getUbicacionesVULMaterial_POST = (req, res) => {
+    let estacion = (req.res.locals.macIP.mac).replace(/:/g, "-")
+    let material = req.body.material
+    let proceso = req.body.proceso
+    let user_id = req.res.locals.authData.id.id
+    let storage_type = req.body.storage_type
+
+
+    let send = `{
+            "station":"${estacion}",
+            "material": "${material}", 
+            "process":"${proceso}", 
+            "storage_type": "${storage_type}", 
+            "user_id":"${user_id}"
+        }`
+
+    amqpRequest(send, "rpc_vul")
+        .then((result) => { res.json(result) })
+        .catch((err) => { res.json(err) })
+}
+
+controller.getUbicacionesVULMandrel_POST = (req, res) => {
+    // let estacion = req.res.locals.macIP.mac
+    // let serial = req.body.serial
+    // let material = req.body.material
+    // let cantidad = null
+    // let proceso = req.body.proceso
+    // let user_id = req.res.locals.authData.id.id
+    // let storage_type = req.body.storage_type
+
+
+    // let send = `{
+    //         "station":"${estacion}",
+    //         "serial_num":"${serial}",
+    //         "material": "${material}",
+    //         "cantidad":"${cantidad}", 
+    //         "process":"${proceso}", 
+    //         "storage_type": "${storage_type}", 
+    //         "user_id":"${user_id}"
+    //     }`
+
+    // amqpRequest(send, "rpc_vul")
+    //     .then((result) => { res.json(result) })
+    //     .catch((err) => { res.json(err) })
+
+
+        let estacion = (req.res.locals.macIP.mac).replace(/:/g, "-")
+        let mandrel = req.body.mandrel
+        let proceso = req.body.proceso
+        let user_id = req.res.locals.authData.id.id
+        let material = ""
+    
+    
+        funcion.sapFromMandrel(mandrel, "vulc")
+            .then((result) => {
+                if (result.length == 0) {
+                    res.json(JSON.stringify({ "result": "N/A", "error": "Check Mandrel Number" }))
+                } else {
+                    let send = `{
+                        "station":"${estacion}",
+                        "material": "${ (result[0].no_sap).charAt(0).toUpperCase() == "P"  ? (result[0].no_sap).substring(1) : result[0].no_sap }",
+                        "process":"${proceso}", 
+                        "user_id":"${user_id}"
+                    }`
+    
+                    amqpRequest(send, "rpc_vul")
+                        .then((result) => { res.json(result) })
+                        .catch((err) => { res.json(err) })
+                }
+    
+            })
+            .catch((err) => { res.json(err) })
+}
+
+controller.getUbicacionesVULSerial_POST = (req, res) => {
     let estacion = req.res.locals.macIP.mac
     let serial = req.body.serial
     let material = req.body.material
@@ -1054,6 +1154,7 @@ controller.getUbicacionesVUL_POST = (req, res) => {
         .catch((err) => { res.json(err) })
 }
 
+
 controller.getUbicacionesEXTMandrel_POST = (req, res) => {
 
     let estacion = req.res.locals.macIP.mac
@@ -1062,7 +1163,7 @@ controller.getUbicacionesEXTMandrel_POST = (req, res) => {
     let user_id = req.res.locals.authData.id.id
 
 
-    funcion.sapFromMandrel(mandrel)
+    funcion.sapFromMandrel(mandrel, "extr")
         .then((result) => {
             if (result.length == 0) {
                 res.json(JSON.stringify({ "result": "N/A", "error": "Check Mandrel Number" }))

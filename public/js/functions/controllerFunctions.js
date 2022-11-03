@@ -305,13 +305,13 @@ funcion.updateProcesado = (raw_id) => {
 }
 
 
-funcion.sapFromMandrel = (mandrel) =>{
+funcion.sapFromMandrel = (mandrel, table) =>{
     return new Promise((resolve, reject) =>{
         dbBartender(`
         SELECT
             no_sap
         FROM
-            extr
+            ${table}
         WHERE
             cust_part = "${mandrel}"
         `)
