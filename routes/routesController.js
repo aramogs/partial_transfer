@@ -1,17 +1,15 @@
-//Conexion a base de datos
 const controller = {};
-
+//Require RabbitMQ
 var amqp = require('amqplib/callback_api');
-const { v4: uuidv4 } = require('uuid');
+// Require Jason Web Token
 const jwt = require('jsonwebtoken');
-
 //Require ExcelJs
 const Excel = require('exceljs');
 //Require Funciones
 const funcion = require('../public/js/functions/controllerFunctions');
 //Require Redis
 const redis = require('redis');
-
+//Require Axios
 const axios = require('axios');
 
 
@@ -280,54 +278,29 @@ controller.master_request_GM_CREATE_POST = (req, res) => {
         .catch((err) => { res.json(err) })
 }
 
-// controller.postSerials_POST = (req, res) => {
-//     let estacion = uuidv4()
-//     let serial = req.body.serial
-//     let material = null
-//     let cantidad = null
-//     let proceso = req.body.proceso
-//     let storage_bin = req.body.storage_bin
-//     let user_id = req.res.locals.authData.id.id
-
-
-//     let send = `{
-//             "station":"${estacion}",
-//             "serial_num":"${serial}",
-//             "material": "${material}",
-//             "cantidad":"${cantidad}", 
-//             "process":"${proceso}", 
-//             "storage_bin": "${storage_bin}", 
-//             "user_id":"${user_id}"
-//         }`
-
-//     amqpRequest(send, "rpc_queue")
-//         .then((result) => { res.json(result) })
-//         .catch((err) => { res.json(err) })
-// }
 
 controller.postSerialsFG_POST = (req, res) => {
     let estacion = req.res.locals.macIP.mac
     let serial = req.body.serial
-    let material = null
-    let cantidad = null
-    let proceso = req.body.proceso
     let storage_bin = req.body.storage_bin
     let user_id = req.res.locals.authData.id.id
 
+    let serials_array = serial.split(",")
+    let promises = []
+    serials_array.forEach(serial_ => {
+        promises.push(funcion.sapRFC_transferFG(serial_, storage_bin).catch((err) => { return err }))
+    });
 
-    let send = `{
-            "station":"${estacion}",
-            "serial_num":"${serial}",
-            "material": "${material}",
-            "cantidad":"${cantidad}", 
-            "process":"${proceso}", 
-            "storage_bin": "${storage_bin}", 
-            "user_id":"${user_id}"
-        }`
+    Promise.all(promises)
+        .then(result => { res.json(result) })
+        .catch(err => { res.json(err) })
 
-    amqpRequest(send, "rpc_fg")
-        .then((result) => { res.json(result) })
-        .catch((err) => { res.json(err) })
+    // let progress = 0;
+    // promises.forEach(p => p.then(() => {
+    //     progress++;
+    //     console.log(Math.round(progress / promises.length * 100) + "%");
+    // }));
+
 }
 
 controller.verify_hashRedis_POST = (req, res) => {
@@ -335,7 +308,7 @@ controller.verify_hashRedis_POST = (req, res) => {
     let estacion_hash = (req.body.estacion).replace(/:/g, "-")
     async function getStatus() {
         const redis_client = redis.createClient({ host: `${process.env.DB_REDIS_SERVER}` });
-        redis_client.on('error', err => (console.log("error", err)))
+        redis_client.on('error', err => (console.error("error", err)))
         redis_client.get(estacion_hash, function (err, reply) { res.json(reply) });
         redis_client.quit()
 
@@ -690,7 +663,7 @@ controller.verificarSAP_POST = (req, res) => {
                 .then((result) => { res.json(result) })
                 .catch((err) => { res.json(err) })
         })
-        .catch((err) => { console.log(err); res.status(200).send({ message: err }) })
+        .catch((err) => { res.status(200).send({ message: err }) })
 }
 
 controller.editarListado_GET = (req, res) => {
@@ -820,7 +793,7 @@ controller.getRawFIFO_POST = (req, res) => {
                     .then(result => { res.json([result, count_res]) })
                     .catch(err => { res.json(err) })
             })
-            .catch((err) => { console.log(err); res.status(200).send({ message: err }) })
+            .catch((err) => { res.status(200).send({ message: err }) })
     } else {
         let send = `{
             "station":"${estacion}",
@@ -857,7 +830,7 @@ controller.postSerialsMP_RAW_POST = (req, res) => {
             return procesado
         }
         waitForPromise()
-            .catch((err) => { console.log(err); res.status(200).send({ message: err }) })
+            .catch((err) => { res.status(200).send({ message: err }) })
     }
 
     let send = `{
@@ -915,7 +888,7 @@ function amqpRequest(send, queue) {
     return new Promise((resolve, reject) => {
         var args = process.argv.slice(2);
         if (args.length == 0) {
-            // console.log("Usage: rpc_client.js num");
+            console.error("Usage: rpc_client.js num");
             // process.exit(1);
         }
 
@@ -1029,7 +1002,7 @@ controller.transferVUL_Confirmed = (req, res) => {
 }
 
 controller.getUbicacionesVULSerial_POST = (req, res) => {
-    
+
     let estacion = (req.res.locals.macIP.mac).replace(/:/g, "-")
     let serial = req.body.serial
     let material = req.body.material
@@ -1038,7 +1011,6 @@ controller.getUbicacionesVULSerial_POST = (req, res) => {
     let user_id = req.res.locals.authData.id.id
     let storage_type = req.body.storage_type
 
-    console.log(estacion);
     let send = `{
             "station":"${estacion}",
             "serial_num":"${serial}",
@@ -1048,8 +1020,6 @@ controller.getUbicacionesVULSerial_POST = (req, res) => {
             "storage_type": "${storage_type}", 
             "user_id":"${user_id}"
         }`
-        console.log("!!!!!!!!!!!!!!!!!!!!!!!",req.res.locals.macIP.mac)
-        console.log(req.res.locals.macIP.mac.replace(/:/g, "-"))
     amqpRequest(send, "rpc_vul")
         .then((result) => { res.json(result) })
         .catch((err) => { res.json(err) })
@@ -1101,32 +1071,32 @@ controller.getUbicacionesVULMandrel_POST = (req, res) => {
     //     .catch((err) => { res.json(err) })
 
 
-        let estacion = (req.res.locals.macIP.mac).replace(/:/g, "-")
-        let mandrel = req.body.mandrel
-        let proceso = req.body.proceso
-        let user_id = req.res.locals.authData.id.id
-        let material = ""
-    
-    
-        funcion.sapFromMandrel(mandrel, "vulc")
-            .then((result) => {
-                if (result.length == 0) {
-                    res.json(JSON.stringify({ "result": "N/A", "error": "Check Mandrel Number" }))
-                } else {
-                    let send = `{
+    let estacion = (req.res.locals.macIP.mac).replace(/:/g, "-")
+    let mandrel = req.body.mandrel
+    let proceso = req.body.proceso
+    let user_id = req.res.locals.authData.id.id
+    let material = ""
+
+
+    funcion.sapFromMandrel(mandrel, "vulc")
+        .then((result) => {
+            if (result.length == 0) {
+                res.json(JSON.stringify({ "result": "N/A", "error": "Check Mandrel Number" }))
+            } else {
+                let send = `{
                         "station":"${estacion}",
-                        "material": "${ (result[0].no_sap).charAt(0).toUpperCase() == "P"  ? (result[0].no_sap).substring(1) : result[0].no_sap }",
+                        "material": "${(result[0].no_sap).charAt(0).toUpperCase() == "P" ? (result[0].no_sap).substring(1) : result[0].no_sap}",
                         "process":"${proceso}", 
                         "user_id":"${user_id}"
                     }`
-    
-                    amqpRequest(send, "rpc_vul")
-                        .then((result) => { res.json(result) })
-                        .catch((err) => { res.json(err) })
-                }
-    
-            })
-            .catch((err) => { res.json(err) })
+
+                amqpRequest(send, "rpc_vul")
+                    .then((result) => { res.json(result) })
+                    .catch((err) => { res.json(err) })
+            }
+
+        })
+        .catch((err) => { res.json(err) })
 }
 
 controller.getUbicacionesVULSerial_POST = (req, res) => {
@@ -1211,7 +1181,7 @@ controller.getUbicacionesEXTSerial_POST = (req, res) => {
 
 }
 
-module.exports = controller;
+
 
 controller.postSerialsEXT_POST = (req, res) => {
     let estacion = req.res.locals.macIP.mac
@@ -1237,3 +1207,4 @@ controller.postSerialsEXT_POST = (req, res) => {
         .then((result) => { res.json(result) })
         .catch((err) => { res.json(err) })
 }
+module.exports = controller;

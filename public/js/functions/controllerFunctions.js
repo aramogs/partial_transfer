@@ -5,6 +5,11 @@ const dbC = require('../../db/conn_cycle');
 const dbEX = require('../../db/conn_extr');
 const dbA = require('../../db/conn_areas');
 const dbBartender = require('../../db/conn_b10_bartender');
+//Require Node-RFC
+const rfcClient = require('node-rfc').Client;
+const abapSystem =  require('../../sap/Connection');
+const SAP_RFC_Client = new rfcClient(abapSystem)
+
 
 funcion.getUsers = (user) => {
     return new Promise((resolve, reject) => {
@@ -28,10 +33,10 @@ funcion.insertListed_storage_units = (storage_type, storage_bin, storage_units, 
     return new Promise((resolve, reject) => {
         let valores_finales = []
         let arreglo_arreglos = []
-  
+
         for (let i = 0; i < storage_units.length; i++) {
             valores_finales = []
-            
+
             valores_finales.push(`${storage_type}`)
             valores_finales.push(`${storage_bin}`)
             valores_finales.push(`${storage_units[i]}`)
@@ -40,13 +45,13 @@ funcion.insertListed_storage_units = (storage_type, storage_bin, storage_units, 
             arreglo_arreglos.push(valores_finales)
         }
 
-        let sql  = `INSERT INTO cycle_count (storage_type, storage_bin, storage_unit, emp_num, status) VALUES ?`;
+        let sql = `INSERT INTO cycle_count (storage_type, storage_bin, storage_unit, emp_num, status) VALUES ?`;
 
         dbC(sql, [arreglo_arreglos])
-        .then((result) => {
-            resolve(result.affectedRows)
-        })
-        .catch((error) => { reject(error) })
+            .then((result) => {
+                resolve(result.affectedRows)
+            })
+            .catch((error) => { reject(error) })
 
     })
 
@@ -54,15 +59,15 @@ funcion.insertListed_storage_units = (storage_type, storage_bin, storage_units, 
 
 funcion.insertListed_OKBIN = (storage_type, storage_bin, storage_units, emp_num) => {
     return new Promise((resolve, reject) => {
-  
 
-        let sql  = `INSERT INTO cycle_count (storage_type, storage_bin, storage_unit, emp_num, status) VALUES ?`;
+
+        let sql = `INSERT INTO cycle_count (storage_type, storage_bin, storage_unit, emp_num, status) VALUES ?`;
 
         dbC(sql, [[storage_type, storage_bin, "", emp_num, ""]])
-        .then((result) => {
-            resolve(result.affectedRows)
-        })
-        .catch((error) => { reject(error) })
+            .then((result) => {
+                resolve(result.affectedRows)
+            })
+            .catch((error) => { reject(error) })
 
     })
 
@@ -124,7 +129,7 @@ funcion.getNumerosSAP = () => {
         SELECT no_sap FROM extr;
         `)
             .then((result) => { resolve(result) })
-            .catch((error) => { reject(error)   })
+            .catch((error) => { reject(error) })
     })
 }
 
@@ -133,7 +138,7 @@ funcion.insertListadoExcel = (tabla, titulos, valores, sup_num, fecha, turno) =>
         let valor
         let valores_finales = []
         let arreglo_arreglos = []
-  
+
 
         for (let i = 0; i < valores.length; i++) {
             valores_finales = []
@@ -154,14 +159,14 @@ funcion.insertListadoExcel = (tabla, titulos, valores, sup_num, fecha, turno) =>
             arreglo_arreglos.push(valores_finales)
         }
 
-        let sql  = `INSERT INTO ${tabla} (${titulos.join()},sup_name,fecha,turno) VALUES ?`;
-        
-        dbC(sql, [arreglo_arreglos])
-        .then((result) => {
-            resolve(result.affectedRows)
+        let sql = `INSERT INTO ${tabla} (${titulos.join()},sup_name,fecha,turno) VALUES ?`;
 
-        })
-        .catch((error) => { console.error(error); reject(error) })
+        dbC(sql, [arreglo_arreglos])
+            .then((result) => {
+                resolve(result.affectedRows)
+
+            })
+            .catch((error) => { console.error(error); reject(error) })
 
     })
 
@@ -177,8 +182,8 @@ funcion.getListadoFecha = (fecha) => {
         WHERE
            fecha like "${fecha}%"
         `)
-            .then((result) => {resolve(result) })
-            .catch((error) => {reject(error) })
+            .then((result) => { resolve(result) })
+            .catch((error) => { reject(error) })
     })
 }
 
@@ -242,8 +247,8 @@ funcion.getListadoPendiente = (fecha) => {
         WHERE
            status = "Pendiente"
         `)
-            .then((result) => {resolve(result) })
-            .catch((error) => {reject(error) })
+            .then((result) => { resolve(result) })
+            .catch((error) => { reject(error) })
     })
 }
 
@@ -259,8 +264,8 @@ funcion.getListadoProcesado = (fecha) => {
         AND
             DATE(fecha) = CURDATE()
         `)
-            .then((result) => {resolve(result) })
-            .catch((error) => {reject(error) })
+            .then((result) => { resolve(result) })
+            .catch((error) => { reject(error) })
     })
 }
 
@@ -283,8 +288,8 @@ funcion.getRawMovements = (raw_id) => {
         GROUP BY 
             raw_id;
         `)
-            .then((result) => {resolve(result) })
-            .catch((error) => {reject(error) })
+            .then((result) => { resolve(result) })
+            .catch((error) => { reject(error) })
     })
 }
 
@@ -305,8 +310,8 @@ funcion.updateProcesado = (raw_id) => {
 }
 
 
-funcion.sapFromMandrel = (mandrel, table) =>{
-    return new Promise((resolve, reject) =>{
+funcion.sapFromMandrel = (mandrel, table) => {
+    return new Promise((resolve, reject) => {
         dbBartender(`
         SELECT
             no_sap
@@ -315,8 +320,75 @@ funcion.sapFromMandrel = (mandrel, table) =>{
         WHERE
             cust_part = "${mandrel}"
         `)
-        .then((result) => { resolve(result) })
-        .catch((error) => { reject(error)})
+            .then((result) => { resolve(result) })
+            .catch((error) => { reject(error) })
     })
 }
+
+// funcion.sapRFC_transferFG = (serial, storage_bin) => {
+//     return new Promise((resolve, reject) => {
+
+//         let serial_array = serial.split(",")
+//         console.log(serial_array);
+//         let response_list = []
+
+//         serial_array.forEach(serial_ => {
+//             SAP_RFC_Client.connect(function (err) {
+//                 if (err) {
+//                     response_list.push({ "serial_num": serial_, "result": (err.key != "") ? err.key : err.message })
+//                 }
+
+//                 SAP_RFC_Client.invoke('L_TO_CREATE_MOVE_SU',
+//                     {
+//                         I_LENUM: `0000000000${serial_}`,
+//                         I_BWLVS: `998`,
+//                         I_LETYP: `IP`,
+//                         I_NLTYP: `FG`,
+//                         I_NLBER: `001`,
+//                         I_NLPLA: `${storage_bin}`
+//                     }, function (err, result) {
+//                         if (err) {
+//                             response_list.push({ "serial_num": serial_, "result": (err.key != "") ? err.key : err.message })
+//                         } else {
+//                             response_list.push({ "serial_num": serial_, "result": result.T_LTAK[0].TANUM })
+//                         }
+//                     })
+//             })
+//         })
+//         resolve(response_list)
+//         reject("")
+
+//     })
+// }
+
+funcion.sapRFC_transferFG = (serial, storage_bin) => {
+    return new Promise((resolve, reject) => {
+            
+            SAP_RFC_Client.open()
+                .then(() => {
+                    SAP_RFC_Client.call('L_TO_CREATE_MOVE_SU',
+                        {
+                            I_LENUM: `0000000000${serial}`,
+                            I_BWLVS: `998`,
+                            I_LETYP: `IP`,
+                            I_NLTYP: `FG`,
+                            I_NLBER: `001`,
+                            I_NLPLA: `${storage_bin}`
+                        }
+                    )
+                        .then(result => {
+                            resolve(result)
+                        })
+                        .catch(err => {
+                            reject(err)
+                        });
+                })
+                .catch(err => {
+                    reject(err)
+                });
+        })
+
+
+}
+
 module.exports = funcion;

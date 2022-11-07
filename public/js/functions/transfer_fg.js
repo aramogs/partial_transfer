@@ -24,8 +24,6 @@ let btnCerrar_Bin = document.getElementById("btnCerrar_Bin")
 let submitArray_Bin = document.getElementById("submitArray_Bin")
 let spanBin = document.getElementById("spanBin")
 let estacion = document.getElementById("estacion").innerHTML
-let beginOF = document.getElementById("beginOF")
-let endOF = document.getElementById("endOF")
 
 serial_num.focus()
 btnCerrar.forEach(element => {
@@ -182,40 +180,8 @@ function verifyBin(e) {
     }
 }
 
-function uuidv4() {
-    return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
-        (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
-    );
-}
-
-function verify_hashRedis() {
-    let data = { "estacion": `${estacion}` };
-    axios({
-        method: 'post',
-        url: "/verify_hashRedis",
-        data: JSON.stringify(data),
-        headers: {
-            'Content-Type': 'application/json'
-        }
-
-    })
-        .then(result => {
-            if (result.data !== null) {
-                result_array = (result.data).split("\n")
-                beginOF.innerHTML = result_array.length
-                endOF.innerHTML = serialsArray.length
-            }
-        })
-        .catch(err => {
-            console.error(err);
-        })
-}
-
 
 function transferFG(e) {
-    // e.preventDefault()
-    beginOF.innerHTML = 0
-    endOF.innerHTML = serialsArray.length
     $('#modalStorage').modal('hide')
     setTimeout(() => {
         soundOk()
@@ -223,12 +189,10 @@ function transferFG(e) {
     soundOk()
     let storage_bin = submitArray.value
     $('#myModal').modal('hide')
-    // $('#modalSpinner').modal({ backdrop: 'static', keyboard: false })
     $('#modalCountDown').modal({ backdrop: 'static', keyboard: false })
-    
+
 
     let data = { "estacion": `${estacion}`, "proceso": "transfer_fg_confirmed", "user_id": user_id.innerHTML, "serial": `${serialsArray}`, "storage_bin": `${storage_bin}` };
-    let interval = setInterval(verify_hashRedis, 800);
     axios({
         method: 'post',
         url: "/postSerialesRedisFG",
@@ -238,84 +202,43 @@ function transferFG(e) {
         data: JSON.stringify(data)
     })
         .then((result) => {
+            let response = result.data
+            let errors = 0
+            soundOk()
+            errorText.hidden = true
+            tabla_consulta_container.hidden = false
 
-            if ((result.data).includes("<!DOCTYPE html>")) {
-
-                setTimeout(() => {
-                    location.href = "/login"
-                }, 1000);
-                soundWrong()
-            }
-
-            response = JSON.parse(result.data)
-
-
-
-            if (response.error !== "N/A") {
-
-                errorTextField.innerHTML = response.error
-                errorText.hidden = false
-                tabla_consulta_container.hidden = true
-                serialsArray = []
-                currentST.innerHTML = ""
-                btn_transferFG.disabled = true
-                clearInterval(interval);
-                setTimeout(() => { soundWrong(), $('#modalCountDown').modal('hide') }, 500);
-                $('#modalError').modal({ backdrop: 'static', keyboard: false })
-
-            } else {
-                soundOk()
-                errorText.hidden = true
-                tabla_consulta_container.hidden = false
-                let result = response.result
-                let result_mod = ""
-
-                result_mod = result.replace("[", "").replace("]", "").replace(/'/g, '"')
-                let objectStringArray = (new Function("return [" + result_mod + "];")());
-                let errors = 0
-
-                objectStringArray.forEach(element => {
-                    if (typeof (element.result) != "number") {
-                        errors++
-                    }
-                });
-
-                if (errors != 0) {
-                    tabla_consulta.innerHTML = ""
-                    objectStringArray.forEach(element => {
-                        let newRow = tabla_consulta.insertRow(tabla_consulta.rows.length);
-                        if (typeof (element.result) != "number") {
-                            let row = `
+            tabla_consulta.innerHTML = ""
+            response.forEach(element => {
+                let newRow = tabla_consulta.insertRow(tabla_consulta.rows.length);
+                if (element.name) {
+                    let row = `
                                 <tr class="bg-danger">
-                                    <td>${element.serial_num}</td>
-                                    <td>${element.result}</td>
+                                    <td>${element.abapMsgV1}</td>
+                                    <td>${element.key ? element.key : element.message}</td>
                                 </tr>
                                 `
-                            newRow.classList.add("bg-danger", "text-white")
-                            return newRow.innerHTML = row;
-                        }
-
-
-                    })
-                    cantidadErrores.innerHTML = errors
-                    // $('#modalSpinner').modal('hide')
-                    // $('#modalError').modal({ backdrop: 'static', keyboard: false })
-                    setTimeout(function () {
-                        clearInterval(interval);
-                        $('#modalCountDown').modal('hide')
-                        $('#modalError').modal({ backdrop: 'static', keyboard: false })
-                    }, 500);
+                    newRow.classList.add("bg-danger", "text-white")
+                    errors++
+                    return newRow.innerHTML = row;
                 } else {
-                    // $('#modalSpinner').modal('hide')
-                    // $('#modalSuccess').modal({ backdrop: 'static', keyboard: false })
-                    clearInterval(interval);
-                    $('#modalCountDown').modal('hide')
-                    $('#modalSuccess').modal({ backdrop: 'static', keyboard: false })
+                    let row = `
+                                <tr >
+                                    <td>${(element.I_LENUM).replace(/^0+/gm, "")}</td>
+                                    <td>${element.E_TANUM}</td>
+                                </tr>
+                                `
+
+                    return newRow.innerHTML = row;
                 }
-            }
-        })
-        .catch((err) => {
-            console.error(err);
+
+
+            })
+            cantidadErrores.innerHTML = errors
+
+            $('#modalCountDown').modal('hide')
+            $('#modalError').modal({ backdrop: 'static', keyboard: false })
+
+
         })
 }
-
