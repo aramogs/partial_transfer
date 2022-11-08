@@ -1,3 +1,5 @@
+const Pool = require("node-rfc").Pool;
+
 const abapSystem = {
 	user: process.env.RFC_USER,
 	passwd:  process.env.RFC_PASSWD,
@@ -7,4 +9,10 @@ const abapSystem = {
 	lang:  process.env.RFC_LANG,
 };
 
-module.exports = abapSystem;
+const SAP_RFC_Pool = new Pool({
+    connectionParameters: abapSystem,
+    clientOptions: {},
+    poolOptions: { low: 0, high: 4 },
+});
+
+module.exports = SAP_RFC_Pool;

@@ -7,7 +7,7 @@ const dbA = require('../../db/conn_areas');
 const dbBartender = require('../../db/conn_b10_bartender');
 //Require Node-RFC
 const rfcClient = require('node-rfc').Client;
-const abapSystem =  require('../../sap/Connection');
+const abapSystem = require('../../sap/Connection');
 const SAP_RFC_Client = new rfcClient(abapSystem)
 
 
@@ -363,32 +363,33 @@ funcion.sapFromMandrel = (mandrel, table) => {
 
 funcion.sapRFC_transferFG = (serial, storage_bin) => {
     return new Promise((resolve, reject) => {
-            
-            SAP_RFC_Client.open()
-                .then(() => {
-                    SAP_RFC_Client.call('L_TO_CREATE_MOVE_SU',
-                        {
-                            I_LENUM: `0000000000${serial}`,
-                            I_BWLVS: `998`,
-                            I_LETYP: `IP`,
-                            I_NLTYP: `FG`,
-                            I_NLBER: `001`,
-                            I_NLPLA: `${storage_bin}`
-                        }
-                    )
-                        .then(result => {
-                            resolve(result)
-                        })
-                        .catch(err => {
-                            reject(err)
-                        });
-                })
-                .catch(err => {
-                    reject(err)
-                });
-        })
 
-
+        abapSystem.acquire()
+            .then(managed_client => {
+                managed_client.call('L_TO_CREATE_MOVE_SU',
+                    {
+                        I_LENUM: `0000000000${serial}`,
+                        I_BWLVS: `998`,
+                        I_LETYP: `IP`,
+                        I_NLTYP: `FG`,
+                        I_NLBER: `001`,
+                        I_NLPLA: `${storage_bin}`
+                    }
+                )
+                    .then(result => {
+                        managed_client.release()
+                        resolve(result)
+                    })
+                    .catch(err => {
+                        managed_client.release()
+                        reject(err)
+                    });
+            })
+            .catch(err => {
+                reject(err)
+            });
+    })
 }
+
 
 module.exports = funcion;

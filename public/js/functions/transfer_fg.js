@@ -236,9 +236,10 @@ function transferFG(e) {
             })
             cantidadErrores.innerHTML = errors
 
-            $('#modalCountDown').modal('hide')
-            $('#modalError').modal({ backdrop: 'static', keyboard: false })
-
+            setTimeout(function () {
+                $('#modalCountDown').modal('hide')
+                $('#modalError').modal({ backdrop: 'static', keyboard: false })
+            }, 500);
 
         })
 }
