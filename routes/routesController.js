@@ -116,6 +116,15 @@ controller.consultaFG_GET = (req, res) => {
     })
 }
 
+controller.consultaFG2_GET = (req, res) => {
+    let user_id = req.res.locals.authData.id.id
+    let user_name = req.res.locals.authData.id.username
+    res.render('consulta_fg2.ejs', {
+        user_id,
+        user_name
+    })
+}
+
 controller.transferFG_GET = (req, res) => {
     let user_id = req.res.locals.authData.id.id
     let user_name = req.res.locals.authData.id.username
@@ -389,9 +398,20 @@ controller.getUbicacionesFG_POST = (req, res) => {
             "user_id":"${user_id}"
         }`
 
-    amqpRequest(send, "rpc_fg")
-        .then((result) => { res.json(result) })
-        .catch((err) => { res.json(err) })
+    // amqpRequest(send, "rpc_fg")
+    //     .then((result) => { res.json(result) })
+    //     .catch((err) => { res.json(err) })
+    funcion.sapRFC_consultaStorageUnit(funcion.addLeadingZeros(serial, 20))
+        .then(resultado => {
+            funcion.sapRFC_consultaMaterial(resultado[0].MATNR, "0014")
+                .then(resultado => {
+                    res.json(resultado)
+                })
+                .catch(err => {
+                    res.json(err)
+                })
+        })
+        .catch(err => { res.json(err)})
 }
 
 controller.getInfoMP_POST = (req, res) => {

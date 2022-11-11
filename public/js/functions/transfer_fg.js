@@ -190,8 +190,6 @@ function transferFG(e) {
     let storage_bin = submitArray.value
     $('#myModal').modal('hide')
     $('#modalCountDown').modal({ backdrop: 'static', keyboard: false })
-
-
     let data = { "estacion": `${estacion}`, "proceso": "transfer_fg_confirmed", "user_id": user_id.innerHTML, "serial": `${serialsArray}`, "storage_bin": `${storage_bin}` };
     axios({
         method: 'post',
@@ -242,4 +240,13 @@ function transferFG(e) {
             }, 500);
 
         })
+        .catch(err =>{
+
+            setTimeout(function () {
+                cantidadErrores.innerHTML = err
+                $('#modalCountDown').modal('hide')
+                $('#modalError').modal({ backdrop: 'static', keyboard: false })
+            }, 500);
+        })
+        
 }

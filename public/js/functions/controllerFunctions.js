@@ -6,9 +6,12 @@ const dbEX = require('../../db/conn_extr');
 const dbA = require('../../db/conn_areas');
 const dbBartender = require('../../db/conn_b10_bartender');
 //Require Node-RFC
-const rfcClient = require('node-rfc').Client;
-const abapSystem = require('../../sap/Connection');
-const SAP_RFC_Client = new rfcClient(abapSystem)
+const node_RFC = require('../../sap/Connection');
+
+
+funcion.addLeadingZeros =(num, totalLength) => {
+    return String(num).padStart(totalLength, '0');
+  }
 
 
 funcion.getUsers = (user) => {
@@ -364,11 +367,11 @@ funcion.sapFromMandrel = (mandrel, table) => {
 funcion.sapRFC_transferFG = (serial, storage_bin) => {
     return new Promise((resolve, reject) => {
 
-        abapSystem.acquire()
+        node_RFC.acquire()
             .then(managed_client => {
                 managed_client.call('L_TO_CREATE_MOVE_SU',
                     {
-                        I_LENUM: `0000000000${serial}`,
+                        I_LENUM: `${funcion.addLeadingZeros(serial,20)}`,
                         I_BWLVS: `998`,
                         I_LETYP: `IP`,
                         I_NLTYP: `FG`,
@@ -391,5 +394,114 @@ funcion.sapRFC_transferFG = (serial, storage_bin) => {
     })
 }
 
+
+
+
+
+funcion.sapRFC_consultaMaterial = (material_number, storage_location) => {
+    return new Promise((resolve, reject) => {
+        node_RFC.acquire()
+            .then(managed_client => {
+                managed_client.call('RFC_READ_TABLE',
+                    {
+                        QUERY_TABLE: 'LQUA',
+                        DELIMITER: ",",
+                        OPTIONS: [{ TEXT: `MATNR EQ '${material_number}'   AND LGORT EQ '${storage_location}'` }]
+                    }
+                )
+                    .then(result => {
+                        let columns = []
+                        let rows = []
+                        let fields = result.FIELDS
+
+                        fields.forEach(field => {
+                            columns.push(field.FIELDNAME)
+                        });
+
+                        let data = result.DATA
+
+                        data.forEach(data_ => {
+                            rows.push(data_.WA.split(","))
+                        });
+
+                        let res = rows.map(row => Object.fromEntries(
+                            columns.map((key, i) => [key, row[i]])
+                        ))
+                        resolve(res)
+                        managed_client.release()
+                    })
+                    .catch(err => {
+                        reject(err)
+                        managed_client.release()
+                    })
+            })
+            .catch(err => {
+                reject(err)
+                managed_client.release()
+            })
+    })
+}
+
+funcion.sapRFC_consultaStorageUnit = (storage_unit) => {
+    return new Promise((resolve, reject) => {
+        node_RFC.acquire()
+            .then(managed_client => {
+                managed_client.call('RFC_READ_TABLE',
+                    {
+                        QUERY_TABLE: 'LQUA',
+                        DELIMITER: ",",
+                        OPTIONS: [{ TEXT: `LENUM EQ '${storage_unit}' ` }]
+                    }
+                )
+                    .then(result => {
+                        let columns = []
+                        let rows = []
+                        let fields = result.FIELDS
+
+                        fields.forEach(field => {
+                            columns.push(field.FIELDNAME)
+                        });
+
+                        let data = result.DATA
+
+                        data.forEach(data_ => {
+                            rows.push(data_.WA.split(","))
+                        });
+
+                        let res = rows.map(row => Object.fromEntries(
+                            columns.map((key, i) => [key, row[i]])
+                        ))
+                        resolve(res)
+                        managed_client.release()
+                    })
+                    .catch(err => {
+                        reject(err)
+                        managed_client.release()
+                    })
+            })
+            .catch(err => {
+                reject(err)
+                managed_client.release()
+            })
+    })
+}
+
+
+
+// node_RFC.acquire()
+//     .then(managed_client => {
+//         managed_client.call('BAPI_WHSE_TO_GET_DETAIL ',
+//             {
+   
+//             }
+//         )
+//             .then(result => {
+//                 console.log(result);
+//             })
+//             .catch(err => {
+//                 console.log(err);
+//                 managed_client.release()
+//             })
+//     })
 
 module.exports = funcion;
