@@ -5,13 +5,16 @@ const dbC = require('../../db/conn_cycle');
 const dbEX = require('../../db/conn_extr');
 const dbA = require('../../db/conn_areas');
 const dbBartender = require('../../db/conn_b10_bartender');
+const dbB10 = require('../../db/conn_b10');
 //Require Node-RFC
 const node_RFC = require('../../sap/Connection');
+//Require Axios
+const axios = require('axios');
 
 
-funcion.addLeadingZeros =(num, totalLength) => {
+funcion.addLeadingZeros = (num, totalLength) => {
     return String(num).padStart(totalLength, '0');
-  }
+}
 
 
 funcion.getUsers = (user) => {
@@ -313,6 +316,44 @@ funcion.updateProcesado = (raw_id) => {
 }
 
 
+funcion.getPrinter = (station) => {
+    return new Promise((resolve, reject) => {
+        dbB10(`
+        SELECT impre
+        FROM b10.station_conf
+        WHERE no_estacion = '${station}'
+            `)
+            .then((result) => { resolve(result) })
+            .catch((error) => { reject(error) })
+    })
+}
+
+funcion.insertPartialTransfer = (emp_num, part_num, no_serie, linea, transfer_order) => {
+    return new Promise((resolve, reject) => {
+        dbC(`INSERT INTO partial_transfer (emp_num, part_num, no_serie, linea, transfer_order) 
+                VALUES (${emp_num}, "${part_num}", ${no_serie}, "${linea}", ${transfer_order})`)
+            .then((result) => { resolve(result) })
+            .catch((error) => { reject(error) })
+    })
+}
+
+funcion.printLabelTRA = (data, labelType) => {
+    return new Promise((resolve, reject) => {
+
+        axios({
+            method: 'POST',
+            url: `http://${process.env.BARTENDER_SERVER}:${process.env.BARTENDER_PORT}/Integration/${labelType}/Execute/`,
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            data: JSON.stringify(data)
+        })
+            .then((result) => { resolve(result) })
+            .catch((err) => { reject(err) })
+
+    })
+}
+
 funcion.sapFromMandrel = (mandrel, table) => {
     return new Promise((resolve, reject) => {
         dbBartender(`
@@ -328,41 +369,7 @@ funcion.sapFromMandrel = (mandrel, table) => {
     })
 }
 
-// funcion.sapRFC_transferFG = (serial, storage_bin) => {
-//     return new Promise((resolve, reject) => {
 
-//         let serial_array = serial.split(",")
-//         console.log(serial_array);
-//         let response_list = []
-
-//         serial_array.forEach(serial_ => {
-//             SAP_RFC_Client.connect(function (err) {
-//                 if (err) {
-//                     response_list.push({ "serial_num": serial_, "result": (err.key != "") ? err.key : err.message })
-//                 }
-
-//                 SAP_RFC_Client.invoke('L_TO_CREATE_MOVE_SU',
-//                     {
-//                         I_LENUM: `0000000000${serial_}`,
-//                         I_BWLVS: `998`,
-//                         I_LETYP: `IP`,
-//                         I_NLTYP: `FG`,
-//                         I_NLBER: `001`,
-//                         I_NLPLA: `${storage_bin}`
-//                     }, function (err, result) {
-//                         if (err) {
-//                             response_list.push({ "serial_num": serial_, "result": (err.key != "") ? err.key : err.message })
-//                         } else {
-//                             response_list.push({ "serial_num": serial_, "result": result.T_LTAK[0].TANUM })
-//                         }
-//                     })
-//             })
-//         })
-//         resolve(response_list)
-//         reject("")
-
-//     })
-// }
 
 funcion.sapRFC_transferFG = (serial, storage_bin) => {
     return new Promise((resolve, reject) => {
@@ -371,7 +378,7 @@ funcion.sapRFC_transferFG = (serial, storage_bin) => {
             .then(managed_client => {
                 managed_client.call('L_TO_CREATE_MOVE_SU',
                     {
-                        I_LENUM: `${funcion.addLeadingZeros(serial,20)}`,
+                        I_LENUM: `${funcion.addLeadingZeros(serial, 20)}`,
                         I_BWLVS: `998`,
                         I_LETYP: `IP`,
                         I_NLTYP: `FG`,
@@ -487,12 +494,113 @@ funcion.sapRFC_consultaStorageUnit = (storage_unit) => {
 }
 
 
+funcion.sapRFC_ConsultaMaterialMM03 = (material_number) => {
+    return new Promise((resolve, reject) => {
 
+        node_RFC.acquire()
+            .then(managed_client => {
+                managed_client.call('BAPI_MATERIAL_GET_DETAIL',
+                    {
+                        MATERIAL: `${material_number}`, /* Material no. */
+                    }
+                )
+                    .then(result => {
+                        managed_client.release()
+                        resolve(result)
+                    })
+                    .catch(err => {
+                        managed_client.release()
+                        reject(err)
+                    });
+            })
+            .catch(err => {
+                reject(err)
+            });
+    })
+}
+
+funcion.sapRFC_partialTransferStorageUnit = (material_number, transfer_quantity, source_storage_location, source_storage_type, source_storage_unit, destination_storage_type, destination_storage_bin) => {
+    return new Promise((resolve, reject) => {
+        node_RFC.acquire()
+            .then(managed_client => {
+                managed_client.call('L_TO_CREATE_SINGLE',
+                    {
+                        I_LGNUM: '521',                                                     /* Warehouse number */
+                        I_BWLVS: '998',                                                     /* Movement type    */
+                        I_MATNR: `${material_number}`,                                      /* Material no. */
+                        I_WERKS: '5210',                                                    /* Plant    */
+                        I_ANFME: `${transfer_quantity}`,                                    /* Requested Qty    */
+                        I_ALTME: '',                                                        /* Unit of measure  */
+                        I_LGORT: `${source_storage_location}`,                              /* Storage Location */
+                        I_LETYP: '001',                                                     /* Storage Unit Type    */
+                        I_VLTYP: `${source_storage_type}`,                                  /* Source storage type  */
+                        I_VLBER: '001',                                                     /* Source storage section   */
+                        I_VLENR: `${funcion.addLeadingZeros(source_storage_unit, 20)}`,     /* Source storage unit   */
+                        I_NLTYP: `${destination_storage_type}`,                             /*  Destination storage type    */
+                        I_NLBER: '001',                                                     /* Destination storage section  */
+                        I_NLPLA: `${destination_storage_bin}`,                              /* Destination Storage Bin  */
+                    }
+                )
+                    .then(result => {
+                        managed_client.release()
+                        resolve(result)
+                    })
+                    .catch(err => {
+                        managed_client.release()
+                        reject(err)
+                    })
+            })
+    })
+}
+
+funcion.sapRFC_transferVulProd = (serial) => {
+    return new Promise((resolve, reject) => {
+        node_RFC.acquire()
+            .then(managed_client => {
+                managed_client.call('L_TO_CREATE_MOVE_SU',
+                    {
+                        I_LENUM: `${funcion.addLeadingZeros(serial, 20)}`,
+                        I_BWLVS: `998`,
+                        I_LETYP: `IP`,
+                        I_NLTYP: `102`,
+                        I_NLBER: `001`,
+                        I_NLPLA: `103`
+                    }
+                )
+                    .then(result => {
+                        managed_client.release()
+                        resolve(result)
+                    })
+                    .catch(err => {
+                        managed_client.release()
+                        reject(err)
+                    });
+            })
+            .catch(err => { reject(err) })
+
+    })
+
+}
+
+//LT01
 // node_RFC.acquire()
 //     .then(managed_client => {
-//         managed_client.call('BAPI_WHSE_TO_GET_DETAIL ',
+//         managed_client.call('L_TO_CREATE_SINGLE',
 //             {
-   
+//                I_LGNUM: '521',          /* Warehouse number */
+//                I_BWLVS: '998' ,         /* Movement type    */
+//                I_MATNR: '1000009362A0', /* Material no. */
+//                I_WERKS: '5210',         /* Plant    */
+//                I_ANFME: '1',            /* Requested Qty    */
+//                I_ALTME: '',             /* Unit of measure  */
+//                I_LGORT: '0011',         /* Storage Location */
+//                I_LETYP: '001',          /* Storage Unit Type    */
+//                I_VLTYP: 'MP',           /* Source storage type  */
+//                I_VLBER: '001',          /* Source storage section   */
+//                I_VLENR: '00000000001032829214',/* Source storage unit   */
+//                I_NLTYP: '102',          /*  Destination storage type    */
+//                I_NLBER: '001',          /* Destination storage section  */
+//                I_NLPLA: '104',          /* Destination Storage Bin  */
 //             }
 //         )
 //             .then(result => {
@@ -503,5 +611,24 @@ funcion.sapRFC_consultaStorageUnit = (storage_unit) => {
 //                 managed_client.release()
 //             })
 //     })
+
+//MM03
+// node_RFC.acquire()
+//     .then(managed_client => {
+//         managed_client.call('BAPI_MATERIAL_GET_DETAIL',
+//             {
+//                MATERIAL: '1000009362A0', /* Material no. */
+//             }
+//         )
+//             .then(result => {
+//                 console.log(result);
+//             })
+//             .catch(err => {
+//                 console.log(err);
+//                 managed_client.release()
+//             })
+//     })
+
+
 
 module.exports = funcion;

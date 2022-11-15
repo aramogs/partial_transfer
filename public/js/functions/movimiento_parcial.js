@@ -82,18 +82,10 @@ submitSerial.addEventListener("submit", function (e) {
         })
             .then((result) => {
 
-                if ((result.data).includes("<!DOCTYPE html>")) {
-
-                    setTimeout(() => {
-                        location.href="/login"
-                    }, 1000);
-                    soundWrong()
-                }
 
                 response = JSON.parse(result.data)
-                // console.log(response);
-
-                if (response.error !== "N/A") {
+                // TODO hacer pruebas con errores
+                if (response.error) {
                     soundWrong()
                     errorText.innerHTML = response.error
                     $('#modalSpinner').modal('hide')
@@ -134,28 +126,16 @@ submitCantidad.addEventListener("submit", function (e) {
         data: JSON.stringify(data)
     })
         .then((result) => {
-
-            if ((result.data).includes("<!DOCTYPE html>")) {
-
-                setTimeout(() => {
-                    location.href="/login"
-                }, 1000);
-                soundWrong()
-            }
-
-            cantidadSubmit.value = ""
-
-            response = JSON.parse(result.data)
-            // console.log(response);
-
-            if (response.error !== "N/A") {
+            cantidadSubmit.value = ""        
+            if (result.data.key) {
                 soundWrong()
                 btnTransferir.disabled = false
-                errorText.innerHTML = response.error
+                errorText.innerHTML = result.data.key
                 $('#modalSpinner').modal('hide')
                 // $('#myModal').modal('hide')
                 $('#modalError').modal({ backdrop: 'static', keyboard: false })
             } else {
+                response = JSON.parse(result.data)
                 soundOk()
                 btnTransferir.disabled = false
                 successText.innerHTML = response.result
