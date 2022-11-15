@@ -411,7 +411,7 @@ controller.getUbicacionesFG_POST = (req, res) => {
                     res.json(err)
                 })
         })
-        .catch(err => { res.json(err)})
+        .catch(err => { res.json(err) })
 }
 
 controller.getInfoMP_POST = (req, res) => {
@@ -423,19 +423,44 @@ controller.getInfoMP_POST = (req, res) => {
     let user_id = req.res.locals.authData.id.id
 
 
-    let send = `{
-            "station":"${estacion}",
-            "serial_num":"${serial}",
-            "material": "${material}",
-            "cantidad":"${cantidad}", 
-            "process":"${proceso}", 
-            "user_id":"${user_id}" 
-        }`
 
 
-    amqpRequest(send, "rpc_rm")
-        .then((result) => { res.json(result) })
-        .catch((err) => { res.json(err) })
+    funcion.sapRFC_consultaStorageUnit(funcion.addLeadingZeros(serial, 20))
+        .then(result => {
+
+            let certificate_number = ""
+            let material_number = ""
+            let stock_quantity = ""
+            let material_description = ""
+            let material_w = ""
+
+            certificate_number = (result[0].ZEUGN).trim()
+            material_number = (result[0].MATNR).trim()
+            stock_quantity = (result[0].VERME).trim()
+
+            funcion.sapRFC_ConsultaMaterialMM03(material_number)
+                .then(result => {
+                    material_description = result.MATERIAL_GENERAL_DATA.MATL_DESC
+                    material_w = result.MATERIAL_GENERAL_DATA.GROSS_WT
+
+
+                    let response = `{
+                        "serial":"${serial}",
+                        "material":"${material_number}",
+                        "material_description": "${material_description}",
+                        "material_w":"${material_w}", 
+                        "cantidad":"${Number(stock_quantity)}", 
+                        "certificate_number":"${certificate_number}" 
+                    }`
+                    res.json(response)
+                })
+                .catch(err => { res.json(err) })
+        })
+        .catch(err => { res.json(err) })
+
+    // amqpRequest(send, "rpc_rm")
+    //     .then((result) => { res.json(result) })
+    //     .catch((err) => { res.json(err) })
 }
 
 
@@ -449,25 +474,37 @@ controller.transferenciaMaterialMP_POST = (req, res) => {
     let proceso = req.body.proceso
     let material_description = req.body.material_description
     let certificate_number = req.body.certificate_number
-
     let cantidad_restante = req.body.cantidad_restante
     let user_id = req.body.user_id
 
-    let send = `{
-            "station":"${estacion}",
-            "serial_num":"${serial}",
-            "material": "${material}",
-            "cantidad":"${cantidad}", 
-            "process":"${proceso}", 
-            "material_description": "${material_description}",
-            "cantidad_restante":"${cantidad_restante}", 
-            "user_id":"${user_id}",
-            "certificate_number": "${certificate_number}"
-        }`
 
-    amqpRequest(send, "rpc_rm")
-        .then((result) => { res.json(result) })
+
+    funcion.sapRFC_partialTransferStorageUnit(material, cantidad, "0011", "MP", serial, "102", "104")
+        .then((result) => {
+            let transfer_order = result.E_TANUM
+            let response = `{
+                "serial":"${serial}",
+                "material": "${material}",
+                "cantidad":"${cantidad}",  
+                "result": "${transfer_order}",
+                "error": "N/A"
+            }`
+            funcion.getPrinter(estacion)
+                .then(result => {
+
+                    let dataTRA = { "labels": `1`, "printer": `${result[0].impre}`, "cantidad": `${cantidad_restante}`, "descripcion": `${material_description}`, "lote": `${certificate_number}`, "material": `${material}`, "serial": `${serial}` }
+                    let dataTRAB = { "labels": `1`, "printer": `${result[0].impre}`, "cantidad": `${cantidad}`, "descripcion": `${material_description}`, "lote": `${certificate_number}`, "material": `${material}`, "serial": `${serial}` }
+
+                    funcion.printLabelTRA(dataTRAB, "TRAB").catch(err=>{console.error(err)})
+                    if (cantidad_restante > 0) { funcion.printLabelTRA(dataTRA, "TRA") }
+                    funcion.insertPartialTransfer(user_id, material, serial, estacion, transfer_order).catch(err=>{console.error(err)})
+                    
+                })
+                .catch(err => { console.error(err) })
+            res.json(response)
+        })
         .catch((err) => { res.json(err) })
+
 }
 
 controller.getBinStatusReport_POST = (req, res) => {
@@ -1226,5 +1263,13 @@ controller.postSerialsEXT_POST = (req, res) => {
     amqpRequest(send, "rpc_ext")
         .then((result) => { res.json(result) })
         .catch((err) => { res.json(err) })
+}
+
+controller.transferVulProd_POST = (req, res) => {
+    let serial = req.body.serial
+    funcion.sapRFC_transferVulProd(funcion.addLeadingZeros(serial, 20))
+        .then(resultado => {res.json(resultado.T_LTAK[0])})
+        .catch(err => {res.json(err)})
+
 }
 module.exports = controller;

@@ -82,6 +82,8 @@ router.post('/transferVUL_Confirmed',middleware.verifyToken, middleware.macFromI
 router.post("/getUbicacionesVULMaterial",middleware.verifyToken, middleware.macFromIP, routesController.getUbicacionesVULMaterial_POST);
 router.post("/getUbicacionesVULMandrel",middleware.verifyToken, middleware.macFromIP, routesController.getUbicacionesVULMandrel_POST);
 router.post("/getUbicacionesVULSerial",middleware.verifyToken, middleware.macFromIP, routesController.getUbicacionesVULSerial_POST);
+
+router.post('/transferVulProd', routesController.transferVulProd_POST);
 // // router.get('*', (req, res) => {
 // //   res.redirect('http://tftdelsrv001:3000/not_found');
 // // });
