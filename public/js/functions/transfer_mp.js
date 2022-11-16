@@ -26,8 +26,8 @@ let spanBin = document.getElementById("spanBin")
 let storage_type = document.getElementById("storage_type")
 
 let estacion = document.getElementById("estacion").innerHTML
-let beginOF = document.getElementById("beginOF")
-let endOF = document.getElementById("endOF")
+// let beginOF = document.getElementById("beginOF")
+// let endOF = document.getElementById("endOF")
 
 serial_num.focus()
 btnCerrar.forEach(element => {
@@ -204,8 +204,8 @@ function verify_hashRedis() {
         .then(result => {
             if (result.data !== null) {
                 result_array = (result.data).split("\n")
-                beginOF.innerHTML = result_array.length
-                endOF.innerHTML = serialsArray.length
+                // beginOF.innerHTML = result_array.length
+                // endOF.innerHTML = serialsArray.length
             }
         })
         .catch(err => {
@@ -214,8 +214,8 @@ function verify_hashRedis() {
 }
 
 function transferFG(e) {
-    beginOF.innerHTML = 0
-    endOF.innerHTML = serialsArray.length
+    // beginOF.innerHTML = 0
+    // endOF.innerHTML = serialsArray.length
     // e.preventDefault()
     $('#modalStorage').modal('hide')
     setTimeout(() => {
@@ -239,85 +239,53 @@ function transferFG(e) {
         data: JSON.stringify(data)
     })
         .then((result) => {
+            let response = result.data
+            let errors = 0
+            soundOk()
+            errorText.hidden = true
+            tabla_consulta_container.hidden = false
 
-            if ((result.data).includes("<!DOCTYPE html>")) {
-
-                setTimeout(() => {
-                    location.href = "/login"
-                }, 1000);
-                soundWrong()
-            }
-
-            response = JSON.parse(result.data)
-
-
-
-            if (response.error !== "N/A") {
-
-                errorTextField.innerHTML = response.error
-                errorText.hidden = false
-                tabla_consulta_container.hidden = true
-                serialsArray = []
-                currentST.innerHTML = ""
-                btn_transferFG.disabled = true
-                clearInterval(interval);
-                setTimeout(() => { soundWrong(), $('#modalCountDown').modal('hide') }, 500);
-                $('#modalError').modal({ backdrop: 'static', keyboard: false })
-
-            } else {
-                soundOk()
-                errorText.hidden = true
-                tabla_consulta_container.hidden = false
-                let result = response.result
-                let result_mod = ""
-
-                result_mod = result.replace("[", "").replace("]", "").replace(/'/g, '"')
-                let objectStringArray = (new Function("return [" + result_mod + "];")());
-                let errors = 0
-
-                objectStringArray.forEach(element => {
-                    if (typeof (element.result) != "number") {
-                        errors++
-                    }
-                });
-
-                if (errors != 0) {
-                    tabla_consulta.innerHTML = ""
-                    objectStringArray.forEach(element => {
-                        let newRow = tabla_consulta.insertRow(tabla_consulta.rows.length);
-                        if (typeof (element.result) != "number") {
-                            let row = `
+            tabla_consulta.innerHTML = ""
+            response.forEach(element => {
+                let newRow = tabla_consulta.insertRow(tabla_consulta.rows.length);
+                if (element.name) {
+                    let row = `
                                 <tr class="bg-danger">
-                                    <td>${element.serial_num}</td>
-                                    <td>${element.result}</td>
+                                    <td>${element.abapMsgV1}</td>
+                                    <td>${element.key ? element.key : element.message}</td>
                                 </tr>
                                 `
-                            newRow.classList.add("bg-danger", "text-white")
-                            return newRow.innerHTML = row;
-                        }
-
-
-                    })
-                    cantidadErrores.innerHTML = errors
-                    // $('#modalSpinner').modal('hide')
-                    // $('#modalError').modal({ backdrop: 'static', keyboard: false })
-                    setTimeout(function () {
-                        clearInterval(interval);
-                        $('#modalCountDown').modal('hide')
-                        $('#modalError').modal({ backdrop: 'static', keyboard: false })
-
-                    }, 500);
+                    newRow.classList.add("bg-danger", "text-white")
+                    errors++
+                    return newRow.innerHTML = row;
                 } else {
-                    // $('#modalSpinner').modal('hide')
-                    // $('#modalSuccess').modal({ backdrop: 'static', keyboard: false })
-                    clearInterval(interval);
-                    $('#modalCountDown').modal('hide')
-                    $('#modalSuccess').modal({ backdrop: 'static', keyboard: false })
+                    let row = `
+                                <tr >
+                                    <td>${(element.I_LENUM).replace(/^0+/gm, "")}</td>
+                                    <td>${element.E_TANUM}</td>
+                                </tr>
+                                `
+
+                    return newRow.innerHTML = row;
                 }
-            }
+
+
+            })
+            cantidadErrores.innerHTML = errors
+
+            setTimeout(function () {
+                $('#modalCountDown').modal('hide')
+                $('#modalError').modal({ backdrop: 'static', keyboard: false })
+            }, 500);
+
         })
-        .catch((err) => {
-            console.error(err);
+        .catch(err =>{
+
+            setTimeout(function () {
+                cantidadErrores.innerHTML = err
+                $('#modalCountDown').modal('hide')
+                $('#modalError').modal({ backdrop: 'static', keyboard: false })
+            }, 500);
         })
 }
 
