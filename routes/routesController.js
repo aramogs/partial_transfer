@@ -335,22 +335,17 @@ controller.postSerialsMP_POST = (req, res) => {
     let storage_type = req.body.storage_type
     let user_id = req.res.locals.authData.id.id
 
+    let serials_array = serial.split(",")
+    let promises = []
+    serials_array.forEach(serial_ => {
+        promises.push(funcion.sapRFC_transferMP(funcion.addLeadingZeros(serial_,20), storage_type, storage_bin, user_id)
+        .catch((err) => { return err }))
+    });
 
-    let send = `{
-            "station":"${estacion}",
-            "serial_num":"${serial}",
-            "material": "${material}",
-            "cantidad":"${cantidad}", 
-            "process":"${proceso}", 
-            "storage_bin": "${storage_bin}",
-            "storage_type": "${storage_type}",
-            "user_id":"${user_id}"
+    Promise.all(promises)
+        .then(result => { res.json(result) })
+        .catch(err => { res.json(err) })
 
-        }`
-
-    amqpRequest(send, "rpc_rm")
-        .then((result) => { res.json(result) })
-        .catch((err) => { res.json(err) })
 }
 
 controller.getUbicaciones_POST = (req, res) => {
@@ -495,10 +490,10 @@ controller.transferenciaMaterialMP_POST = (req, res) => {
                     let dataTRA = { "labels": `1`, "printer": `${result[0].impre}`, "cantidad": `${cantidad_restante}`, "descripcion": `${material_description}`, "lote": `${certificate_number}`, "material": `${material}`, "serial": `${serial}` }
                     let dataTRAB = { "labels": `1`, "printer": `${result[0].impre}`, "cantidad": `${cantidad}`, "descripcion": `${material_description}`, "lote": `${certificate_number}`, "material": `${material}`, "serial": `${serial}` }
 
-                    funcion.printLabelTRA(dataTRAB, "TRAB").catch(err=>{console.error(err)})
+                    funcion.printLabelTRA(dataTRAB, "TRAB").catch(err => { console.error(err) })
                     if (cantidad_restante > 0) { funcion.printLabelTRA(dataTRA, "TRA") }
-                    funcion.insertPartialTransfer(user_id, material, serial, estacion, transfer_order).catch(err=>{console.error(err)})
-                    
+                    funcion.insertPartialTransfer(user_id, material, serial, estacion, transfer_order).catch(err => { console.error(err) })
+
                 })
                 .catch(err => { console.error(err) })
             res.json(response)
@@ -1268,8 +1263,8 @@ controller.postSerialsEXT_POST = (req, res) => {
 controller.transferVulProd_POST = (req, res) => {
     let serial = req.body.serial
     funcion.sapRFC_transferVulProd(funcion.addLeadingZeros(serial, 20))
-        .then(resultado => {res.json(resultado.T_LTAK[0])})
-        .catch(err => {res.json(err)})
+        .then(resultado => { res.json(resultado.T_LTAK[0]) })
+        .catch(err => { res.json(err) })
 
 }
 module.exports = controller;

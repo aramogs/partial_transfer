@@ -337,6 +337,15 @@ funcion.insertPartialTransfer = (emp_num, part_num, no_serie, linea, transfer_or
     })
 }
 
+funcion.insertCompleteTransfer = (emp_num, area, no_serie, storage_bin, result) => {
+    return new Promise((resolve, reject) => {
+        dbC(`INSERT INTO complete_transfer (emp_num, area, no_serie, storage_bin, result) 
+                VALUES (${emp_num}, "${area}", ${no_serie}, "${storage_bin}", "${result}")`)
+            .then((result) => { resolve(result) })
+            .catch((error) => { reject(error) })
+    })
+}
+
 funcion.printLabelTRA = (data, labelType) => {
     return new Promise((resolve, reject) => {
 
@@ -582,6 +591,72 @@ funcion.sapRFC_transferVulProd = (serial) => {
 
 }
 
+funcion.sapRFC_transferMP = (storage_unit, storage_type, storage_bin, emp_num) => {
+    return new Promise((resolve, reject) => {
+
+        funcion.sapRFC_consultaStorageUnit(storage_unit)
+            .then(result => {
+                let error = ""
+                let abap_error = {
+                    "name": 'ABAPError',
+                    "group": 2,
+                    "code": 4,
+                    "codeString": 'RFC_ABAP_MESSAGE',
+                    "key": '',
+                    "message": "",
+                    "abapMsgClass": 'L3',
+                    "abapMsgType": 'E',
+                    "abapMsgNumber": '004',
+                    "abapMsgV1": `${(storage_unit).replace(/^0+/gm, "")}`,
+                    "abapMsgV2": '',
+                    "abapMsgV3": '',
+                    "abapMsgV4": ''
+                }
+                if (result.length === 0) {
+                    error = "DEL: Check your entries"
+                    abap_error.message = error
+                    reject(abap_error)
+                } else if ((result[0].LGTYP).trim() !== (storage_type).trim()) {
+                    error = 'DEL: Transfer between Storage Types not permited'
+                    abap_error.message = error
+                    funcion.insertCompleteTransfer(emp_num, storage_type, (storage_unit).replace(/^0+/gm, ""), storage_bin, error)
+                    reject(abap_error)
+                } else {
+
+                    node_RFC.acquire()
+                        .then(managed_client => {
+                            managed_client.call('L_TO_CREATE_MOVE_SU',
+                                {
+                                    I_LENUM: `${storage_unit}`,
+                                    I_BWLVS: `998`,
+                                    I_LETYP: `IP`,
+                                    I_NLTYP: `${storage_type}`,
+                                    I_NLBER: `001`,
+                                    I_NLPLA: `${storage_bin}`
+                                }
+                            )
+                                .then(result => {
+                                    managed_client.release()
+                                    funcion.insertCompleteTransfer(emp_num, storage_type, (storage_unit).replace(/^0+/gm, ""), storage_bin, result.E_TANUM)
+                                    resolve(result)
+                                })
+                                .catch(err => {
+                                    funcion.insertCompleteTransfer(emp_num, storage_type, (storage_unit).replace(/^0+/gm, ""), storage_bin, err.message)
+                                    managed_client.release()
+                                    reject(err)
+                                });
+                        })
+                        .catch(err => {
+                            reject(err)
+                        })
+                }
+            })
+            .catch()
+
+
+    })
+}
+
 //LT01
 // node_RFC.acquire()
 //     .then(managed_client => {
@@ -629,6 +704,30 @@ funcion.sapRFC_transferVulProd = (serial) => {
 //             })
 //     })
 
-
+// node_RFC.acquire()
+//     .then(managed_client => {
+//         managed_client.call('ABAP4_CALL_TRANSACTION',
+//             {
+//                 TCODE: 'LX03',
+//                 SKIP_SCREEN :'X',
+//                 SPAGPA_TAB: [
+//                     { PARID: 'LGN', PARVAL: '521' },
+//                     { PARID: 'LGT', PARVAL: 'FG' },
+//                     { PARID: 'LGP', PARVAL: 'FW0101' },
+//                     // { PARID: 'MATNR', PARVAL: '5000009979A0' },
+//                     // { PARID: 'DATUM', PARVAL: '16.11.2022' },
+//                     // { PARID: 'VERID', PARVAL: '1' },
+//                     // { PARID: 'LDEST', PARVAL: 'TFTDELPRN067' }
+//                 ]
+//             }
+//         )
+//             .then(result => {
+//                 console.log(result);
+//             })
+//             .catch(err => {
+//                 console.log(err);
+//                 managed_client.release()
+//             })
+//     })
 
 module.exports = funcion;
