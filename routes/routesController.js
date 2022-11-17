@@ -297,7 +297,8 @@ controller.postSerialsFG_POST = (req, res) => {
     let serials_array = serial.split(",")
     let promises = []
     serials_array.forEach(serial_ => {
-        promises.push(funcion.sapRFC_transferFG(serial_, storage_bin).catch((err) => { return err }))
+        promises.push(funcion.sapRFC_transferFG(serial_, (storage_bin).toUpperCase())
+        .catch((err) => { return err }))
     });
 
     Promise.all(promises)
@@ -338,7 +339,7 @@ controller.postSerialsMP_POST = (req, res) => {
     let serials_array = serial.split(",")
     let promises = []
     serials_array.forEach(serial_ => {
-        promises.push(funcion.sapRFC_transferMP(funcion.addLeadingZeros(serial_,20), storage_type, storage_bin, user_id)
+        promises.push(funcion.sapRFC_transferMP(funcion.addLeadingZeros(serial_,20), storage_type, (storage_bin).toUpperCase(), user_id)
         .catch((err) => { return err }))
     });
 
