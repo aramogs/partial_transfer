@@ -82,8 +82,6 @@ submitSerial.addEventListener("submit", function (e) {
             data: JSON.stringify(data)
         })
             .then((result) => {
-                console.log(result);
-
                 if (result.data.key) {
                     soundWrong()
                     errorText.innerHTML = result.data.key ? result.data.key : result.data.message

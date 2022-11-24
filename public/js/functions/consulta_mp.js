@@ -16,7 +16,7 @@ let material = ""
 let serial = ""
 let errorText = document.getElementById("errorText")
 let btnCerrar = document.querySelectorAll(".btnCerrar")
-let storage_type =document.getElementById("storage_type").innerText
+let storage_type = document.getElementById("storage_type").innerText
 let successText = document.getElementById("successText")
 let user_id = document.getElementById("user_id")
 
@@ -66,87 +66,76 @@ function consultarMaterial() {
 
     $('#modalSpinner').modal({ backdrop: 'static', keyboard: false })
     serial_num.disabled = true
-    let material_ =  material.substring(1)
+    let material_ = material.substring(1)
 
     let data = { "proceso": "location_mp_material", "material": `${material_}`, "user_id": user_id.innerHTML, "storage_type": `${storage_type}` };
     axios({
         method: 'post',
-        url: "/getUbicacionesMP",
+        url: "/getUbicacionesMPMaterial",
         headers: {
             'Content-Type': 'application/json'
         },
         data: JSON.stringify(data)
     })
-        .then((result) => {
+    .then((result) => {
+        if (result.data.key) {
+            soundWrong()
+            errorText.innerHTML = result.data.key ? result.data.key : result.data.message
+            setTimeout(() => { $('#modalSpinner').modal('hide') }, 500);
+            $('#modalError').modal({ backdrop: 'static', keyboard: false })
+        } else {
 
-            if ((result.data).includes("<!DOCTYPE html>")) {
+            let storage_bins = []
+            let arregloFinal = []
+            tabla_consulta.innerHTML = ""
+            soundOk()
+            let result_array = result.data
 
-                setTimeout(() => {
-                    location.href = "/login"
-                }, 1000);
-                soundWrong()
+            for (let i = 0; i < result_array.length; i++) {
+                if (storage_bins.indexOf(result_array[i].LGPLA) === -1) {
+                    storage_bins.push(`${result_array[i].LGPLA}`)
+                }
             }
 
-            let response = JSON.parse(result.data)
+            for (let i = 0; i < storage_bins.length; i++) {
+                let count = 0
+                let recentDate = "12/12/1900"
+                for (let y = 0; y < result_array.length; y++) {
+                    if (storage_bins[i] == result_array[y].LGPLA) {
+                        count++
 
-            if (response.error !== "N/A") {
-                soundWrong()
-                errorText.innerHTML = response.error
-                setTimeout(() => { $('#modalSpinner').modal('hide') }, 500);
-                $('#modalError').modal({ backdrop: 'static', keyboard: false })
-            } else {
-
-                let storage_bins = []
-                let arregloFinal = []
-                tabla_consulta.innerHTML = ""
-                soundOk()
-                let result = response.result
-
-                for (let i = 0; i < result.length; i++) {
-                    if (storage_bins.indexOf(result[i].storage_bin) === -1) {
-                        storage_bins.push(`${result[i].storage_bin}`)
-                    }
-                }
-
-
-                for (let i = 0; i < storage_bins.length; i++) {
-                    let count = 0
-                    let recentDate = ""
-                    for (let y = 0; y < result.length; y++) {
-                        if (storage_bins[i] == result[y].storage_bin) {
-                            count++
-                            if (recentDate < result[y].gr_date) {
-                                recentDate = result[y].gr_date
-                            }
+                        if (moment(result_array[y].WDATU, "YYYYMMDD") > moment(recentDate, 'MM/DD/YYYY')) {
+                            recentDate = moment(result_array[y].WDATU, "YYYYMMDD").format('MM/DD/YYYY')
                         }
+
                     }
-                    let push = { "storage_bin": `${storage_bins[i]}`, "count": `${count}`, "recentDate": `${recentDate}` }
-                    arregloFinal.push(push)
-
                 }
+                let push = { "storage_bin": `${storage_bins[i]}`, "count": `${count}`, "date": `${recentDate}` }
+                arregloFinal.push(push)
 
-                const arregloFinalSortDate = arregloFinal.sort((a, b) => b.recentDate - a.recentDate)
-                arregloFinalSortDate.forEach(element => {
-                    row = `
-                        <tr>
-                            <td>${element.storage_bin}</td>
-                            <td>${element.count}</td>
-                            <td>${element.recentDate}</td>
-                        </tr>
-                        `
+            }
+            const arregloFinalSortDate = arregloFinal.sort((d1, d2) => new Date(d2.date) - new Date(d1.date))
+            arregloFinalSortDate.forEach(element => {
+                row = `
+            <tr>
+                <td>${element.storage_bin}</td>
+                <td>${element.count}</td>
+                <td>${element.date}</td>
+            </tr>
+            `
 
-                    let newRow = tabla_consulta.insertRow(tabla_consulta.rows.length);
-                    return newRow.innerHTML = row;
-                });
-
+                let newRow = tabla_consulta.insertRow(tabla_consulta.rows.length);
+                return newRow.innerHTML = row;
+            });
+            setTimeout(function () {
                 $('#modalSpinner').modal('hide')
                 $('#myModal').modal({ backdrop: 'static', keyboard: false })
+            }, 500);
 
-            }
+        }
 
-        })
-        .catch((err) => { console.error(err) })
-
+    })
+    .catch((err) => { console.error(err) })
 }
 
 
@@ -164,30 +153,19 @@ submitSerial.addEventListener("submit", function (e) {
             serial_ = serial.substring(1)
         }
 
-        let data = { "proceso": "location_mp_serial", "serial": `${serial_}`, "user_id": user_id.innerHTML ,"storage_type": `${storage_type}`};
+        let data = { "proceso": "location_mp_serial", "serial": `${serial_}`, "user_id": user_id.innerHTML, "storage_type": `${storage_type}` };
         axios({
             method: 'post',
-            url: "/getUbicacionesMP",
+            url: "/getUbicacionesMPSerial",
             headers: {
                 'Content-Type': 'application/json'
             },
             data: JSON.stringify(data)
         })
             .then((result) => {
-
-                if ((result.data).includes("<!DOCTYPE html>")) {
-
-                    setTimeout(() => {
-                        location.href = "/login"
-                    }, 1000);
+                if (result.data.key) {
                     soundWrong()
-                }
-
-                let response = JSON.parse(result.data)
-
-                if (response.error !== "N/A") {
-                    soundWrong()
-                    errorText.innerHTML = response.error
+                    errorText.innerHTML = result.data.key ? result.data.key : result.data.message
                     setTimeout(() => { $('#modalSpinner').modal('hide') }, 500);
                     $('#modalError').modal({ backdrop: 'static', keyboard: false })
                 } else {
@@ -196,47 +174,49 @@ submitSerial.addEventListener("submit", function (e) {
                     let arregloFinal = []
                     tabla_consulta.innerHTML = ""
                     soundOk()
-                    let result = response.result
+                    let result_array = result.data
 
-                    for (let i = 0; i < result.length; i++) {
-                        if (storage_bins.indexOf(result[i].storage_bin) === -1) {
-                            storage_bins.push(`${result[i].storage_bin}`)
+                    for (let i = 0; i < result_array.length; i++) {
+                        if (storage_bins.indexOf(result_array[i].LGPLA) === -1) {
+                            storage_bins.push(`${result_array[i].LGPLA}`)
                         }
                     }
-
 
                     for (let i = 0; i < storage_bins.length; i++) {
                         let count = 0
-                        let recentDate = ""
-                        for (let y = 0; y < result.length; y++) {
-                            if (storage_bins[i] == result[y].storage_bin) {
+                        let recentDate = "12/12/1900"
+                        for (let y = 0; y < result_array.length; y++) {
+                            if (storage_bins[i] == result_array[y].LGPLA) {
                                 count++
-                                if (recentDate < result[y].gr_date) {
-                                    recentDate = result[y].gr_date
+
+                                if (moment(result_array[y].WDATU, "YYYYMMDD") > moment(recentDate, 'MM/DD/YYYY')) {
+                                    recentDate = moment(result_array[y].WDATU, "YYYYMMDD").format('MM/DD/YYYY')
                                 }
+
                             }
                         }
-                        let push = { "storage_bin": `${storage_bins[i]}`, "count": `${count}`, "recentDate": `${recentDate}` }
+                        let push = { "storage_bin": `${storage_bins[i]}`, "count": `${count}`, "date": `${recentDate}` }
                         arregloFinal.push(push)
 
                     }
-
-                    const arregloFinalSortDate = arregloFinal.sort((a, b) => b.recentDate - a.recentDate)
+                    const arregloFinalSortDate = arregloFinal.sort((d1, d2) => new Date(d2.date) - new Date(d1.date))
                     arregloFinalSortDate.forEach(element => {
                         row = `
-                        <tr>
-                            <td>${element.storage_bin}</td>
-                            <td>${element.count}</td>
-                            <td>${element.recentDate}</td>
-                        </tr>
-                        `
+                    <tr>
+                        <td>${element.storage_bin}</td>
+                        <td>${element.count}</td>
+                        <td>${element.date}</td>
+                    </tr>
+                    `
 
                         let newRow = tabla_consulta.insertRow(tabla_consulta.rows.length);
                         return newRow.innerHTML = row;
                     });
 
-                    $('#modalSpinner').modal('hide')
-                    $('#myModal').modal({ backdrop: 'static', keyboard: false })
+                    setTimeout(function () {
+                        $('#modalSpinner').modal('hide')
+                        $('#myModal').modal({ backdrop: 'static', keyboard: false })
+                    }, 500);
 
                 }
 
