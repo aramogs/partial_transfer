@@ -361,7 +361,7 @@ controller.getUbicacionesMPSerial_POST = (req, res) => {
 
     funcion.sapRFC_consultaStorageUnit(funcion.addLeadingZeros(serial, 20))
         .then(resultado => {
-            funcion.sapRFC_consultaMaterial(resultado[0].MATNR, "0011")
+            funcion.sapRFC_consultaMaterial_ST(resultado[0].MATNR, "0011", storage_type)
                 .then(resultado => {
                     res.json(resultado)
                 })
@@ -382,7 +382,7 @@ controller.getUbicacionesMPMaterial_POST = (req, res) => {
     let storage_type = req.body.storage_type
 
 
-    funcion.sapRFC_consultaMaterial(material, "0011")
+    funcion.sapRFC_consultaMaterial_ST(material, "0011", storage_type)
         .then(resultado => {
             res.json(resultado)
         })
