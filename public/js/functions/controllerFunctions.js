@@ -458,6 +458,50 @@ funcion.sapRFC_consultaMaterial = (material_number, storage_location) => {
     })
 }
 
+funcion.sapRFC_consultaMaterial_ST = (material_number, storage_location, storage_type) => {
+    return new Promise((resolve, reject) => {
+        node_RFC.acquire()
+            .then(managed_client => {
+                managed_client.call('RFC_READ_TABLE',
+                    {
+                        QUERY_TABLE: 'LQUA',
+                        DELIMITER: ",",
+                        OPTIONS: [{ TEXT: `MATNR EQ '${material_number}'   AND LGORT EQ '${storage_location}' AND LGTYP EQ '${storage_type}'` }]
+                    }
+                )
+                    .then(result => {
+                        let columns = []
+                        let rows = []
+                        let fields = result.FIELDS
+
+                        fields.forEach(field => {
+                            columns.push(field.FIELDNAME)
+                        });
+
+                        let data = result.DATA
+
+                        data.forEach(data_ => {
+                            rows.push(data_.WA.split(","))
+                        });
+
+                        let res = rows.map(row => Object.fromEntries(
+                            columns.map((key, i) => [key, row[i]])
+                        ))
+                        resolve(res)
+                        managed_client.release()
+                    })
+                    .catch(err => {
+                        reject(err)
+                        managed_client.release()
+                    })
+            })
+            .catch(err => {
+                reject(err)
+                managed_client.release()
+            })
+    })
+}
+
 funcion.sapRFC_consultaStorageUnit = (storage_unit) => {
     return new Promise((resolve, reject) => {
         node_RFC.acquire()
