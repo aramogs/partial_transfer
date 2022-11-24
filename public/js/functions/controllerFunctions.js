@@ -690,9 +690,15 @@ funcion.sapRFC_transferMP = (storage_unit, storage_type, storage_bin, emp_num) =
 //MM03
 // node_RFC.acquire()
 //     .then(managed_client => {
-//         managed_client.call('BAPI_MATERIAL_GET_DETAIL',
+//         managed_client.call('BAPI_HU_CREATE ',
 //             {
-//                MATERIAL: '1000009362A0', /* Material no. */
+
+//                 HEADERPROPOSAL: 
+//                     {
+//                         PACK_MAT: '5000010057A0',
+//                         PLANT: '5210',
+//                     }
+                
 //             }
 //         )
 //             .then(result => {

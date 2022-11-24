@@ -298,7 +298,7 @@ controller.postSerialsFG_POST = (req, res) => {
     let promises = []
     serials_array.forEach(serial_ => {
         promises.push(funcion.sapRFC_transferFG(serial_, (storage_bin).toUpperCase())
-        .catch((err) => { return err }))
+            .catch((err) => { return err }))
     });
 
     Promise.all(promises)
@@ -339,8 +339,8 @@ controller.postSerialsMP_POST = (req, res) => {
     let serials_array = serial.split(",")
     let promises = []
     serials_array.forEach(serial_ => {
-        promises.push(funcion.sapRFC_transferMP(funcion.addLeadingZeros(serial_,20), storage_type, (storage_bin).toUpperCase(), user_id)
-        .catch((err) => { return err }))
+        promises.push(funcion.sapRFC_transferMP(funcion.addLeadingZeros(serial_, 20), storage_type, (storage_bin).toUpperCase(), user_id)
+            .catch((err) => { return err }))
     });
 
     Promise.all(promises)
@@ -349,7 +349,7 @@ controller.postSerialsMP_POST = (req, res) => {
 
 }
 
-controller.getUbicaciones_POST = (req, res) => {
+controller.getUbicacionesMPSerial_POST = (req, res) => {
     let estacion = req.res.locals.macIP.mac
     let serial = req.body.serial
     let material = req.body.material
@@ -359,19 +359,37 @@ controller.getUbicaciones_POST = (req, res) => {
     let storage_type = req.body.storage_type
 
 
-    let send = `{
-            "station":"${estacion}",
-            "serial_num":"${serial}",
-            "material": "${material}",
-            "cantidad":"${cantidad}", 
-            "process":"${proceso}", 
-            "storage_type": "${storage_type}", 
-            "user_id":"${user_id}"
-        }`
+    funcion.sapRFC_consultaStorageUnit(funcion.addLeadingZeros(serial, 20))
+        .then(resultado => {
+            funcion.sapRFC_consultaMaterial(resultado[0].MATNR, "0011")
+                .then(resultado => {
+                    res.json(resultado)
+                })
+                .catch(err => {
+                    res.json(err)
+                })
+        })
+        .catch(err => { res.json(err) })
+}
 
-    amqpRequest(send, "rpc_rm")
-        .then((result) => { res.json(result) })
-        .catch((err) => { res.json(err) })
+controller.getUbicacionesMPMaterial_POST = (req, res) => {
+    let estacion = req.res.locals.macIP.mac
+    let serial = req.body.serial
+    let material = req.body.material
+    let cantidad = null
+    let proceso = req.body.proceso
+    let user_id = req.res.locals.authData.id.id
+    let storage_type = req.body.storage_type
+
+
+    funcion.sapRFC_consultaMaterial(material, "0011")
+        .then(resultado => {
+            res.json(resultado)
+        })
+        .catch(err => {
+            res.json(err)
+        })
+
 }
 
 controller.getUbicacionesFG_POST = (req, res) => {
@@ -423,34 +441,66 @@ controller.getInfoMP_POST = (req, res) => {
 
     funcion.sapRFC_consultaStorageUnit(funcion.addLeadingZeros(serial, 20))
         .then(result => {
-
             let certificate_number = ""
             let material_number = ""
             let stock_quantity = ""
             let material_description = ""
             let material_w = ""
-
-            certificate_number = (result[0].ZEUGN).trim()
-            material_number = (result[0].MATNR).trim()
-            stock_quantity = (result[0].VERME).trim()
-
-            funcion.sapRFC_ConsultaMaterialMM03(material_number)
-                .then(result => {
-                    material_description = result.MATERIAL_GENERAL_DATA.MATL_DESC
-                    material_w = result.MATERIAL_GENERAL_DATA.GROSS_WT
+            let storage_type = ""
+            let response
 
 
-                    let response = `{
+
+            if (result.length == 0) {
+                response = `{
+                    "serial":"${serial}",
+                    "material":"${material_number}",
+                    "material_description": "${material_description}",
+                    "material_w":"${material_w}", 
+                    "cantidad":"${Number(stock_quantity)}", 
+                    "certificate_number":"${certificate_number}" ,
+                    "error": "Storage Unit: ${serial} Not Found "
+                }`
+                res.json(response)
+            } else {
+
+                certificate_number = (result[0].ZEUGN).trim()
+                material_number = (result[0].MATNR).trim()
+                stock_quantity = (result[0].VERME).trim()
+                storage_type = (result[0].LGTYP).trim()
+
+                if (storage_type !== "MP") {
+                    response = `{
                         "serial":"${serial}",
                         "material":"${material_number}",
                         "material_description": "${material_description}",
                         "material_w":"${material_w}", 
                         "cantidad":"${Number(stock_quantity)}", 
-                        "certificate_number":"${certificate_number}" 
+                        "certificate_number":"${certificate_number}" ,
+                        "error": "Storage Unit: ${serial} From Storage Type: ${storage_type} Not Permited "
                     }`
                     res.json(response)
-                })
-                .catch(err => { res.json(err) })
+                } else {
+                    funcion.sapRFC_ConsultaMaterialMM03(material_number)
+                        .then(result => {
+                            material_description = result.MATERIAL_GENERAL_DATA.MATL_DESC
+                            material_w = result.MATERIAL_GENERAL_DATA.GROSS_WT
+
+
+                            response = `{
+                            "serial":"${serial}",
+                            "material":"${material_number}",
+                            "material_description": "${material_description}",
+                            "material_w":"${material_w}", 
+                            "cantidad":"${Number(stock_quantity)}", 
+                            "certificate_number":"${certificate_number}" ,
+                            "error": ""
+                        }`
+                            res.json(response)
+                        })
+                        .catch(err => { res.json(err) })
+                }
+            }
         })
         .catch(err => { res.json(err) })
 

@@ -41,7 +41,8 @@ router.post('/postSerialesMP_RAW',middleware.verifyToken,  middleware.macFromIP,
 router.post('/getRawFIFO', middleware.verifyToken,  middleware.macFromIP, routesController.getRawFIFO_POST);
 router.get('/getRawListado', middleware.verifyToken, routesController.getRawListado_GET);
 router.get('/getRawListadoProcesado', middleware.verifyToken, routesController.getRawListadoProcesado_GET);
-router.post("/getUbicacionesMP",middleware.verifyToken, middleware.macFromIP, routesController.getUbicaciones_POST);
+router.post("/getUbicacionesMPSerial",middleware.verifyToken, middleware.macFromIP, routesController.getUbicacionesMPSerial_POST);
+router.post("/getUbicacionesMPMaterial",middleware.verifyToken, middleware.macFromIP, routesController.getUbicacionesMPMaterial_POST);
 router.get('/cargaListado', middleware.sspi, routesController.cargaListado_GET);
 router.post('/getListado',routesController.getListado_POST);
 router.get('/getTurnos',routesController.getTurnos_GET);

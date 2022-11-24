@@ -29,8 +29,8 @@ btnCerrar.forEach(element => {
 });
 
 function check_qualifier() {
-     serial = serial_num.value;
-    if (serial.charAt(0) !== "S" && serial.charAt(0) !== "s" ) {
+    serial = serial_num.value;
+    if (serial.charAt(0) !== "S" && serial.charAt(0) !== "s") {
         soundWrong()
         alerta_prefijo.classList.remove("animate__flipOutX", "animate__animated")
         alerta_prefijo.classList.add("animate__flipInX", "animate__animated")
@@ -71,7 +71,7 @@ submitSerial.addEventListener("submit", function (e) {
     $('#modalSpinner').modal({ backdrop: 'static', keyboard: false })
     if (value == true) {
         serial_num.disabled = true
-        let data = { "proceso": "partial_transfer", "serial": `${serial.substring(1)}`,"user_id": user_id.innerHTML };
+        let data = { "proceso": "partial_transfer", "serial": `${serial.substring(1)}`, "user_id": user_id.innerHTML };
         axios({
             method: 'post',
             url: "/getInfoMP",
@@ -81,15 +81,15 @@ submitSerial.addEventListener("submit", function (e) {
             data: JSON.stringify(data)
         })
             .then((result) => {
-
-
                 response = JSON.parse(result.data)
-                // TODO hacer pruebas con errores
                 if (response.error) {
                     soundWrong()
                     errorText.innerHTML = response.error
-                    $('#modalSpinner').modal('hide')
-                    $('#modalError').modal({ backdrop: 'static', keyboard: false })
+                    setTimeout(function () {
+                        $('#modalSpinner').modal('hide')
+                        $('#modalError').modal({ backdrop: 'static', keyboard: false })
+                    }, 500);
+
                 } else {
                     soundOk()
                     Bserial.innerHTML = response.serial
@@ -98,9 +98,11 @@ submitSerial.addEventListener("submit", function (e) {
                     Bdescription.innerHTML = response.material_description
                     Bweigth.innerHTML = response.material_w
                     Blote.innerHTML = response.certificate_number
-                    $('#modalSpinner').modal('hide')
-                    $('#myModal').modal({ backdrop: 'static', keyboard: false })
-                    
+                    setTimeout(function () {
+                        $('#modalSpinner').modal('hide')
+                        $('#myModal').modal({ backdrop: 'static', keyboard: false })
+                    }, 500);
+
                 }
 
             })
@@ -116,7 +118,7 @@ submitCantidad.addEventListener("submit", function (e) {
     $('#myModal').modal('hide')
     btnTransferir.disabled = true
 
-    let data = { "proceso": "partial_transfer_confirmed", "serial": `${Bserial.innerText}`, "material": `${Bmaterial.innerText}`, "material_description": JSON.stringify(Bdescription.innerText).replace(/(^"|"$)/g, '') , "cantidad": `${cantidadSubmit.value}`, "cantidad_restante": `${(parseInt(Bstock.innerText) - cantidadSubmit.value )}`, "user_id": user_id.innerHTML, "certificate_number": Blote.innerHTML };
+    let data = { "proceso": "partial_transfer_confirmed", "serial": `${Bserial.innerText}`, "material": `${Bmaterial.innerText}`, "material_description": JSON.stringify(Bdescription.innerText).replace(/(^"|"$)/g, ''), "cantidad": `${cantidadSubmit.value}`, "cantidad_restante": `${(parseInt(Bstock.innerText) - cantidadSubmit.value)}`, "user_id": user_id.innerHTML, "certificate_number": Blote.innerHTML };
     axios({
         method: 'post',
         url: "/transferenciaMaterialMP",
@@ -126,23 +128,27 @@ submitCantidad.addEventListener("submit", function (e) {
         data: JSON.stringify(data)
     })
         .then((result) => {
-            cantidadSubmit.value = ""        
+            cantidadSubmit.value = ""
             if (result.data.key) {
                 soundWrong()
                 btnTransferir.disabled = false
                 errorText.innerHTML = result.data.key
-                $('#modalSpinner').modal('hide')
-                // $('#myModal').modal('hide')
-                $('#modalError').modal({ backdrop: 'static', keyboard: false })
+                setTimeout(function () {
+                    $('#modalSpinner').modal('hide')
+                    // $('#myModal').modal('hide')
+                    $('#modalError').modal({ backdrop: 'static', keyboard: false })
+                }, 500);
             } else {
                 response = JSON.parse(result.data)
                 soundOk()
                 btnTransferir.disabled = false
                 successText.innerHTML = response.result
-                $('#modalSpinner').modal('hide')
-                // $('#myModal').modal('hide')
-                $('#modalSuccess').modal({ backdrop: 'static', keyboard: false })
-                // printLabel(response.material, Bdescription.innerText, response.serial, (parseInt(Bstock.innerText) - response.cantidad))
+                setTimeout(function () {
+                    $('#modalSpinner').modal('hide')
+                    // $('#myModal').modal('hide')
+                    $('#modalSuccess').modal({ backdrop: 'static', keyboard: false })
+                    // printLabel(response.material, Bdescription.innerText, response.serial, (parseInt(Bstock.innerText) - response.cantidad))
+                }, 500);
             }
 
 
