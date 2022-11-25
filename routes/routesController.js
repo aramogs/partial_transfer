@@ -11,6 +11,7 @@ const funcion = require('../public/js/functions/controllerFunctions');
 const redis = require('redis');
 //Require Axios
 const axios = require('axios');
+const { sapRFC_consultaMaterial, sapRFC_consultaMaterial_ST } = require('../public/js/functions/controllerFunctions');
 
 
 controller.index_GET = (req, res) => {
@@ -914,6 +915,47 @@ controller.getRawFIFO_POST = (req, res) => {
     }
 }
 
+controller.getRawFIFOMP1_POST = (req, res) => {
+
+    let estacion = req.res.locals.macIP.mac
+    let serial = null
+    let material = req.body.material
+    let cantidad = null
+    let proceso = req.body.proceso
+    let storage_type = req.body.storage_type
+    let user_id = req.res.locals.authData.id.id
+    let raw_id = req.body.raw_id
+
+
+    async function waitForPromise() {
+        let count = funcion.getRawMovements(raw_id)
+        return count
+    }
+    waitForPromise()
+        .then(result => {
+            let count_res = result
+            let send = `{
+                "station":"${estacion}",
+                "serial_num":"${serial}",
+                "material": "${material}",
+                "cantidad":"${cantidad}", 
+                "process":"${proceso}", 
+                "storage_type":"${storage_type}",  
+                "user_id":"${user_id}"
+            }`
+
+            // amqpRequest(send, "rpc_rm")
+            //     .then(result => { res.json([result, count_res]) })
+            //     .catch(err => { res.json(err) })
+
+            sapRFC_consultaMaterial_ST(material, "0011", storage_type)
+                .then(result => { res.json([result, count_res]) })
+                .catch(err => { res.json(err) })
+        })
+        .catch((err) => { res.status(200).send({ message: err }) })
+
+}
+
 controller.postSerialsMP_RAW_POST = (req, res) => {
     let estacion = req.res.locals.macIP.mac
     let serial = req.body.serial
@@ -952,6 +994,57 @@ controller.postSerialsMP_RAW_POST = (req, res) => {
     amqpRequest(send, "rpc_rm")
         .then((result) => { res.json(result) })
         .catch((err) => { res.json(err) })
+}
+
+controller.postSerialsMP1_RAW_POST = (req, res) => {
+    let estacion = req.res.locals.macIP.mac
+    let serial = req.body.serial
+    let material = null
+    let cantidad = null
+    let proceso = req.body.proceso
+    let storage_type = req.body.storage_type
+    let user_id = req.res.locals.authData.id.id
+    let raw_id = req.body.raw_id
+    let shift = req.body.shift
+    let clear = req.body.clear
+    let serials_obsoletos = req.body.serials_obsoletos
+    let storage_bin = ""
+    if (clear !== "null") {
+        async function waitForPromise() {
+            let procesado = funcion.updateProcesado(raw_id)
+            return procesado
+        }
+        waitForPromise()
+            .catch((err) => { res.status(200).send({ message: err }) })
+    }
+
+    if (shift === "T1") storage_bin = "ITVINDEL1"
+    if (shift === "T2") storage_bin = "ITVINDEL2"
+    if (shift === "T3") storage_bin = "ITVINDEL3"
+
+    let serials_array = serial.split(",")
+    let serials_obsoletos_array = serials_obsoletos.split(",")
+    let promises = []
+    let promises_obsoletos = []
+
+    serials_array.forEach(serial_ => {
+        promises.push(funcion.sapRFC_transferMP1(funcion.addLeadingZeros(serial_, 20), "MP", (storage_bin).toUpperCase(), user_id, raw_id)
+            .catch((err) => { return err }))
+    })
+    Promise.all(promises)
+        .then(result => { res.json(result) })
+        .catch(err => { res.json(err) })
+
+    if (serials_obsoletos_array[0] != "") {
+
+        serials_obsoletos_array.forEach(serial_ => {
+            promises_obsoletos.push(funcion.sapRFC_transferMP1_Obsoletos(funcion.addLeadingZeros(serial_, 20), storage_type, "CICLICRAW1", user_id, raw_id)
+                .catch((err) => { return err }))
+        })
+        Promise.all(promises_obsoletos)
+            .then(result => {})
+            .catch(err => {})
+    }
 }
 
 
@@ -1318,4 +1411,57 @@ controller.transferVulProd_POST = (req, res) => {
         .catch(err => { res.json(err) })
 
 }
+
+controller.transferProdVul_POST = (req, res) => {
+
+    let material = req.body.material
+    let qty = req.body.qty
+
+    funcion.sapRFC_transferProdVul_1(material,qty)
+        .then(r => {
+            funcion.sapRFC_transferProdVul_2(material,qty)
+                .then(resultado => {                    
+                    res.json(resultado.E_LTAP)
+                })
+                .catch(err => {
+                    res.json(err)
+                })
+        })
+        .catch(err => {
+            res.json(err)
+        })
+}
+
+controller.transferSemProd_POST = (req, res) => {
+    let serial = req.body.serial
+    funcion.sapRFC_transferSemProd(funcion.addLeadingZeros(serial, 20))
+        .then(resultado => {
+            res.json(resultado.T_LTAK[0])
+        })
+        .catch(err => {
+            res.json(err)
+        })
+}
+
+
+
+controller.transferProdSem_POST = (req, res) => {
+    let material = req.body.material
+    let qty = req.body.qty
+    funcion.sapRFC_transferProdSem_1(material,qty)
+        .then(r => {
+            funcion.sapRFC_transferProdSem_2(material,qty)
+                .then(resultado => {
+                    res.json(resultado.E_LTAP)
+                })
+                .catch(err => {
+                    res.json(err)
+                })
+        })
+        .catch(err => {
+            res.json(err)
+        })
+}
+
+
 module.exports = controller;

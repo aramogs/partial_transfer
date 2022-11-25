@@ -38,7 +38,9 @@ router.get('/transfer_MP_FIFO/:storage_type',middleware.verifyToken, routesContr
 router.get('/consultaMP',middleware.verifyToken, routesController.consultaMP_GET);
 router.get('/consultaMP/:storage_type',middleware.verifyToken, routesController.consultaMP_ST_GET);
 router.post('/postSerialesMP_RAW',middleware.verifyToken,  middleware.macFromIP, routesController.postSerialsMP_RAW_POST);
+router.post('/postSerialesMP1_RAW',middleware.verifyToken,  middleware.macFromIP, routesController.postSerialsMP1_RAW_POST);
 router.post('/getRawFIFO', middleware.verifyToken,  middleware.macFromIP, routesController.getRawFIFO_POST);
+router.post('/getRawFIFOMP1', middleware.verifyToken,  middleware.macFromIP, routesController.getRawFIFOMP1_POST);
 router.get('/getRawListado', middleware.verifyToken, routesController.getRawListado_GET);
 router.get('/getRawListadoProcesado', middleware.verifyToken, routesController.getRawListadoProcesado_GET);
 router.post("/getUbicacionesMPSerial",middleware.verifyToken, middleware.macFromIP, routesController.getUbicacionesMPSerial_POST);
@@ -85,6 +87,12 @@ router.post("/getUbicacionesVULMandrel",middleware.verifyToken, middleware.macFr
 router.post("/getUbicacionesVULSerial",middleware.verifyToken, middleware.macFromIP, routesController.getUbicacionesVULSerial_POST);
 
 router.post('/transferVulProd', routesController.transferVulProd_POST);
+router.post('/transferProdVul', routesController.transferProdVul_POST);
+
+
+// ##############Sub Assembly##################
+router.post('/transferSemProd', routesController.transferSemProd_POST);
+router.post('/transferProdSem', routesController.transferProdSem_POST);
 // // router.get('*', (req, res) => {
 // //   res.redirect('http://tftdelsrv001:3000/not_found');
 // // });
