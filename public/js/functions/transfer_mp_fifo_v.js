@@ -93,7 +93,7 @@ btnCerrar.forEach(element => {
     element.addEventListener("click", cleanInput)
 })
 
-function submitMaterial(e , proceso) {
+function submitMaterial(e, proceso) {
     procesoActual = proceso
     let material = e.innerHTML.replace(regexBefore, "")
     turno = e.innerHTML.replace(regexAfter, "")
@@ -108,24 +108,17 @@ function submitMaterial(e , proceso) {
     let datax = { "proceso": "raw_fifo_verify", "material": `${material}`, "user_id": user_id.innerHTML, "storage_type": `${storage_type.innerHTML}`, "raw_id": `${id}` };
     axios({
         method: 'post',
-        url: "/getRawFIFO",
+        url: "/getRawFIFOMP1",
         headers: {
             'Content-Type': 'application/json'
         },
         data: JSON.stringify(datax)
     })
         .then((result) => {
+            console.log(result);
+            let response = result.data[0]
 
-            let response = JSON.parse(result.data[0])
-            if ((result.data).includes("<!DOCTYPE html>")) {
-
-                setTimeout(() => {
-                    location.href = "/login"
-                }, 1000);
-                soundWrong()
-            }
-
-            if (response.error !== "N/A") {
+            if (result.data.key) {
                 soundWrong()
                 errorText.innerHTML = response.error
                 setTimeout(() => { $('#modalSpinner').modal('hide') }, 500);
@@ -141,51 +134,56 @@ function submitMaterial(e , proceso) {
 
                 tabla_consulta.innerHTML = ""
                 dates = {}
-                array_fifo = response.result
+                array_fifo = response
                 cScan.innerHTML = `${currentCount}/${contenedores}`
 
                 array_fifo.forEach(function (obj) {
-                    if (!(obj.storage_bin).toUpperCase().includes("CICLI")) {
-                        let key = JSON.stringify(obj.gr_date)
+                    if (!(obj.LGPLA).toUpperCase().includes("CICLI")) {
+                        let key = JSON.stringify(moment(obj.WDATU, "YYYYMMDD").format("MM/DD/YYYY"))
                         dates[key] = (dates[key] || 0) + 1
                     }
                 })
 
-                array_fifo.forEach(element => {
+                const arregloFinalSortDate = array_fifo.sort((d1, d2) => new Date(moment(d1.WDATU, "YYYYMMDD").format('MM/DD/YYYY')) - new Date(moment(d2.WDATU, "YYYYMMDD").format('MM/DD/YYYY')))
+                arregloFinalSortDate.forEach(element => {
 
                     let newRow = tabla_consulta.insertRow(tabla_consulta.rows.length);
-                    newRow.setAttribute("id", `${element.storage_unit}`)
-                   
-                    if ((element.storage_bin).toUpperCase().includes("CICLI")) {
+                    newRow.setAttribute("id", `${(element.LENUM).replace(/^0+/gm, "")}`)
+
+                    if ((element.LGPLA).toUpperCase().includes("CICLI")) {
                         newRow.setAttribute("class", "bg-secondary text-white")
                         row = `
-                        <tr id="${element.storage_unit}">
-                            <td>${element.storage_bin}</td>
-                            <td>${element.storage_unit}</td>
-                            <td>${element.gr_date}</td>
+                        <tr>
+                            <td>${element.LGPLA}</td>
+                            <td>${(element.LENUM).replace(/^0+/gm, "")}</td>
+                            <td>${moment(element.WDATU, "YYYYMMDD").format("MM/DD/YYYY")}</td>
                             <td><button type="button" class="cycleButton btn btn-sm btn-secondary fas fa-recycle " disabled></button></td>
                         </tr>
                         `
-                    }else{
+                    } else {
                         row = `
-                        <tr id="${element.storage_unit}">
-                            <td>${element.storage_bin}</td>
-                            <td>${element.storage_unit}</td>
-                            <td>${element.gr_date}</td>
+                        <tr>
+                            <td>${element.LGPLA}</td>
+                            <td>${(element.LENUM).replace(/^0+/gm, "")}</td>
+                            <td>${moment(element.WDATU, "YYYYMMDD").format("MM/DD/YYYY")}</td>
                             <td><button type="button" class="cycleButton btn btn-sm btn-warning fas fa-recycle"></button></td>
                         </tr>
                         `
                     }
-                   
 
-                    
+
+
                     return newRow.innerHTML = row;
                 });
 
                 cPartNum.innerHTML = material
                 cDescription.innerHTML = descripcion
-                $('#modalSpinner').modal('hide')
-                $('#myModal').modal({ backdrop: 'static', keyboard: false })
+
+
+                setTimeout(function () {
+                    $('#modalSpinner').modal('hide')
+                    $('#myModal').modal({ backdrop: 'static', keyboard: false })
+                }, 500);
 
                 setTimeout(() => { inp_verifyFIFO.focus() }, 500);
 
@@ -291,82 +289,133 @@ function transferSU() {
     let data = { "proceso": "raw_mp_confirmed_v", "user_id": user_id.innerHTML, "serial": `${selected_serials}`, "storage_type": `${storage_type.innerHTML}`, "raw_id": `${id}`, "shift": `${turno}`, "clear": `${clear}`, "serials_obsoletos": `${serials_obsoletos}` };
     axios({
         method: 'post',
-        url: "/postSerialesMP_RAW",
+        url: "/postSerialesMP1_RAW",
         headers: {
             'Content-Type': 'application/json'
         },
         data: JSON.stringify(data)
     })
         .then((result) => {
+            console.log(result);
+            let response = result.data
+            let errors = 0
+            soundOk()
+            errorText.hidden = true
+            tabla_consulta_container.hidden = false
 
-            if ((result.data).includes("<!DOCTYPE html>")) {
-
-                setTimeout(() => {
-                    location.href = "/login"
-                }, 1000);
-                soundWrong()
-            }
-
-            response = JSON.parse(result.data)
-
-            if (response.error !== "N/A") {
-
-                errorTextField.innerHTML = response.error
-                errorText.hidden = false
-                tabla_consulta_container.hidden = true
-                selected_serials = []
-                currentST.innerHTML = ""
-
-                setTimeout(() => { soundWrong(), $('#modalSpinner').modal('hide') }, 500);
-                $('#modalError').modal({ backdrop: 'static', keyboard: false })
-
-            } else {
-                soundOk()
-                errorText.hidden = true
-                tabla_consulta_container.hidden = false
-                let result = response.result
-                let result_mod = ""
-
-
-                result_mod = result.replace("[", "").replace("]", "").replace(/'/g, '"')
-                let objectStringArray = (new Function("return [" + result_mod + "];")());
-                let errors = 0
-
-                objectStringArray.forEach(element => {
-                    if (typeof (element.result) != "number") {
-                        errors++
-                    }
-                });
-
-                if (errors != 0) {
-                    tabla_consulta2.innerHTML = ""
-                    objectStringArray.forEach(element => {
-                        let newRow = tabla_consulta2.insertRow(tabla_consulta2.rows.length);
-                        if (typeof (element.result) != "number") {
-                            let row = `
-                                <tr class="bg-danger">
-                                    <td>${element.serial_num}</td>
-                                    <td>${element.result}</td>
-                                </tr>
-                                `
-                            newRow.classList.add("bg-danger", "text-white")
-                            return newRow.innerHTML = row;
-                        }
-
-
-                    })
-                    cantidadErrores.innerHTML = errors
-                    $('#modalSpinner').modal('hide')
-                    $('#modalError').modal({ backdrop: 'static', keyboard: false })
+            tabla_consulta2.innerHTML = ""
+            response.forEach(element => {
+                let newRow = tabla_consulta2.insertRow(tabla_consulta2.rows.length);
+                if (element.name) {
+                    console.log(element);
+                    let row = `
+                            <tr class="bg-danger">
+                                <td>${element.abapMsgV1}</td>
+                                <td>${element.key ? element.key : element.message}</td>
+                            </tr>
+                            `
+                    newRow.classList.add("bg-danger", "text-white")
+                    errors++
+                    return newRow.innerHTML = row;
                 } else {
-                    $('#modalSpinner').modal('hide')
-                    $('#modalSuccess').modal({ backdrop: 'static', keyboard: false })
+                    let row = `
+                            <tr >
+                                <td>${(element.I_LENUM).replace(/^0+/gm, "")}</td>
+                                <td>${element.E_TANUM}</td>
+                            </tr>
+                            `
+
+                    return newRow.innerHTML = row;
                 }
-            }
+
+
+            })
+            cantidadErrores.innerHTML = errors
+
+            setTimeout(function () {
+                $('#modalSpinner').modal('hide')
+                $('#modalError').modal({ backdrop: 'static', keyboard: false })
+            }, 500);
+
         })
-        .catch((err) => {
-            console.error(err);
+        .catch(err => {
+
+            setTimeout(function () {
+                cantidadErrores.innerHTML = err
+                $('#modalSpinner').modal('hide')
+                $('#modalError').modal({ backdrop: 'static', keyboard: false })
+            }, 500);
         })
+    // .then((result) => {
+
+    //     if ((result.data).includes("<!DOCTYPE html>")) {
+
+    //         setTimeout(() => {
+    //             location.href = "/login"
+    //         }, 1000);
+    //         soundWrong()
+    //     }
+
+    //     response = JSON.parse(result.data)
+
+    //     if (response.error !== "N/A") {
+
+    //         errorTextField.innerHTML = response.error
+    //         errorText.hidden = false
+    //         tabla_consulta_container.hidden = true
+    //         selected_serials = []
+    //         currentST.innerHTML = ""
+
+    //         setTimeout(() => { soundWrong(), $('#modalSpinner').modal('hide') }, 500);
+    //         $('#modalError').modal({ backdrop: 'static', keyboard: false })
+
+    //     } else {
+    //         soundOk()
+    //         errorText.hidden = true
+    //         tabla_consulta_container.hidden = false
+    //         let result = response.result
+    //         let result_mod = ""
+
+
+    //         result_mod = result.replace("[", "").replace("]", "").replace(/'/g, '"')
+    //         let objectStringArray = (new Function("return [" + result_mod + "];")());
+    //         let errors = 0
+
+    //         objectStringArray.forEach(element => {
+    //             if (typeof (element.result) != "number") {
+    //                 errors++
+    //             }
+    //         });
+
+    //         if (errors != 0) {
+    //             tabla_consulta2.innerHTML = ""
+    //             objectStringArray.forEach(element => {
+    //                 let newRow = tabla_consulta2.insertRow(tabla_consulta2.rows.length);
+    //                 if (typeof (element.result) != "number") {
+    //                     let row = `
+    //                         <tr class="bg-danger">
+    //                             <td>${element.serial_num}</td>
+    //                             <td>${element.result}</td>
+    //                         </tr>
+    //                         `
+    //                     newRow.classList.add("bg-danger", "text-white")
+    //                     return newRow.innerHTML = row;
+    //                 }
+
+
+    //             })
+    //             cantidadErrores.innerHTML = errors
+    //             $('#modalSpinner').modal('hide')
+    //             $('#modalError').modal({ backdrop: 'static', keyboard: false })
+    //         } else {
+    //             $('#modalSpinner').modal('hide')
+    //             $('#modalSuccess').modal({ backdrop: 'static', keyboard: false })
+    //         }
+    //     }
+    // })
+    // .catch((err) => {
+    //     console.error(err);
+    // })
 
 }
 

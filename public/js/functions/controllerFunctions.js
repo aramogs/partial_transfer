@@ -346,6 +346,15 @@ funcion.insertCompleteTransfer = (emp_num, area, no_serie, storage_bin, result) 
     })
 }
 
+funcion.insertRawMovement = (raw_id, storage_type, emp_num, no_serie, sap_result) => {
+    return new Promise((resolve, reject) => {
+        dbC(`INSERT INTO raw_movement (raw_id, storage_type, emp_num, no_serie, sap_result) 
+                VALUES (${raw_id}, "${storage_type}", "${emp_num}", ${no_serie}, "${sap_result}")`)
+            .then((result) => { resolve(result) })
+            .catch((error) => { reject(error) })
+    })
+}
+
 funcion.printLabelTRA = (data, labelType) => {
     return new Promise((resolve, reject) => {
 
@@ -466,7 +475,7 @@ funcion.sapRFC_consultaMaterial_ST = (material_number, storage_location, storage
                     {
                         QUERY_TABLE: 'LQUA',
                         DELIMITER: ",",
-                        OPTIONS: [{ TEXT: `MATNR EQ '${material_number}'   AND LGORT EQ '${storage_location}' AND LGTYP EQ '${storage_type}'` }]
+                        OPTIONS: [{ TEXT: `MATNR EQ '${material_number}'   AND LGORT EQ '${storage_location}' AND LGTYP EQ '${storage_type}' ` }]
                     }
                 )
                     .then(result => {
@@ -635,6 +644,179 @@ funcion.sapRFC_transferVulProd = (serial) => {
 
 }
 
+funcion.sapRFC_transferProdVul_1 = (material, qty) => {
+    return new Promise((resolve, reject) => {
+
+        node_RFC.acquire()
+            .then(managed_client => {
+                managed_client.call('L_TO_CREATE_SINGLE',
+                    {
+                        I_LGNUM: `521`,
+                        I_BWLVS: `100`,
+                        I_MATNR: `${material}`,
+                        I_WERKS: `5210`,
+                        I_ANFME: `${qty}`,
+                        I_LGORT: `0012`,
+                        I_LETYP: `IP`,
+                        I_VLTYP: `102`,
+                        I_VLBER: `001`,
+                        I_VLPLA: `103`
+                        
+                    }
+                )
+                    .then(result => {
+                        managed_client.release()
+                        resolve(result)
+                    })
+                    .catch(err => {
+                        managed_client.release()
+                        reject(err)
+                    });
+            })
+            .catch(err => {
+                reject(err)
+            });
+    })
+}
+
+funcion.sapRFC_transferProdVul_2 = (material, qty) => {
+    return new Promise((resolve, reject) => {
+
+        node_RFC.acquire()
+            .then(managed_client => {
+                managed_client.call('L_TO_CREATE_SINGLE',
+                    {
+                        I_LGNUM: `521`,
+                        I_BWLVS: `199`,
+                        I_MATNR: `${material}`,
+                        I_WERKS: `5210`,
+                        I_ANFME: `${qty}`,
+                        I_LGORT: `0012`,
+                        I_LETYP: `IP`,
+                        I_NLTYP: `VUL`,
+                        I_NLBER: `001`,
+                        I_NLPLA: `TEMPR`
+
+                        
+                    }
+                )
+                    .then(result => {
+                        managed_client.release()
+                        resolve(result)
+                    })
+                    .catch(err => {
+                        managed_client.release()
+                        reject(err)
+                    });
+            })
+            .catch(err => {
+                reject(err)
+            });
+    })
+}
+
+funcion.sapRFC_transferSemProd = (serial) => {
+    return new Promise((resolve, reject) => {
+
+        node_RFC.acquire()
+            .then(managed_client => {
+                managed_client.call('L_TO_CREATE_MOVE_SU',
+                    {
+                        I_LENUM: `${funcion.addLeadingZeros(serial,20)}`,
+                        I_BWLVS: `998`,
+                        I_LETYP: `IP`,
+                        I_NLTYP: `102`,
+                        I_NLBER: `001`,
+                        I_NLPLA: `103`
+                    }
+                )
+                    .then(result => {
+                        managed_client.release()
+                        resolve(result)
+                    })
+                    .catch(err => {
+                        managed_client.release()
+                        reject(err)
+                    });
+            })
+            .catch(err => {
+                reject(err)
+            });
+    })
+}
+
+funcion.sapRFC_transferProdSem_1 = (material, qty) => {
+    return new Promise((resolve, reject) => {
+
+        node_RFC.acquire()
+            .then(managed_client => {
+                managed_client.call('L_TO_CREATE_SINGLE',
+                    {
+                        I_LGNUM: `521`,
+                        I_BWLVS: `100`,
+                        I_MATNR: `${material}`,
+                        I_WERKS: `5210`,
+                        I_ANFME: `${qty}`,
+                        I_LGORT: `0012`,
+                        I_LETYP: `IP`,
+                        I_VLTYP: `102`,
+                        I_VLBER: `001`,
+                        I_VLPLA: `103`
+                        
+                    }
+                )
+                    .then(result => {
+                        managed_client.release()
+                        resolve(result)
+                    })
+                    .catch(err => {
+                        managed_client.release()
+                        reject(err)
+                    });
+            })
+            .catch(err => {
+                reject(err)
+            });
+    })
+}
+
+
+funcion.sapRFC_transferProdSem_2 = (material, qty) => {
+    return new Promise((resolve, reject) => {
+
+        node_RFC.acquire()
+            .then(managed_client => {
+                managed_client.call('L_TO_CREATE_SINGLE',
+                    {
+                        I_LGNUM: `521`,
+                        I_BWLVS: `199`,
+                        I_MATNR: `${material}`,
+                        I_WERKS: `5210`,
+                        I_ANFME: `${qty}`,
+                        I_LGORT: `0012`,
+                        I_LETYP: `IP`,
+                        I_NLTYP: `SEM`,
+                        I_NLBER: `001`,
+                        I_NLPLA: `TEMPR_SEM`
+
+                        
+                    }
+                )
+                    .then(result => {
+                        managed_client.release()
+                        resolve(result)
+                    })
+                    .catch(err => {
+                        managed_client.release()
+                        reject(err)
+                    });
+            })
+            .catch(err => {
+                reject(err)
+            });
+    })
+}
+
 funcion.sapRFC_transferMP = (storage_unit, storage_type, storage_bin, emp_num) => {
     return new Promise((resolve, reject) => {
 
@@ -701,6 +883,70 @@ funcion.sapRFC_transferMP = (storage_unit, storage_type, storage_bin, emp_num) =
     })
 }
 
+funcion.sapRFC_transferMP1 = (storage_unit, storage_type, storage_bin, emp_num, raw_id) => {
+    return new Promise((resolve, reject) => {
+
+        node_RFC.acquire()
+            .then(managed_client => {
+                managed_client.call('L_TO_CREATE_MOVE_SU',
+                    {
+                        I_LENUM: `${storage_unit}`,
+                        I_BWLVS: `998`,
+                        I_LETYP: `IP`,
+                        I_NLTYP: `${storage_type}`,
+                        I_NLBER: `001`,
+                        I_NLPLA: `${storage_bin}`
+                    }
+                )
+                    .then(result => {
+                        managed_client.release()
+                        funcion.insertRawMovement(raw_id, storage_type, emp_num, (storage_unit).replace(/^0+/gm, ""),  result.E_TANUM)
+                        resolve(result)
+                    })
+                    .catch(err => {
+                        funcion.insertRawMovement(raw_id, storage_type, emp_num, (storage_unit).replace(/^0+/gm, ""),  err.message)
+                        managed_client.release()
+                        reject(err)
+                    });
+            })
+            .catch(err => {
+                reject(err)
+            })
+    })
+}
+
+funcion.sapRFC_transferMP1_Obsoletos = (storage_unit, storage_type, storage_bin, emp_num, raw_id) => {
+    return new Promise((resolve, reject) => {
+
+        node_RFC.acquire()
+            .then(managed_client => {
+                managed_client.call('L_TO_CREATE_MOVE_SU',
+                    {
+                        I_LENUM: `${storage_unit}`,
+                        I_BWLVS: `998`,
+                        I_LETYP: `IP`,
+                        I_NLTYP: `${storage_type}`,
+                        I_NLBER: `001`,
+                        I_NLPLA: `${storage_bin}`
+                    }
+                )
+                    .then(result => {
+                        managed_client.release()
+                        funcion.insertRawMovement(raw_id, storage_type, emp_num, (storage_unit).replace(/^0+/gm, ""),  `${storage_bin}-${result.E_TANUM}`)
+                        resolve(result)
+                    })
+                    .catch(err => {
+                        funcion.insertRawMovement(raw_id, storage_type, emp_num, (storage_unit).replace(/^0+/gm, ""),  `${storage_bin}-${err.message}`)
+                        managed_client.release()
+                        reject(err)
+                    });
+            })
+            .catch(err => {
+                reject(err)
+            })
+    })
+}
+
 //LT01
 // node_RFC.acquire()
 //     .then(managed_client => {
@@ -742,7 +988,7 @@ funcion.sapRFC_transferMP = (storage_unit, storage_type, storage_bin, emp_num) =
 //                         PACK_MAT: '5000010057A0',
 //                         PLANT: '5210',
 //                     }
-                
+
 //             }
 //         )
 //             .then(result => {
