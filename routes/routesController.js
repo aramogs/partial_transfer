@@ -11,7 +11,7 @@ const funcion = require('../public/js/functions/controllerFunctions');
 const redis = require('redis');
 //Require Axios
 const axios = require('axios');
-const { sapRFC_consultaMaterial, sapRFC_consultaMaterial_ST } = require('../public/js/functions/controllerFunctions');
+
 
 
 controller.index_GET = (req, res) => {
@@ -305,12 +305,6 @@ controller.postSerialsFG_POST = (req, res) => {
     Promise.all(promises)
         .then(result => { res.json(result) })
         .catch(err => { res.json(err) })
-
-    // let progress = 0;
-    // promises.forEach(p => p.then(() => {
-    //     progress++;
-    //     console.log(Math.round(progress / promises.length * 100) + "%");
-    // }));
 
 }
 
@@ -863,7 +857,6 @@ controller.transferMP_FIFO_GET = (req, res) => {
 
 }
 
-//TODO dividir esto en 2 funciones, crear nueva ruta y modificar en javascript la nueva ruta de MP1
 controller.getRawFIFO_POST = (req, res) => {
 
     let estacion = req.res.locals.macIP.mac
@@ -875,31 +868,8 @@ controller.getRawFIFO_POST = (req, res) => {
     let user_id = req.res.locals.authData.id.id
     let raw_id = req.body.raw_id
 
-    if (raw_id !== undefined) {
-        async function waitForPromise() {
-            let count = funcion.getRawMovements(raw_id)
-            return count
-        }
-        waitForPromise()
-            .then(result => {
-                let count_res = result
-                let send = `{
-                "station":"${estacion}",
-                "serial_num":"${serial}",
-                "material": "${material}",
-                "cantidad":"${cantidad}", 
-                "process":"${proceso}", 
-                "storage_type":"${storage_type}",  
-                "user_id":"${user_id}"
-            }`
 
-                amqpRequest(send, "rpc_rm")
-                    .then(result => { res.json([result, count_res]) })
-                    .catch(err => { res.json(err) })
-            })
-            .catch((err) => { res.status(200).send({ message: err }) })
-    } else {
-        let send = `{
+    let send = `{
             "station":"${estacion}",
             "serial_num":"${serial}",
             "material": "${material}",
@@ -909,10 +879,69 @@ controller.getRawFIFO_POST = (req, res) => {
             "user_id":"${user_id}"
         }`
 
-        amqpRequest(send, "rpc_rm")
-            .then(result => { res.json(result) })
-            .catch(err => { res.json(err) })
-    }
+    // amqpRequest(send, "rpc_rm")
+    //     .then(result => { res.json(result) })
+    //     .catch(err => { res.json(err) })
+    funcion.sapRFC_consultaMaterial_ST(material, "0011", storage_type)
+        .then(result => { res.json(result) })
+        .catch(err => { res.json(err) })
+
+}
+
+controller.getRawFIFOSerial_POST = (req, res) => {
+
+    let estacion = req.res.locals.macIP.mac
+    let serial = req.body.serial
+    let material = null
+    let cantidad = null
+    let proceso = req.body.proceso
+    let storage_type = req.body.storage_type
+    let user_id = req.res.locals.authData.id.id
+    let raw_id = req.body.raw_id
+
+
+    // let send = `{
+    //         "station":"${estacion}",
+    //         "serial_num":"${serial}",
+    //         "material": "${material}",
+    //         "cantidad":"${cantidad}", 
+    //         "process":"${proceso}", 
+    //         "storage_type":"${storage_type}",  
+    //         "user_id":"${user_id}"
+    //     }`
+
+    funcion.sapRFC_consultaStorageUnit(funcion.addLeadingZeros(serial, 20))
+        .then(result => {
+            let error = ""
+            let abap_error = {
+                "name": 'ABAPError',
+                "group": 2,
+                "code": 4,
+                "codeString": 'RFC_ABAP_MESSAGE',
+                "key": ``,
+                "message": `${(serial).replace(/^0+/gm, "")}`,
+                "abapMsgClass": 'L3',
+                "abapMsgType": 'E',
+                "abapMsgNumber": '004',
+                "abapMsgV1": `${(serial).replace(/^0+/gm, "")}`,
+                "abapMsgV2": '',
+                "abapMsgV3": '',
+                "abapMsgV4": ''
+            }
+            if (result.length === 0) {
+                error = "DEL: Check your entries"
+                abap_error.key = error
+                abap_error.message = error
+                res.json(abap_error)
+            } else {
+                funcion.sapRFC_consultaMaterial_ST(result[0].MATNR, "0011", storage_type)
+                    .then(result => { res.json(result) })
+                    .catch(err => { res.json(err) })
+            }
+        })
+        .catch(err => { res.json(err) })
+
+
 }
 
 controller.getRawFIFOMP1_POST = (req, res) => {
@@ -948,7 +977,7 @@ controller.getRawFIFOMP1_POST = (req, res) => {
             //     .then(result => { res.json([result, count_res]) })
             //     .catch(err => { res.json(err) })
 
-            sapRFC_consultaMaterial_ST(material, "0011", storage_type)
+            funcion.sapRFC_consultaMaterial_ST(material, "0011", storage_type)
                 .then(result => { res.json([result, count_res]) })
                 .catch(err => { res.json(err) })
         })
@@ -969,31 +998,42 @@ controller.postSerialsMP_RAW_POST = (req, res) => {
     let clear = req.body.clear
     let serials_obsoletos = req.body.serials_obsoletos
 
-    if (clear !== "null") {
-        async function waitForPromise() {
-            let procesado = funcion.updateProcesado(raw_id)
-            return procesado
-        }
-        waitForPromise()
-            .catch((err) => { res.status(200).send({ message: err }) })
+    let serials_array = serial.split(",")
+    let serials_obsoletos_array = serials_obsoletos.split(",")
+    let promises = []
+    let promises_obsoletos = []
+
+    serials_array.forEach(serial_ => {
+        promises.push(funcion.sapRFC_transferMP_BetweenStorageTypes(funcion.addLeadingZeros(serial_, 20), "102", "104", user_id, raw_id)
+            .catch((err) => { return err }))
+    })
+    Promise.all(promises)
+        .then(result => {
+            res.json(result),
+            funcion.getPrinter(estacion)
+                .then(result_printer => {
+
+                    result.forEach(element => {
+                        let dataTRAB = { "labels": `1`, "printer": `${result_printer[0].impre}`, "cantidad": `${element.T_LTAP_VB[0].VSOLM}`, "descripcion": `${element.T_LTAP_VB[0].MAKTX}`, "lote": `${element.T_LTAP_VB[0].ZEUGN}`, "material": `${element.T_LTAP_VB[0].MATNR}`, "serial": `${(element.T_LTAP_VB[0].VLENR).replace(/^0+/gm, "")}` }
+                    funcion.printLabelTRA(dataTRAB, "TRAB").catch(err => { console.error(err) })
+                    });
+                    
+
+                })
+                .catch(err => { console.error(err) })
+        })
+        .catch(err => { res.json(err) })
+
+    if (serials_obsoletos_array[0] != "") {
+
+        serials_obsoletos_array.forEach(serial_ => {
+            promises_obsoletos.push(funcion.sapRFC_transferMP_Obsoletos(funcion.addLeadingZeros(serial_, 20), storage_type, "CICLICORAW", user_id, raw_id)
+                .catch((err) => { return err }))
+        })
+        Promise.all(promises_obsoletos)
+            .then(result => { })
+            .catch(err => { })
     }
-
-    let send = `{
-            "station":"${estacion}",
-            "serial_num":"${serial}",
-            "material": "${material}",
-            "cantidad":"${cantidad}", 
-            "process":"${proceso}", 
-            "storage_type":"${storage_type}",
-            "raw_id":"${raw_id}",
-            "shift":"${shift}",
-            "user_id":"${user_id}",
-            "serials_obsoletos": "${serials_obsoletos}"
-        }`
-
-    amqpRequest(send, "rpc_rm")
-        .then((result) => { res.json(result) })
-        .catch((err) => { res.json(err) })
 }
 
 controller.postSerialsMP1_RAW_POST = (req, res) => {
@@ -1038,12 +1078,12 @@ controller.postSerialsMP1_RAW_POST = (req, res) => {
     if (serials_obsoletos_array[0] != "") {
 
         serials_obsoletos_array.forEach(serial_ => {
-            promises_obsoletos.push(funcion.sapRFC_transferMP1_Obsoletos(funcion.addLeadingZeros(serial_, 20), storage_type, "CICLICRAW1", user_id, raw_id)
+            promises_obsoletos.push(funcion.sapRFC_transferMP_Obsoletos(funcion.addLeadingZeros(serial_, 20), storage_type, "CICLICRAW1", user_id, raw_id)
                 .catch((err) => { return err }))
         })
         Promise.all(promises_obsoletos)
-            .then(result => {})
-            .catch(err => {})
+            .then(result => { })
+            .catch(err => { })
     }
 }
 
@@ -1417,10 +1457,10 @@ controller.transferProdVul_POST = (req, res) => {
     let material = req.body.material
     let qty = req.body.qty
 
-    funcion.sapRFC_transferProdVul_1(material,qty)
+    funcion.sapRFC_transferProdVul_1(material, qty)
         .then(r => {
-            funcion.sapRFC_transferProdVul_2(material,qty)
-                .then(resultado => {                    
+            funcion.sapRFC_transferProdVul_2(material, qty)
+                .then(resultado => {
                     res.json(resultado.E_LTAP)
                 })
                 .catch(err => {
@@ -1448,9 +1488,9 @@ controller.transferSemProd_POST = (req, res) => {
 controller.transferProdSem_POST = (req, res) => {
     let material = req.body.material
     let qty = req.body.qty
-    funcion.sapRFC_transferProdSem_1(material,qty)
+    funcion.sapRFC_transferProdSem_1(material, qty)
         .then(r => {
-            funcion.sapRFC_transferProdSem_2(material,qty)
+            funcion.sapRFC_transferProdSem_2(material, qty)
                 .then(resultado => {
                     res.json(resultado.E_LTAP)
                 })

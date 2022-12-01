@@ -115,7 +115,6 @@ function submitMaterial(e, proceso) {
         data: JSON.stringify(datax)
     })
         .then((result) => {
-            console.log(result);
             let response = result.data[0]
 
             if (result.data.key) {
@@ -136,15 +135,15 @@ function submitMaterial(e, proceso) {
                 dates = {}
                 array_fifo = response
                 cScan.innerHTML = `${currentCount}/${contenedores}`
-
-                array_fifo.forEach(function (obj) {
-                    if (!(obj.LGPLA).toUpperCase().includes("CICLI")) {
-                        let key = JSON.stringify(moment(obj.WDATU, "YYYYMMDD").format("MM/DD/YYYY"))
+                let date_
+                array_fifo.forEach(function (element) {
+                    if (!(element.LGPLA).toUpperCase().includes("CICLI")) {
+                        let key = JSON.stringify(moment(element.WDATU == "00000000" ? date_ = "20110101" : date_ = element.WDATU, "YYYYMMDD").format("MM/DD/YYYY"))
                         dates[key] = (dates[key] || 0) + 1
                     }
                 })
 
-                const arregloFinalSortDate = array_fifo.sort((d1, d2) => new Date(moment(d1.WDATU, "YYYYMMDD").format('MM/DD/YYYY')) - new Date(moment(d2.WDATU, "YYYYMMDD").format('MM/DD/YYYY')))
+                const arregloFinalSortDate = array_fifo.sort((d1, d2) => new Date(moment(d1.WDATU == "00000000" ? date_ = "20110101" : date_ = d1.WDATU, "YYYYMMDD").format('MM/DD/YYYY')) - new Date(moment(d2.WDATU == "00000000" ? date_ = "20110101" : date_ = d2.WDATU, "YYYYMMDD").format('MM/DD/YYYY')))
                 arregloFinalSortDate.forEach(element => {
 
                     let newRow = tabla_consulta.insertRow(tabla_consulta.rows.length);
@@ -156,7 +155,7 @@ function submitMaterial(e, proceso) {
                         <tr>
                             <td>${element.LGPLA}</td>
                             <td>${(element.LENUM).replace(/^0+/gm, "")}</td>
-                            <td>${moment(element.WDATU, "YYYYMMDD").format("MM/DD/YYYY")}</td>
+                            <td>${moment(element.WDATU == "00000000" ? date_ = "20110101" : date_ = element.WDATU, "YYYYMMDD").format("MM/DD/YYYY")}</td>
                             <td><button type="button" class="cycleButton btn btn-sm btn-secondary fas fa-recycle " disabled></button></td>
                         </tr>
                         `
@@ -165,7 +164,7 @@ function submitMaterial(e, proceso) {
                         <tr>
                             <td>${element.LGPLA}</td>
                             <td>${(element.LENUM).replace(/^0+/gm, "")}</td>
-                            <td>${moment(element.WDATU, "YYYYMMDD").format("MM/DD/YYYY")}</td>
+                            <td>${moment(element.WDATU == "00000000" ? date_ = "20110101" : date_ = element.WDATU, "YYYYMMDD").format("MM/DD/YYYY")}</td>
                             <td><button type="button" class="cycleButton btn btn-sm btn-warning fas fa-recycle"></button></td>
                         </tr>
                         `
@@ -346,76 +345,7 @@ function transferSU() {
                 $('#modalError').modal({ backdrop: 'static', keyboard: false })
             }, 500);
         })
-    // .then((result) => {
 
-    //     if ((result.data).includes("<!DOCTYPE html>")) {
-
-    //         setTimeout(() => {
-    //             location.href = "/login"
-    //         }, 1000);
-    //         soundWrong()
-    //     }
-
-    //     response = JSON.parse(result.data)
-
-    //     if (response.error !== "N/A") {
-
-    //         errorTextField.innerHTML = response.error
-    //         errorText.hidden = false
-    //         tabla_consulta_container.hidden = true
-    //         selected_serials = []
-    //         currentST.innerHTML = ""
-
-    //         setTimeout(() => { soundWrong(), $('#modalSpinner').modal('hide') }, 500);
-    //         $('#modalError').modal({ backdrop: 'static', keyboard: false })
-
-    //     } else {
-    //         soundOk()
-    //         errorText.hidden = true
-    //         tabla_consulta_container.hidden = false
-    //         let result = response.result
-    //         let result_mod = ""
-
-
-    //         result_mod = result.replace("[", "").replace("]", "").replace(/'/g, '"')
-    //         let objectStringArray = (new Function("return [" + result_mod + "];")());
-    //         let errors = 0
-
-    //         objectStringArray.forEach(element => {
-    //             if (typeof (element.result) != "number") {
-    //                 errors++
-    //             }
-    //         });
-
-    //         if (errors != 0) {
-    //             tabla_consulta2.innerHTML = ""
-    //             objectStringArray.forEach(element => {
-    //                 let newRow = tabla_consulta2.insertRow(tabla_consulta2.rows.length);
-    //                 if (typeof (element.result) != "number") {
-    //                     let row = `
-    //                         <tr class="bg-danger">
-    //                             <td>${element.serial_num}</td>
-    //                             <td>${element.result}</td>
-    //                         </tr>
-    //                         `
-    //                     newRow.classList.add("bg-danger", "text-white")
-    //                     return newRow.innerHTML = row;
-    //                 }
-
-
-    //             })
-    //             cantidadErrores.innerHTML = errors
-    //             $('#modalSpinner').modal('hide')
-    //             $('#modalError').modal({ backdrop: 'static', keyboard: false })
-    //         } else {
-    //             $('#modalSpinner').modal('hide')
-    //             $('#modalSuccess').modal({ backdrop: 'static', keyboard: false })
-    //         }
-    //     }
-    // })
-    // .catch((err) => {
-    //     console.error(err);
-    // })
 
 }
 

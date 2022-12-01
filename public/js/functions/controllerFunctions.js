@@ -883,6 +883,69 @@ funcion.sapRFC_transferMP = (storage_unit, storage_type, storage_bin, emp_num) =
     })
 }
 
+funcion.sapRFC_transferMP_BetweenStorageTypes = (storage_unit, storage_type, storage_bin, emp_num) => {
+    return new Promise((resolve, reject) => {
+
+        funcion.sapRFC_consultaStorageUnit(storage_unit)
+            .then(result => {
+                let error = ""
+                let abap_error = {
+                    "name": 'ABAPError',
+                    "group": 2,
+                    "code": 4,
+                    "codeString": 'RFC_ABAP_MESSAGE',
+                    "key": '',
+                    "message": "",
+                    "abapMsgClass": 'L3',
+                    "abapMsgType": 'E',
+                    "abapMsgNumber": '004',
+                    "abapMsgV1": `${(storage_unit).replace(/^0+/gm, "")}`,
+                    "abapMsgV2": '',
+                    "abapMsgV3": '',
+                    "abapMsgV4": ''
+                }
+                if (result.length === 0) {
+                    error = "DEL: Check your entries"
+                    abap_error.message = error
+                    reject(abap_error)
+                }  else {
+
+                    node_RFC.acquire()
+                        .then(managed_client => {
+                            managed_client.call('L_TO_CREATE_MOVE_SU',
+                                {
+                                    I_LENUM: `${storage_unit}`,
+                                    I_BWLVS: `998`,
+                                    I_LETYP: `IP`,
+                                    I_NLTYP: `${storage_type}`,
+                                    I_NLBER: `001`,
+                                    I_NLPLA: `${storage_bin}`
+                                }
+                            )
+                                .then(result => {
+                                    managed_client.release()
+                                    funcion.insertCompleteTransfer(emp_num, storage_type, (storage_unit).replace(/^0+/gm, ""), storage_bin, result.E_TANUM)
+                                    resolve(result)
+                                })
+                                .catch(err => {
+                                    funcion.insertCompleteTransfer(emp_num, storage_type, (storage_unit).replace(/^0+/gm, ""), storage_bin, err.message)
+                                    managed_client.release()
+                                    reject(err)
+                                });
+                        })
+                        .catch(err => {
+                            reject(err)
+                        })
+                }
+            })
+            .catch()
+
+
+    })
+}
+
+
+
 funcion.sapRFC_transferMP1 = (storage_unit, storage_type, storage_bin, emp_num, raw_id) => {
     return new Promise((resolve, reject) => {
 
@@ -915,7 +978,7 @@ funcion.sapRFC_transferMP1 = (storage_unit, storage_type, storage_bin, emp_num, 
     })
 }
 
-funcion.sapRFC_transferMP1_Obsoletos = (storage_unit, storage_type, storage_bin, emp_num, raw_id) => {
+funcion.sapRFC_transferMP_Obsoletos = (storage_unit, storage_type, storage_bin, emp_num, raw_id) => {
     return new Promise((resolve, reject) => {
 
         node_RFC.acquire()
