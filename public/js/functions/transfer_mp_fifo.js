@@ -6,21 +6,13 @@ let submitSerial = document.getElementById("submitSerial")
 let inp_verifyFIFO = document.getElementById("inp_verifyFIFO")
 let submitMaterial = document.getElementById("submitMaterial")
 let tableReprint = document.getElementById("tableReprint").getElementsByTagName('tbody')[0];
-// let submitCantidad = document.getElementById("submitCantidad")
-// let cantidadSubmit = document.getElementById("cantidadSubmit")
-// let alerta_cantidad = document.getElementById("alerta_cantidad")
-// let Bserial = document.getElementById("Bserial")
-// let Bmaterial = document.getElementById("Bmaterial")
-// let Bstock = document.getElementById("Bstock")
-// let Bdescription = document.getElementById("Bdescription")
-// let Bweigth = document.getElementById("Bweigth")
-
 let errorTextField = document.getElementById("errorTextField")
 
 // let currentST = document.getElementById("currentST")
 
 let cantidadErrores = document.getElementById("cantidadErrores")
 let errorText = document.getElementById("errorText")
+let errorText2 = document.getElementById("errorText2")
 let btnCerrar = document.querySelectorAll(".btnCerrar")
 let btnReprint = document.getElementById("btnReprint")
 
@@ -51,7 +43,7 @@ btnCerrar.forEach(element => {
     element.addEventListener("click", cleanInput)
 });
 
-
+part_num.addEventListener("keyup", check_qualifier)
 
 function cleanInput() {
     part_num.disabled = false
@@ -61,150 +53,35 @@ function cleanInput() {
     serials_obsoletos = []
 }
 
-
-
-
-submitSerial.addEventListener("submit", function (e) {
-    e.preventDefault()
-
-
-    selected_serials = []
-    btnTransferir.disabled = true
-    lower_date = "12/12/9999"
-    dates = {}
-    part_num.disabled = true
-    $('#modalSpinner').modal({ backdrop: 'static', keyboard: false })
-
-
-    let data = { "proceso": "raw_fifo_verify", "material": `${part_num.value}`, "user_id": user_id.innerHTML, "storage_type": `${storage_type.innerHTML}` };
-    axios({
-        method: 'post',
-        url: "/getRawFIFO",
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        data: JSON.stringify(data)
-    })
-        .then((result) => {
-            if ((result.data).includes("<!DOCTYPE html>")) {
-
-                setTimeout(() => {
-                    location.href = "/login"
-                }, 1000);
-                soundWrong()
-            }
-
-            let response = JSON.parse(result.data)
-
-            if (response.error !== "N/A") {
-                soundWrong()
-                // errorText.innerHTML = response.error
-                // setTimeout(() => { $('#modalSpinner').modal('hide') }, 500);
-                // $('#modalError').modal({ backdrop: 'static', keyboard: false })
-                tabla_consulta2.innerHTML = ""
-                function emptyfunc() {
-
-
-                    let newRow = tabla_consulta2.insertRow(tabla_consulta2.rows.length);
-                    let row = `
-                                <tr class="bg-danger">
-                                    <td>N/A</td>
-                                    <td>${response.error}</td>
-                                </tr>
-                                `
-                    newRow.classList.add("bg-danger", "text-white")
-                    return newRow.innerHTML = row;
-                }
-                emptyfunc()
-                // cantidadErrores.innerHTML = errors
-                $('#modalSpinner').modal('hide')
-                $('#modalError').modal({ backdrop: 'static', keyboard: false })
-            } else {
-
-
-                tabla_consulta.innerHTML = ""
-                soundOk()
-                let result = response.result
-
-                array_fifo = result
-
-                array_fifo.forEach(function (obj) {
-                    if (!(obj.storage_bin).toUpperCase().includes("CICLI")) {
-                        let key = JSON.stringify(obj.gr_date)
-                        dates[key] = (dates[key] || 0) + 1
-                    }
-                })
-
-                array_fifo.forEach(element => {
-
-                    let newRow = tabla_consulta.insertRow(tabla_consulta.rows.length);
-                    newRow.setAttribute("id", `${element.storage_unit}`)
-
-                    if ((element.storage_bin).toUpperCase().includes("CICLI")) {
-                        newRow.setAttribute("class", "bg-secondary text-white")
-                        row = `
-                        <tr id="${element.storage_unit}">
-                            <td>${element.storage_bin}</td>
-                            <td>${element.storage_unit}</td>
-                            <td>${element.gr_date}</td>
-                            <td><button type="button" class="cycleButton btn btn-sm btn-warning fas fa-recycle" disabled></button></td>
-                        </tr>
-                        `
-                    } else {
-                        row = `
-                        <tr id="${element.storage_unit}">
-                            <td>${element.storage_bin}</td>
-                            <td>${element.storage_unit}</td>
-                            <td>${element.gr_date}</td>
-                            <td><button type="button" class="cycleButton btn btn-sm btn-warning fas fa-recycle"></button></td>
-                        </tr>
-                        `
-                    }
-
-
-
-                    return newRow.innerHTML = row;
-                });
-                cPartNum.innerHTML = part_num.value
-                $('#modalSpinner').modal('hide')
-                $('#myModal').modal({ backdrop: 'static', keyboard: false })
-
-                setTimeout(() => { inp_verifyFIFO.focus() }, 500);
-            }
-
-        })
-        .catch((err) => { console.error(err) })
-        .finally(() => {
-            setTimeout(() => {
-                cycleButtons = document.getElementsByClassName("cycleButton")
-                for (let i = 0; i < cycleButtons.length; i++) {
-                    cycleButtons[i].addEventListener("click", (e) => { cycleAdd(e) })
-
-                }
-            }, 500);
-
-        })
-
-
-})
-
-
-
 function check_qualifier() {
 
-    serial = inp_verifyFIFO.value;
-    if (serial.charAt(0) !== "S" && serial.charAt(0) !== "s") {
-        // soundWrong()
-        alerta_prefijo2.classList.remove("animate__flipOutX", "animate__animated")
-        alerta_prefijo2.classList.add("animate__flipInX", "animate__animated")
-        inp_verifyFIFO.value = ""
-
+    if (part_num.value.charAt(0) === "P" || part_num.value.charAt(0) === "p") {
+        if ((part_num.value.substring(1)).length > 11) {
+            alerta_prefijo.classList.remove("animate__flipInX", "animate__animated")
+            alerta_prefijo.classList.add("animate__flipOutX", "animate__animated")
+            soundOk()
+            consultarMaterial()
+        }
+    } else if (part_num.value.charAt(0) === "S" || part_num.value.charAt(0) === "s") {
+        if ((part_num.value.substring(1)).length > 9) {
+            alerta_prefijo.classList.remove("animate__flipInX", "animate__animated")
+            alerta_prefijo.classList.add("animate__flipOutX", "animate__animated")
+            value = true
+            soundOk()
+            consultaSerial()
+        }
     } else {
-        value = true
-        // soundOk()
-        alerta_prefijo2.classList.remove("animate__flipInX", "animate__animated")
-        alerta_prefijo2.classList.add("animate__flipOutX", "animate__animated")
+        soundWrong()
+        alerta_prefijo.classList.remove("animate__flipOutX", "animate__animated")
+        alerta_prefijo.classList.add("animate__flipInX", "animate__animated")
+        part_num.value = ""
 
+    }
+}
+
+function check_qualifierSerials() {
+    if (inp_verifyFIFO.value.charAt(0) !== "S" && inp_verifyFIFO.value.charAt(0) !== "s") {
+        inp_verifyFIFO.value = ""
     }
 }
 
@@ -227,11 +104,375 @@ function cycleAdd(e) {
     lower_date = "12/12/9999"
 }
 
+function transferSU() {
+
+
+    $('#myModal').modal('hide')
+    $('#modalSpinner').modal({ backdrop: 'static', keyboard: false })
+    let data = { "proceso": "raw_mp_confirmed", "user_id": user_id.innerHTML, "serial": `${selected_serials}`, "storage_type": `${storage_type.innerHTML}`, "raw_id": 0, "serials_obsoletos": `${serials_obsoletos}` };
+    axios({
+        method: 'post',
+        url: "/postSerialesMP_RAW",
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        data: JSON.stringify(data)
+    })
+        .then((result) => {
+            console.log(result);
+            let response = result.data
+            let errors = 0
+            soundOk()
+            errorText.hidden = true
+            tabla_consulta_container.hidden = false
+
+            tabla_consulta2.innerHTML = ""
+            response.forEach(element => {
+                let newRow = tabla_consulta2.insertRow(tabla_consulta2.rows.length);
+                if (element.name) {
+                    console.log(element);
+                    let row = `
+                        <tr class="bg-danger">
+                            <td>${element.abapMsgV1}</td>
+                            <td>${element.key ? element.key : element.message}</td>
+                        </tr>
+                        `
+                    newRow.classList.add("bg-danger", "text-white")
+                    errors++
+                    return newRow.innerHTML = row;
+                } else {
+                    let row = `
+                        <tr >
+                            <td>${(element.I_LENUM).replace(/^0+/gm, "")}</td>
+                            <td>${element.E_TANUM}</td>
+                        </tr>
+                        `
+
+                    return newRow.innerHTML = row;
+                }
+
+
+            })
+            cantidadErrores.innerHTML = errors
+
+            setTimeout(function () {
+                $('#modalSpinner').modal('hide')
+                $('#modalError').modal({ backdrop: 'static', keyboard: false })
+            }, 500);
+
+        })
+        .catch(err => {
+
+            setTimeout(function () {
+                cantidadErrores.innerHTML = err
+                $('#modalSpinner').modal('hide')
+                $('#modalError').modal({ backdrop: 'static', keyboard: false })
+            }, 500);
+        })
+    // .then((result) => {
+
+    //     if ((result.data).includes("<!DOCTYPE html>")) {
+
+    //         setTimeout(() => {
+    //             location.href = "/login"
+    //         }, 1000);
+    //         soundWrong()
+    //     }
+
+    //     response = JSON.parse(result.data)
+
+    //     if (response.error !== "N/A") {
+
+    //         errorTextField.innerHTML = response.error
+    //         errorText.hidden = false
+    //         tabla_consulta_container.hidden = true
+    //         selected_serials = []
+    //         currentST.innerHTML = ""
+
+    //         setTimeout(() => { soundWrong(), $('#modalSpinner').modal('hide') }, 500);
+    //         $('#modalError').modal({ backdrop: 'static', keyboard: false })
+
+    //     } else {
+    //         soundOk()
+    //         printer = response.printer
+    //         errorText.hidden = true
+    //         tabla_consulta_container.hidden = false
+    //         let result = response.result
+    //         let result_mod = ""
+
+    //         result_mod = result.replace("[", "").replace("]", "").replace(/'/g, '"')
+    //         objectStringArray = (new Function("return [" + result_mod + "];")());
+    //         let errors = 0
+
+    //         if (errors != 0) {
+
+    //             objectStringArray.forEach(element => {
+
+    //                 let newRow = tabla_consulta2.insertRow(tabla_consulta2.rows.length);
+    //                 if (typeof (element.result) != "number") {
+    //                     let row = `
+    //                             <tr class="bg-danger">
+    //                                 <td>${element.serial_num}</td>
+    //                                 <td>${element.result}</td>
+    //                             </tr>
+    //                             `
+    //                     newRow.classList.add("bg-danger", "text-white")
+    //                     return newRow.innerHTML = row;
+    //                 }
+
+    //                 if (typeof (element.result) != "number") {
+    //                     errors++
+    //                 }
+    //             });
+
+    //             cantidadErrores.innerHTML = errors
+    //             $('#modalSpinner').modal('hide')
+    //             $('#modalError').modal({ backdrop: 'static', keyboard: false })
+    //         } else {
+    //             $('#modalSpinner').modal('hide')
+
+    //             tableReprint.innerHTML = ""
+    //             objectStringArray.forEach(element => {
+    //                 let newRow = tableReprint.insertRow(tableReprint.rows.length);
+
+    //                 let row = `
+    //                         <tr>
+    //                             <td style="width:60% !important">${element.serial_num}</td>
+    //                             <td "class="text-center"><input  type="number" class="form-control input-sm"  id="reprint_${element.serial_num}"></td>
+    //                         </tr>
+    //                         `
+    //                 newRow.classList.add("text-center")
+    //                 return newRow.innerHTML = row;
+    //             })
+
+    //             $('#modalSuccess').modal({ backdrop: 'static', keyboard: false })
+    //         }
+    //     }
+    // })
+    // .catch((err) => {
+    //     console.error(err);
+    // })
+
+}
+
+function consultarMaterial() {
+
+
+    selected_serials = []
+    btnTransferir.disabled = true
+    lower_date = "12/12/9999"
+    dates = {}
+    part_num.disabled = true
+    $('#modalSpinner').modal({ backdrop: 'static', keyboard: false })
+
+
+    let data = { "proceso": "raw_fifo_verify", "material": `${(part_num.value).substring(1)}`, "user_id": user_id.innerHTML, "storage_type": `${storage_type.innerHTML}` };
+    axios({
+        method: 'post',
+        url: "/getRawFIFO",
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        data: JSON.stringify(data)
+    })
+        .then((result) => {
+            console.log(result);
+            let response = result.data
+
+            if (result.data.key) {
+                soundWrong()
+                errorText.innerHTML = result.data.key ? result.data.key : result.data.message
+                setTimeout(() => { $('#modalSpinner').modal('hide') }, 500);
+                $('#modalError').modal({ backdrop: 'static', keyboard: false })
+            } else {
+                soundOk()
+
+                // if (result.data[1][0] === undefined) {
+                //     currentCount = 0
+                // } else {
+                //     currentCount = result.data[1][0].count
+                // }
+
+                tabla_consulta.innerHTML = ""
+                dates = {}
+                array_fifo = response
+                // cScan.innerHTML = `${currentCount}/${contenedores}`
+                let date_
+                array_fifo.forEach(function (element) {
+                    if (!(element.LGPLA).toUpperCase().includes("CICLI")) {
+                        let key = JSON.stringify(moment(element.WDATU == "00000000" ? date_ = "20110101" : date_ = element.WDATU, "YYYYMMDD").format("MM/DD/YYYY"))
+                        dates[key] = (dates[key] || 0) + 1
+                    }
+                })
+
+                const arregloFinalSortDate = array_fifo.sort((d1, d2) => new Date(moment(d1.WDATU == "00000000" ? date_ = "20110101" : date_ = d1.WDATU, "YYYYMMDD").format('MM/DD/YYYY')) - new Date(moment(d2.WDATU == "00000000" ? date_ = "20110101" : date_ = d2.WDATU, "YYYYMMDD").format('MM/DD/YYYY')))
+                arregloFinalSortDate.forEach(element => {
+
+                    let newRow = tabla_consulta.insertRow(tabla_consulta.rows.length);
+                    newRow.setAttribute("id", `${(element.LENUM).replace(/^0+/gm, "")}`)
+
+                    if ((element.LGPLA).toUpperCase().includes("CICLI")) {
+                        newRow.setAttribute("class", "bg-secondary text-white")
+                        row = `
+                    <tr>
+                        <td>${element.LGPLA}</td>
+                        <td>${(element.LENUM).replace(/^0+/gm, "")}</td>
+                        <td>${moment(element.WDATU == "00000000" ? date_ = "20110101" : date_ = element.WDATU, "YYYYMMDD").format("MM/DD/YYYY")}</td>
+                        <td><button type="button" class="cycleButton btn btn-sm btn-secondary fas fa-recycle " disabled></button></td>
+                    </tr>
+                    `
+                    } else {
+                        row = `
+                    <tr>
+                        <td>${element.LGPLA}</td>
+                        <td>${(element.LENUM).replace(/^0+/gm, "")}</td>
+                        <td>${moment(element.WDATU == "00000000" ? date_ = "20110101" : date_ = element.WDATU, "YYYYMMDD").format("MM/DD/YYYY")}</td>
+                        <td><button type="button" class="cycleButton btn btn-sm btn-warning fas fa-recycle"></button></td>
+                    </tr>
+                    `
+                    }
+
+
+
+                    return newRow.innerHTML = row;
+                });
+
+                cPartNum.innerHTML = (part_num.value).substring(1)
+                // cDescription.innerHTML = "descripcion"
+
+
+                setTimeout(function () {
+                    $('#modalSpinner').modal('hide')
+                    $('#myModal').modal({ backdrop: 'static', keyboard: false })
+                }, 500);
+
+                setTimeout(() => { inp_verifyFIFO.focus() }, 500);
+
+
+            }
+
+        })
+        .catch((err) => { console.error(err) })
+        .finally(() => {
+            setTimeout(() => {
+                cycleButtons = document.getElementsByClassName("cycleButton")
+                for (let i = 0; i < cycleButtons.length; i++) {
+                    cycleButtons[i].addEventListener("click", (e) => { cycleAdd(e) })
+
+                }
+            }, 500);
+
+        })
+}
+
+function consultaSerial() {
+
+
+    selected_serials = []
+    btnTransferir.disabled = true
+    lower_date = "12/12/9999"
+    dates = {}
+    part_num.disabled = true
+    $('#modalSpinner').modal({ backdrop: 'static', keyboard: false })
+
+
+    let data = { "proceso": "raw_fifo_verify", "serial": `${(part_num.value).substring(1)}`, "user_id": user_id.innerHTML, "storage_type": `${storage_type.innerHTML}` };
+    axios({
+        method: 'post',
+        url: "/getRawFIFOSerial",
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        data: JSON.stringify(data)
+    })
+        .then((result) => {
+            console.log(result);
+            let response = result.data
+            let partNum = ""
+
+            if (result.data.key) {
+                soundWrong()
+                errorText2.innerHTML = result.data.key ? result.data.key : result.data.message
+                setTimeout(() => { $('#modalSpinner').modal('hide') }, 500);
+                $('#modalError2').modal({ backdrop: 'static', keyboard: false })
+            } else {
+                soundOk()
+
+
+                tabla_consulta.innerHTML = ""
+                dates = {}
+                array_fifo = response
+
+                array_fifo.forEach(function (element) {
+                    if (!(element.LGPLA).toUpperCase().includes("CICLI")) {
+                        let key = JSON.stringify(moment(element.WDATU == "00000000" ? date_ = "20110101" : date_ = element.WDATU, "YYYYMMDD").format("MM/DD/YYYY"))
+                        dates[key] = (dates[key] || 0) + 1
+                    }
+                })
+
+                const arregloFinalSortDate = array_fifo.sort((d1, d2) => new Date(moment(d1.WDATU == "00000000" ? date_ = "20110101" : date_ = d1.WDATU, "YYYYMMDD").format('MM/DD/YYYY')) - new Date(moment(d2.WDATU == "00000000" ? date_ = "20110101" : date_ = d2.WDATU, "YYYYMMDD").format('MM/DD/YYYY')))
+                arregloFinalSortDate.forEach(element => {
+                    partNum = element.MATNR
+                    let newRow = tabla_consulta.insertRow(tabla_consulta.rows.length);
+                    newRow.setAttribute("id", `${(element.LENUM).replace(/^0+/gm, "")}`)
+
+                    if ((element.LGPLA).toUpperCase().includes("CICLI")) {
+                        newRow.setAttribute("class", "bg-secondary text-white")
+                        row = `
+                    <tr>
+                        <td>${element.LGPLA}</td>
+                        <td>${(element.LENUM).replace(/^0+/gm, "")}</td>
+                        <td>${moment(element.WDATU == "00000000" ? date_ = "20110101" : date_ = element.WDATU, "YYYYMMDD").format("MM/DD/YYYY")}</td>
+                        <td><button type="button" class="cycleButton btn btn-sm btn-secondary fas fa-recycle " disabled></button></td>
+                    </tr>
+                    `
+                    } else {
+                        row = `
+                    <tr>
+                        <td>${element.LGPLA}</td>
+                        <td>${(element.LENUM).replace(/^0+/gm, "")}</td>
+                        <td>${moment(element.WDATU == "00000000" ? date_ = "20110101" : date_ = element.WDATU, "YYYYMMDD").format("MM/DD/YYYY")}</td>
+                        <td><button type="button" class="cycleButton btn btn-sm btn-warning fas fa-recycle"></button></td>
+                    </tr>
+                    `
+                    }
+
+
+
+                    return newRow.innerHTML = row;
+                });
+
+                cPartNum.innerHTML = partNum
+
+                setTimeout(function () {
+                    $('#modalSpinner').modal('hide')
+                    $('#myModal').modal({ backdrop: 'static', keyboard: false })
+                }, 500);
+
+                setTimeout(() => { inp_verifyFIFO.focus() }, 500);
+
+
+            }
+
+        })
+        .catch((err) => { console.error(err) })
+        .finally(() => {
+            setTimeout(() => {
+                cycleButtons = document.getElementsByClassName("cycleButton")
+                for (let i = 0; i < cycleButtons.length; i++) {
+                    cycleButtons[i].addEventListener("click", (e) => { cycleAdd(e) })
+
+                }
+            }, 500);
+
+        })
+}
+
 submitMaterial.addEventListener("submit", function (e) {
 
     e.preventDefault()
-    check_qualifier()
-    let serial = (inp_verifyFIFO.value).substring(1);
+    check_qualifierSerials()
+    let serial = (inp_verifyFIFO.value).substring(1)
     currentSU = document.getElementById(`${serial}`)
 
     Object.entries(dates).forEach(entry => {
@@ -273,110 +514,7 @@ submitMaterial.addEventListener("submit", function (e) {
         selected_serials.push(serial)
         lower_date = "12/12/9999"
     }
-
-
-
 })
-
-function transferSU() {
-
-
-    $('#myModal').modal('hide')
-    $('#modalSpinner').modal({ backdrop: 'static', keyboard: false })
-    let data = { "proceso": "raw_mp_confirmed", "user_id": user_id.innerHTML, "serial": `${selected_serials}`, "storage_type": `${storage_type.innerHTML}`, "raw_id": 0, "serials_obsoletos": `${serials_obsoletos}` };
-    axios({
-        method: 'post',
-        url: "/postSerialesMP_RAW",
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        data: JSON.stringify(data)
-    })
-        .then((result) => {
-
-            if ((result.data).includes("<!DOCTYPE html>")) {
-
-                setTimeout(() => {
-                    location.href = "/login"
-                }, 1000);
-                soundWrong()
-            }
-
-            response = JSON.parse(result.data)
-
-            if (response.error !== "N/A") {
-
-                errorTextField.innerHTML = response.error
-                errorText.hidden = false
-                tabla_consulta_container.hidden = true
-                selected_serials = []
-                currentST.innerHTML = ""
-
-                setTimeout(() => { soundWrong(), $('#modalSpinner').modal('hide') }, 500);
-                $('#modalError').modal({ backdrop: 'static', keyboard: false })
-
-            } else {
-                soundOk()
-                printer = response.printer
-                errorText.hidden = true
-                tabla_consulta_container.hidden = false
-                let result = response.result
-                let result_mod = ""
-
-                result_mod = result.replace("[", "").replace("]", "").replace(/'/g, '"')
-                objectStringArray = (new Function("return [" + result_mod + "];")());
-                let errors = 0
-
-                if (errors != 0) {
-
-                    objectStringArray.forEach(element => {
-
-                        let newRow = tabla_consulta2.insertRow(tabla_consulta2.rows.length);
-                        if (typeof (element.result) != "number") {
-                            let row = `
-                                    <tr class="bg-danger">
-                                        <td>${element.serial_num}</td>
-                                        <td>${element.result}</td>
-                                    </tr>
-                                    `
-                            newRow.classList.add("bg-danger", "text-white")
-                            return newRow.innerHTML = row;
-                        }
-
-                        if (typeof (element.result) != "number") {
-                            errors++
-                        }
-                    });
-
-                    cantidadErrores.innerHTML = errors
-                    $('#modalSpinner').modal('hide')
-                    $('#modalError').modal({ backdrop: 'static', keyboard: false })
-                } else {
-                    $('#modalSpinner').modal('hide')
-
-                    tableReprint.innerHTML = ""
-                    objectStringArray.forEach(element => {
-                        let newRow = tableReprint.insertRow(tableReprint.rows.length);
-
-                        let row = `
-                                <tr>
-                                    <td style="width:60% !important">${element.serial_num}</td>
-                                    <td "class="text-center"><input  type="number" class="form-control input-sm"  id="reprint_${element.serial_num}"></td>
-                                </tr>
-                                `
-                        newRow.classList.add("text-center")
-                        return newRow.innerHTML = row;
-                    })
-
-                    $('#modalSuccess').modal({ backdrop: 'static', keyboard: false })
-                }
-            }
-        })
-        .catch((err) => {
-            console.error(err);
-        })
-
-}
 
 btnReprint.addEventListener("click", function (e) {
     e.preventDefault()

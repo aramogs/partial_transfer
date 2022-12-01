@@ -40,6 +40,7 @@ router.get('/consultaMP/:storage_type',middleware.verifyToken, routesController.
 router.post('/postSerialesMP_RAW',middleware.verifyToken,  middleware.macFromIP, routesController.postSerialsMP_RAW_POST);
 router.post('/postSerialesMP1_RAW',middleware.verifyToken,  middleware.macFromIP, routesController.postSerialsMP1_RAW_POST);
 router.post('/getRawFIFO', middleware.verifyToken,  middleware.macFromIP, routesController.getRawFIFO_POST);
+router.post('/getRawFIFOSerial', middleware.verifyToken,  middleware.macFromIP, routesController.getRawFIFOSerial_POST);
 router.post('/getRawFIFOMP1', middleware.verifyToken,  middleware.macFromIP, routesController.getRawFIFOMP1_POST);
 router.get('/getRawListado', middleware.verifyToken, routesController.getRawListado_GET);
 router.get('/getRawListadoProcesado', middleware.verifyToken, routesController.getRawListadoProcesado_GET);
