@@ -298,7 +298,7 @@ controller.postSerialsFG_POST = (req, res) => {
     let serials_array = serial.split(",")
     let promises = []
     serials_array.forEach(serial_ => {
-        promises.push(funcion.sapRFC_transferFG(serial_, (storage_bin).toUpperCase())
+        promises.push(funcion.sapRFC_transferFG(serial_, storage_bin)
             .catch((err) => { return err }))
     });
 
@@ -334,7 +334,7 @@ controller.postSerialsMP_POST = (req, res) => {
     let serials_array = serial.split(",")
     let promises = []
     serials_array.forEach(serial_ => {
-        promises.push(funcion.sapRFC_transferMP(funcion.addLeadingZeros(serial_, 20), storage_type, (storage_bin).toUpperCase(), user_id)
+        promises.push(funcion.sapRFC_transferMP(funcion.addLeadingZeros(serial_, 20), storage_type, storage_bin, user_id)
             .catch((err) => { return err }))
     });
 
@@ -1010,17 +1010,17 @@ controller.postSerialsMP_RAW_POST = (req, res) => {
     Promise.all(promises)
         .then(result => {
             res.json(result),
-            funcion.getPrinter(estacion)
-                .then(result_printer => {
+                funcion.getPrinter(estacion)
+                    .then(result_printer => {
 
-                    result.forEach(element => {
-                        let dataTRAB = { "labels": `1`, "printer": `${result_printer[0].impre}`, "cantidad": `${element.T_LTAP_VB[0].VSOLM}`, "descripcion": `${element.T_LTAP_VB[0].MAKTX}`, "lote": `${element.T_LTAP_VB[0].ZEUGN}`, "material": `${element.T_LTAP_VB[0].MATNR}`, "serial": `${(element.T_LTAP_VB[0].VLENR).replace(/^0+/gm, "")}` }
-                    funcion.printLabelTRA(dataTRAB, "TRAB").catch(err => { console.error(err) })
-                    });
-                    
+                        result.forEach(element => {
+                            let dataTRAB = { "labels": `1`, "printer": `${result_printer[0].impre}`, "cantidad": `${element.T_LTAP_VB[0].VSOLM}`, "descripcion": `${element.T_LTAP_VB[0].MAKTX}`, "lote": `${element.T_LTAP_VB[0].ZEUGN}`, "material": `${element.T_LTAP_VB[0].MATNR}`, "serial": `${(element.T_LTAP_VB[0].VLENR).replace(/^0+/gm, "")}` }
+                            funcion.printLabelTRA(dataTRAB, "TRAB").catch(err => { console.error(err) })
+                        });
 
-                })
-                .catch(err => { console.error(err) })
+
+                    })
+                    .catch(err => { console.error(err) })
         })
         .catch(err => { res.json(err) })
 
@@ -1068,7 +1068,7 @@ controller.postSerialsMP1_RAW_POST = (req, res) => {
     let promises_obsoletos = []
 
     serials_array.forEach(serial_ => {
-        promises.push(funcion.sapRFC_transferMP1(funcion.addLeadingZeros(serial_, 20), "MP", (storage_bin).toUpperCase(), user_id, raw_id)
+        promises.push(funcion.sapRFC_transferMP1(funcion.addLeadingZeros(serial_, 20), "MP", storage_bin, user_id, raw_id)
             .catch((err) => { return err }))
     })
     Promise.all(promises)
@@ -1213,150 +1213,82 @@ controller.transferVUL_GET = (req, res) => {
 }
 
 controller.transferVUL_Confirmed = (req, res) => {
-    let estacion = req.res.locals.macIP.mac
+    // let estacion = req.res.locals.macIP.mac
     let serial = req.body.serial
-    let material = null
-    let cantidad = null
     let proceso = req.body.proceso
     let storage_bin = req.body.storage_bin
-    let user_id = req.res.locals.authData.id.id
+    // let user_id = req.res.locals.authData.id.id
 
+    let serials_array = serial.split(",")
+    let promises = []
+    serials_array.forEach(serial_ => {
+        promises.push(funcion.sapRFC_transferVul(serial_, storage_bin)
+            .catch((err) => { return err }))
+    });
 
-    let send = `{
-            "station":"${estacion}",
-            "serial_num":"${serial}",
-            "material": "${material}",
-            "cantidad":"${cantidad}", 
-            "process":"${proceso}", 
-            "storage_bin": "${storage_bin}", 
-            "user_id":"${user_id}"
-        }`
-
-    amqpRequest(send, "rpc_vul")
-        .then((result) => { res.json(result) })
-        .catch((err) => { res.json(err) })
+    Promise.all(promises)
+        .then(result => { res.json(result) })
+        .catch(err => { res.json(err) })
 }
 
 controller.getUbicacionesVULSerial_POST = (req, res) => {
-
-    let estacion = (req.res.locals.macIP.mac).replace(/:/g, "-")
     let serial = req.body.serial
-    let material = req.body.material
-    let cantidad = null
-    let proceso = req.body.proceso
-    let user_id = req.res.locals.authData.id.id
-    let storage_type = req.body.storage_type
 
-    let send = `{
-            "station":"${estacion}",
-            "serial_num":"${serial}",
-            "material": "${material}",
-            "cantidad":"${cantidad}", 
-            "process":"${proceso}", 
-            "storage_type": "${storage_type}", 
-            "user_id":"${user_id}"
-        }`
-    amqpRequest(send, "rpc_vul")
-        .then((result) => { res.json(result) })
-        .catch((err) => { res.json(err) })
+    funcion.sapRFC_consultaStorageUnit(funcion.addLeadingZeros(serial, 20))
+        .then(resultado => {
+            if (resultado.length == 0) {
+                res.json(JSON.stringify({ "key": "Check Serial Number" }))
+            } else {
+                funcion.sapRFC_consultaMaterial(resultado[0].MATNR, "0012")
+                    .then(resultado => {
+                        res.json(resultado)
+                    })
+                    .catch(err => {
+                        res.json(err)
+                    })
+            }
+        })
+        .catch(err => { res.json(err) })
 }
 
 controller.getUbicacionesVULMaterial_POST = (req, res) => {
-    let estacion = (req.res.locals.macIP.mac).replace(/:/g, "-")
+    // let estacion = (req.res.locals.macIP.mac).replace(/:/g, "-")
     let material = req.body.material
-    let proceso = req.body.proceso
-    let user_id = req.res.locals.authData.id.id
-    let storage_type = req.body.storage_type
-
-
-    let send = `{
-            "station":"${estacion}",
-            "material": "${material}", 
-            "process":"${proceso}", 
-            "storage_type": "${storage_type}", 
-            "user_id":"${user_id}"
-        }`
-
-    amqpRequest(send, "rpc_vul")
-        .then((result) => { res.json(result) })
-        .catch((err) => { res.json(err) })
-}
-
-controller.getUbicacionesVULMandrel_POST = (req, res) => {
-    // let estacion = req.res.locals.macIP.mac
-    // let serial = req.body.serial
-    // let material = req.body.material
-    // let cantidad = null
     // let proceso = req.body.proceso
     // let user_id = req.res.locals.authData.id.id
     // let storage_type = req.body.storage_type
 
+    funcion.sapRFC_consultaMaterial_ST(material, "0012", "VUL")
+        .then(resultado => {
+            res.json(resultado)
+        })
+        .catch(err => {
+            res.json(err)
+        })
+}
 
-    // let send = `{
-    //         "station":"${estacion}",
-    //         "serial_num":"${serial}",
-    //         "material": "${material}",
-    //         "cantidad":"${cantidad}", 
-    //         "process":"${proceso}", 
-    //         "storage_type": "${storage_type}", 
-    //         "user_id":"${user_id}"
-    //     }`
-
-    // amqpRequest(send, "rpc_vul")
-    //     .then((result) => { res.json(result) })
-    //     .catch((err) => { res.json(err) })
-
-
-    let estacion = (req.res.locals.macIP.mac).replace(/:/g, "-")
+controller.getUbicacionesVULMandrel_POST = (req, res) => {
+    let estacion = req.body.estacion
     let mandrel = req.body.mandrel
     let proceso = req.body.proceso
-    let user_id = req.res.locals.authData.id.id
+    // let user_id = req.res.locals.authData.id.id
     let material = ""
-
 
     funcion.sapFromMandrel(mandrel, "vulc")
         .then((result) => {
             if (result.length == 0) {
-                res.json(JSON.stringify({ "result": "N/A", "error": "Check Mandrel Number" }))
+                res.json(JSON.stringify({ "key": "Check Mandrel Number" }))
             } else {
-                let send = `{
-                        "station":"${estacion}",
-                        "material": "${(result[0].no_sap).charAt(0).toUpperCase() == "P" ? (result[0].no_sap).substring(1) : result[0].no_sap}",
-                        "process":"${proceso}", 
-                        "user_id":"${user_id}"
-                    }`
-
-                amqpRequest(send, "rpc_vul")
-                    .then((result) => { res.json(result) })
-                    .catch((err) => { res.json(err) })
+                funcion.sapRFC_consultaMaterial_ST((result[0].no_sap).substring(1), "0012", "VUL")
+                    .then(resultado => {
+                        res.json(resultado)
+                    })
+                    .catch(err => {
+                        res.json(err)
+                    })
             }
 
         })
-        .catch((err) => { res.json(err) })
-}
-
-controller.getUbicacionesVULSerial_POST = (req, res) => {
-    let estacion = req.res.locals.macIP.mac
-    let serial = req.body.serial
-    let material = req.body.material
-    let cantidad = null
-    let proceso = req.body.proceso
-    let user_id = req.res.locals.authData.id.id
-    let storage_type = req.body.storage_type
-
-
-    let send = `{
-            "station":"${estacion}",
-            "serial_num":"${serial}",
-            "material": "${material}",
-            "cantidad":"${cantidad}", 
-            "process":"${proceso}", 
-            "storage_type": "${storage_type}", 
-            "user_id":"${user_id}"
-        }`
-
-    amqpRequest(send, "rpc_vul")
-        .then((result) => { res.json(result) })
         .catch((err) => { res.json(err) })
 }
 
@@ -1470,6 +1402,21 @@ controller.transferProdVul_POST = (req, res) => {
         .catch(err => {
             res.json(err)
         })
+}
+
+controller.auditoriaVUL_POST = (req, res) => {
+    let serial = req.body.serial
+    let serials_array = serial.split(",")
+    let promises = []
+    
+    serials_array.forEach(serial_ => {
+        promises.push(funcion.sapRFC_transferVulProd(serial_)
+            .catch((err) => { return err }))
+    });
+
+    Promise.all(promises)
+        .then(result => { res.json(result) })
+        .catch(err => { res.json(err) })
 }
 
 controller.transferSemProd_POST = (req, res) => {

@@ -401,7 +401,7 @@ funcion.sapRFC_transferFG = (serial, storage_bin) => {
                         I_LETYP: `IP`,
                         I_NLTYP: `FG`,
                         I_NLBER: `001`,
-                        I_NLPLA: `${storage_bin}`
+                        I_NLPLA: `${storage_bin.toUpperCase()}`
                     }
                 )
                     .then(result => {
@@ -475,7 +475,7 @@ funcion.sapRFC_consultaMaterial_ST = (material_number, storage_location, storage
                     {
                         QUERY_TABLE: 'LQUA',
                         DELIMITER: ",",
-                        OPTIONS: [{ TEXT: `MATNR EQ '${material_number}'   AND LGORT EQ '${storage_location}' AND LGTYP EQ '${storage_type}' ` }]
+                        OPTIONS: [{ TEXT: `MATNR EQ '${material_number.toUpperCase()}'   AND LGORT EQ '${storage_location}' AND LGTYP EQ '${storage_type}' ` }]
                     }
                 )
                     .then(result => {
@@ -715,6 +715,35 @@ funcion.sapRFC_transferProdVul_2 = (material, qty) => {
     })
 }
 
+funcion.sapRFC_transferVul = (serial, storage_bin) => {
+    return new Promise((resolve, reject) => {
+        node_RFC.acquire()
+            .then(managed_client => {
+                managed_client.call('L_TO_CREATE_MOVE_SU',
+                    {
+                        I_LENUM: `${funcion.addLeadingZeros(serial, 20)}`,
+                        I_BWLVS: `998`,
+                        I_LETYP: `IP`,
+                        I_NLTYP: `VUL`,
+                        I_NLBER: `001`,
+                        I_NLPLA: `${storage_bin.toUpperCase()}`
+                    }
+                )
+                    .then(result => {
+                        managed_client.release()
+                        resolve(result)
+                    })
+                    .catch(err => {
+                        managed_client.release()
+                        reject(err)
+                    });
+            })
+            .catch(err => {
+                reject(err)
+            });
+    })
+}
+
 funcion.sapRFC_transferSemProd = (serial) => {
     return new Promise((resolve, reject) => {
 
@@ -845,7 +874,7 @@ funcion.sapRFC_transferMP = (storage_unit, storage_type, storage_bin, emp_num) =
                 } else if ((result[0].LGTYP).trim() !== (storage_type).trim()) {
                     error = 'DEL: Transfer between Storage Types not permited'
                     abap_error.message = error
-                    funcion.insertCompleteTransfer(emp_num, storage_type, (storage_unit).replace(/^0+/gm, ""), storage_bin, error)
+                    funcion.insertCompleteTransfer(emp_num, storage_type, (storage_unit).replace(/^0+/gm, ""), storage_bin.toUpperCase(), error)
                     reject(abap_error)
                 } else {
 
@@ -858,16 +887,16 @@ funcion.sapRFC_transferMP = (storage_unit, storage_type, storage_bin, emp_num) =
                                     I_LETYP: `IP`,
                                     I_NLTYP: `${storage_type}`,
                                     I_NLBER: `001`,
-                                    I_NLPLA: `${storage_bin}`
+                                    I_NLPLA: `${storage_bin.toUpperCase()}`
                                 }
                             )
                                 .then(result => {
                                     managed_client.release()
-                                    funcion.insertCompleteTransfer(emp_num, storage_type, (storage_unit).replace(/^0+/gm, ""), storage_bin, result.E_TANUM)
+                                    funcion.insertCompleteTransfer(emp_num, storage_type, (storage_unit).replace(/^0+/gm, ""), storage_bin.toUpperCase(), result.E_TANUM)
                                     resolve(result)
                                 })
                                 .catch(err => {
-                                    funcion.insertCompleteTransfer(emp_num, storage_type, (storage_unit).replace(/^0+/gm, ""), storage_bin, err.message)
+                                    funcion.insertCompleteTransfer(emp_num, storage_type, (storage_unit).replace(/^0+/gm, ""), storage_bin.toUpperCase(), err.message)
                                     managed_client.release()
                                     reject(err)
                                 });
@@ -958,7 +987,7 @@ funcion.sapRFC_transferMP1 = (storage_unit, storage_type, storage_bin, emp_num, 
                         I_LETYP: `IP`,
                         I_NLTYP: `${storage_type}`,
                         I_NLBER: `001`,
-                        I_NLPLA: `${storage_bin}`
+                        I_NLPLA: `${storage_bin.toUpperCase()}`
                     }
                 )
                     .then(result => {

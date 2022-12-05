@@ -80,15 +80,17 @@ router.post("/getUbicacionesEXTSerial",middleware.verifyToken, middleware.macFro
 router.post('/postSerialesRedisEXT',middleware.verifyToken, middleware.macFromIP, routesController.postSerialsEXT_POST);
 
 // ##############Vulcanized##################
-router.get('/consultaVUL',middleware.verifyToken, routesController.consultaVUL_GET);
-router.get('/transferVUL',middleware.verifyToken, middleware.macFromIP, routesController.transferVUL_GET);
-router.post('/transferVUL_Confirmed',middleware.verifyToken, middleware.macFromIP, routesController.transferVUL_Confirmed);
-router.post("/getUbicacionesVULMaterial",middleware.verifyToken, middleware.macFromIP, routesController.getUbicacionesVULMaterial_POST);
-router.post("/getUbicacionesVULMandrel",middleware.verifyToken, middleware.macFromIP, routesController.getUbicacionesVULMandrel_POST);
-router.post("/getUbicacionesVULSerial",middleware.verifyToken, middleware.macFromIP, routesController.getUbicacionesVULSerial_POST);
+// router.get('/consultaVUL',middleware.verifyToken, routesController.consultaVUL_GET);
+// router.get('/transferVUL',middleware.verifyToken, middleware.macFromIP, routesController.transferVUL_GET);
+router.post("/getUbicacionesVULMaterial",  routesController.getUbicacionesVULMaterial_POST);
+router.post("/getUbicacionesVULMandrel",  routesController.getUbicacionesVULMandrel_POST);
+router.post("/getUbicacionesVULSerial",  routesController.getUbicacionesVULSerial_POST);
+router.post('/transferVUL_Confirmed', routesController.transferVUL_Confirmed);
 
 router.post('/transferVulProd', routesController.transferVulProd_POST);
 router.post('/transferProdVul', routesController.transferProdVul_POST);
+
+router.post('/auditoriaVUL', routesController.auditoriaVUL_POST);
 
 
 // ##############Sub Assembly##################
