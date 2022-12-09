@@ -73,11 +73,11 @@ router.post('/master_request_gm',middleware.verifyToken, middleware.macFromIP, r
 router.post('/master_request_gm_create',middleware.verifyToken, middleware.macFromIP, routesController.master_request_GM_CREATE_POST);
 
 // ##############Extrusion##################
-router.get('/consultaEXT',middleware.verifyToken, routesController.consultaEXT_GET);
+// router.get('/consultaEXT',middleware.verifyToken, routesController.consultaEXT_GET);
 router.get('/transferEXT',middleware.verifyToken, routesController.transferEXT_GET);
-router.post("/getUbicacionesEXTMandrel",middleware.verifyToken, middleware.macFromIP, routesController.getUbicacionesEXTMandrel_POST);
-router.post("/getUbicacionesEXTSerial",middleware.verifyToken, middleware.macFromIP, routesController.getUbicacionesEXTSerial_POST);
-router.post('/postSerialesRedisEXT',middleware.verifyToken, middleware.macFromIP, routesController.postSerialsEXT_POST);
+router.post("/getUbicacionesEXTMandrel", routesController.getUbicacionesEXTMandrel_POST);
+router.post("/getUbicacionesEXTSerial", routesController.getUbicacionesEXTSerial_POST);
+router.post('/postSerialesEXT', routesController.postSerialsEXT_POST);
 
 // ##############Vulcanized##################
 // router.get('/consultaVUL',middleware.verifyToken, routesController.consultaVUL_GET);
