@@ -581,6 +581,51 @@ funcion.sapRFC_ConsultaMaterialMM03 = (material_number) => {
     })
 }
 
+funcion.sapRFC_consultaStorageBin = (storage_location, storage_type, storage_bin) => {
+    return new Promise((resolve, reject) => {
+        node_RFC.acquire()
+            .then(managed_client => {
+                managed_client.call('RFC_READ_TABLE',
+                    {
+                        QUERY_TABLE: 'LQUA',
+                        DELIMITER: ",",
+                        OPTIONS: [{ TEXT: `LGORT EQ '${storage_location}'   AND LGTYP EQ '${storage_type}' AND LGPLA EQ '${storage_bin.toUpperCase()}'` }]
+                    }
+                )
+                    .then(result => {
+                        let columns = []
+                        let rows = []
+                        let fields = result.FIELDS
+
+                        fields.forEach(field => {
+                            columns.push(field.FIELDNAME)
+                        });
+
+                        let data = result.DATA
+
+                        data.forEach(data_ => {
+                            rows.push(data_.WA.split(","))
+                        });
+
+                        let res = rows.map(row => Object.fromEntries(
+                            columns.map((key, i) => [key, row[i]])
+                        ))
+                        resolve(res)
+                        managed_client.release()
+                    })
+                    .catch(err => {
+                        reject(err)
+                        managed_client.release()
+                    })
+            })
+            .catch(err => {
+                reject(err)
+                managed_client.release()
+            })
+    })
+}
+
+
 funcion.sapRFC_partialTransferStorageUnit = (material_number, transfer_quantity, source_storage_location, source_storage_type, source_storage_unit, destination_storage_type, destination_storage_bin) => {
     return new Promise((resolve, reject) => {
         node_RFC.acquire()

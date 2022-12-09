@@ -1353,7 +1353,7 @@ controller.postSerialsEXT_POST = (req, res) => {
     let proceso = req.body.proceso
     let storage_bin = req.body.storage_bin
     let user_id = req.body
-
+    let max_storage_unit_bin = 5
 
     let send = `{
             "station":"${estacion}",
@@ -1367,14 +1367,27 @@ controller.postSerialsEXT_POST = (req, res) => {
 
     let serials_array = serial.split(",")
     let promises = []
-    serials_array.forEach(serial_ => {
-        promises.push(funcion.sapRFC_transferExt(serial_, storage_bin)
-            .catch((err) => { return err }))
-    });
 
-    Promise.all(promises)
-        .then(result => { res.json(result) })
+    funcion.sapRFC_consultaStorageBin("0012", "EXT", storage_bin)
+        .then(result => {
+            let serials_bin = serials_array.length + result.length
+            if (storage_bin[0] == "r" || storage_bin[0] == "R" && serials_bin > max_storage_unit_bin) {
+                res.json([{ "key": `Exceeded amount of Storage Units per Bin: ${serials_bin- max_storage_unit_bin}` }])
+            } else {
+                serials_array.forEach(serial_ => {
+                    promises.push(funcion.sapRFC_transferExt(serial_, storage_bin)
+                        .catch((err) => { return err }))
+                });
+
+                Promise.all(promises)
+                    .then(result => { res.json(result) })
+                    .catch(err => { res.json(err) })
+            }
+        })
         .catch(err => { res.json(err) })
+
+
+
 }
 
 controller.transferVulProd_POST = (req, res) => {
