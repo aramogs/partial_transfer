@@ -661,7 +661,7 @@ funcion.sapRFC_transferProdVul_1 = (material, qty) => {
                         I_VLTYP: `102`,
                         I_VLBER: `001`,
                         I_VLPLA: `103`
-                        
+
                     }
                 )
                     .then(result => {
@@ -697,7 +697,7 @@ funcion.sapRFC_transferProdVul_2 = (material, qty) => {
                         I_NLBER: `001`,
                         I_NLPLA: `TEMPR`
 
-                        
+
                     }
                 )
                     .then(result => {
@@ -751,7 +751,7 @@ funcion.sapRFC_transferSemProd = (serial) => {
             .then(managed_client => {
                 managed_client.call('L_TO_CREATE_MOVE_SU',
                     {
-                        I_LENUM: `${funcion.addLeadingZeros(serial,20)}`,
+                        I_LENUM: `${funcion.addLeadingZeros(serial, 20)}`,
                         I_BWLVS: `998`,
                         I_LETYP: `IP`,
                         I_NLTYP: `102`,
@@ -791,7 +791,7 @@ funcion.sapRFC_transferProdSem_1 = (material, qty) => {
                         I_VLTYP: `102`,
                         I_VLBER: `001`,
                         I_VLPLA: `103`
-                        
+
                     }
                 )
                     .then(result => {
@@ -828,7 +828,7 @@ funcion.sapRFC_transferProdSem_2 = (material, qty) => {
                         I_NLBER: `001`,
                         I_NLPLA: `TEMPR_SEM`
 
-                        
+
                     }
                 )
                     .then(result => {
@@ -937,7 +937,7 @@ funcion.sapRFC_transferMP_BetweenStorageTypes = (storage_unit, storage_type, sto
                     error = "DEL: Check your entries"
                     abap_error.message = error
                     reject(abap_error)
-                }  else {
+                } else {
 
                     node_RFC.acquire()
                         .then(managed_client => {
@@ -992,11 +992,11 @@ funcion.sapRFC_transferMP1 = (storage_unit, storage_type, storage_bin, emp_num, 
                 )
                     .then(result => {
                         managed_client.release()
-                        funcion.insertRawMovement(raw_id, storage_type, emp_num, (storage_unit).replace(/^0+/gm, ""),  result.E_TANUM)
+                        funcion.insertRawMovement(raw_id, storage_type, emp_num, (storage_unit).replace(/^0+/gm, ""), result.E_TANUM)
                         resolve(result)
                     })
                     .catch(err => {
-                        funcion.insertRawMovement(raw_id, storage_type, emp_num, (storage_unit).replace(/^0+/gm, ""),  err.message)
+                        funcion.insertRawMovement(raw_id, storage_type, emp_num, (storage_unit).replace(/^0+/gm, ""), err.message)
                         managed_client.release()
                         reject(err)
                     });
@@ -1024,11 +1024,11 @@ funcion.sapRFC_transferMP_Obsoletos = (storage_unit, storage_type, storage_bin, 
                 )
                     .then(result => {
                         managed_client.release()
-                        funcion.insertRawMovement(raw_id, storage_type, emp_num, (storage_unit).replace(/^0+/gm, ""),  `${storage_bin}-${result.E_TANUM}`)
+                        funcion.insertRawMovement(raw_id, storage_type, emp_num, (storage_unit).replace(/^0+/gm, ""), `${storage_bin}-${result.E_TANUM}`)
                         resolve(result)
                     })
                     .catch(err => {
-                        funcion.insertRawMovement(raw_id, storage_type, emp_num, (storage_unit).replace(/^0+/gm, ""),  `${storage_bin}-${err.message}`)
+                        funcion.insertRawMovement(raw_id, storage_type, emp_num, (storage_unit).replace(/^0+/gm, ""), `${storage_bin}-${err.message}`)
                         managed_client.release()
                         reject(err)
                     });
@@ -1036,6 +1036,35 @@ funcion.sapRFC_transferMP_Obsoletos = (storage_unit, storage_type, storage_bin, 
             .catch(err => {
                 reject(err)
             })
+    })
+}
+
+funcion.sapRFC_transferExt = (serial, storage_bin) => {
+    return new Promise((resolve, reject) => {
+        node_RFC.acquire()
+            .then(managed_client => {
+                managed_client.call('L_TO_CREATE_MOVE_SU',
+                    {
+                        I_LENUM: `${funcion.addLeadingZeros(serial, 20)}`,
+                        I_BWLVS: `998`,
+                        I_LETYP: `IP`,
+                        I_NLTYP: `EXT`,
+                        I_NLBER: `001`,
+                        I_NLPLA: `${storage_bin.toUpperCase()}`
+                    }
+                )
+                    .then(result => {
+                        managed_client.release()
+                        resolve(result)
+                    })
+                    .catch(err => {
+                        managed_client.release()
+                        reject(err)
+                    });
+            })
+            .catch(err => {
+                reject(err)
+            });
     })
 }
 
@@ -1075,11 +1104,18 @@ funcion.sapRFC_transferMP_Obsoletos = (storage_unit, storage_type, storage_bin, 
 //         managed_client.call('BAPI_HU_CREATE ',
 //             {
 
-//                 HEADERPROPOSAL: 
-//                     {
-//                         PACK_MAT: '5000010057A0',
-//                         PLANT: '5210',
-//                     }
+//                 HEADERPROPOSAL:
+//                 {
+//                     PACK_MAT: '4MC0175',
+//                     PLANT: '5210',
+//                     STGE_LOC: '0012',
+//                     HU_EXID_TYPE: 'C',
+
+//                 },
+//                 HUITEM: [{
+//                     MATERIAL: '5000010057A0',
+//                     PACK_QTY: '100',
+//                 }]
 
 //             }
 //         )
@@ -1091,6 +1127,29 @@ funcion.sapRFC_transferMP_Obsoletos = (storage_unit, storage_type, storage_bin, 
 //                 managed_client.release()
 //             })
 //     })
+
+
+// node_RFC.acquire()
+// .then(managed_client => {
+//     managed_client.call('BAPI_HU_PACK',
+//         {
+//             HUKEY: '00000000000183071080',
+//             // ITEMPROPOSAL: [{
+//             //     MATERIAL: '5000010057A0',
+//             //     PACK_QTY: '100',
+//             // }]
+//             ITEMPROPOSAL:[]
+
+//         }
+//     )
+//         .then(result => {
+//             console.log(result);
+//         })
+//         .catch(err => {
+//             console.log(err);
+//             managed_client.release()
+//         })
+// })
 
 // node_RFC.acquire()
 //     .then(managed_client => {

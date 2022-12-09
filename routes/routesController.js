@@ -1295,27 +1295,23 @@ controller.getUbicacionesVULMandrel_POST = (req, res) => {
 
 controller.getUbicacionesEXTMandrel_POST = (req, res) => {
 
-    let estacion = req.res.locals.macIP.mac
+    let estacion = req.body
     let mandrel = req.body.mandrel
     let proceso = req.body.proceso
-    let user_id = req.res.locals.authData.id.id
-
+    let user_id = req.body
 
     funcion.sapFromMandrel(mandrel, "extr")
         .then((result) => {
             if (result.length == 0) {
-                res.json(JSON.stringify({ "result": "N/A", "error": "Check Mandrel Number" }))
+                res.json(JSON.stringify({ "key": "Check Mandrel Number" }))
             } else {
-                let send = `{
-                    "station":"${estacion}",
-                    "material": "${(result[0].no_sap)}",
-                    "process":"${proceso}", 
-                    "user_id":"${user_id}"
-                }`
-
-                amqpRequest(send, "rpc_ext")
-                    .then((result) => { res.json(result) })
-                    .catch((err) => { res.json(err) })
+                funcion.sapRFC_consultaMaterial_ST(result[0].no_sap, "0012", "EXT")
+                    .then(resultado => {
+                        res.json(resultado)
+                    })
+                    .catch(err => {
+                        res.json(err)
+                    })
             }
 
         })
@@ -1326,39 +1322,37 @@ controller.getUbicacionesEXTMandrel_POST = (req, res) => {
 }
 
 controller.getUbicacionesEXTSerial_POST = (req, res) => {
-    let estacion = req.res.locals.macIP.mac
-    let serial_num = req.body.serial
+    let estacion = req.body
+    let serial = req.body.serial
     let proceso = req.body.proceso
-    let user_id = req.res.locals.authData.id.id
-
-
-
-    let send = `{
-            "station":"${estacion}",
-            "serial_num": "${serial_num}",
-            "process":"${proceso}", 
-            "user_id":"${user_id}"
-        }`
-
-    amqpRequest(send, "rpc_ext")
-        .then((result) => { res.json(result) })
-        .catch((err) => { res.json(err) })
-
-
-
-
+    let user_id = req.body
+    funcion.sapRFC_consultaStorageUnit(funcion.addLeadingZeros(serial, 20))
+        .then(resultado => {
+            if (resultado.length == 0) {
+                res.json(JSON.stringify({ "key": "Check Serial Number" }))
+            } else {
+                funcion.sapRFC_consultaMaterial(resultado[0].MATNR, "0012")
+                    .then(resultado => {
+                        res.json(resultado)
+                    })
+                    .catch(err => {
+                        res.json(err)
+                    })
+            }
+        })
+        .catch(err => { res.json(err) })
 }
 
 
 
 controller.postSerialsEXT_POST = (req, res) => {
-    let estacion = req.res.locals.macIP.mac
+    let estacion = req.vody
     let serial = req.body.serial
     let material = null
     let cantidad = null
     let proceso = req.body.proceso
     let storage_bin = req.body.storage_bin
-    let user_id = req.res.locals.authData.id.id
+    let user_id = req.body
 
 
     let send = `{
@@ -1371,9 +1365,16 @@ controller.postSerialsEXT_POST = (req, res) => {
             "user_id":"${user_id}"
         }`
 
-    amqpRequest(send, "rpc_ext")
-        .then((result) => { res.json(result) })
-        .catch((err) => { res.json(err) })
+    let serials_array = serial.split(",")
+    let promises = []
+    serials_array.forEach(serial_ => {
+        promises.push(funcion.sapRFC_transferExt(serial_, storage_bin)
+            .catch((err) => { return err }))
+    });
+
+    Promise.all(promises)
+        .then(result => { res.json(result) })
+        .catch(err => { res.json(err) })
 }
 
 controller.transferVulProd_POST = (req, res) => {
@@ -1408,7 +1409,7 @@ controller.auditoriaVUL_POST = (req, res) => {
     let serial = req.body.serial
     let serials_array = serial.split(",")
     let promises = []
-    
+
     serials_array.forEach(serial_ => {
         promises.push(funcion.sapRFC_transferVulProd(serial_)
             .catch((err) => { return err }))
