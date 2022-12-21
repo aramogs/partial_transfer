@@ -869,9 +869,11 @@ funcion.sapRFC_transferProdSem_2 = (material, qty) => {
                         I_ANFME: `${qty}`,
                         I_LGORT: `0012`,
                         I_LETYP: `IP`,
-                        I_NLTYP: `SEM`,
+                        // I_NLTYP: `SEM`,
+                        I_NLTYP: `001`,
                         I_NLBER: `001`,
-                        I_NLPLA: `TEMPR_SEM`
+                        // I_NLPLA: `TEMPR_SEM`
+                        I_NLPLA: `103`
 
                     }
                 )
