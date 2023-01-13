@@ -899,17 +899,6 @@ controller.getRawFIFOSerial_POST = (req, res) => {
     let user_id = req.res.locals.authData.id.id
     let raw_id = req.body.raw_id
 
-
-    // let send = `{
-    //         "station":"${estacion}",
-    //         "serial_num":"${serial}",
-    //         "material": "${material}",
-    //         "cantidad":"${cantidad}", 
-    //         "process":"${proceso}", 
-    //         "storage_type":"${storage_type}",  
-    //         "user_id":"${user_id}"
-    //     }`
-
     funcion.sapRFC_consultaStorageUnit(funcion.addLeadingZeros(serial, 20))
         .then(result => {
             let error = ""
@@ -973,9 +962,6 @@ controller.getRawFIFOMP1_POST = (req, res) => {
                 "user_id":"${user_id}"
             }`
 
-            // amqpRequest(send, "rpc_rm")
-            //     .then(result => { res.json([result, count_res]) })
-            //     .catch(err => { res.json(err) })
 
             funcion.sapRFC_consultaMaterial_ST(material, "0011", storage_type)
                 .then(result => { res.json([result, count_res]) })
@@ -1326,6 +1312,7 @@ controller.getUbicacionesEXTSerial_POST = (req, res) => {
     let serial = req.body.serial
     let proceso = req.body.proceso
     let user_id = req.body
+
     funcion.sapRFC_consultaStorageUnit(funcion.addLeadingZeros(serial, 20))
         .then(resultado => {
             if (resultado.length == 0) {
@@ -1372,7 +1359,7 @@ controller.postSerialsEXT_POST = (req, res) => {
         .then(result => {
             let serials_bin = serials_array.length + result.length
             if (storage_bin[0] == "r" || storage_bin[0] == "R" && serials_bin > max_storage_unit_bin) {
-                res.json([{ "key": `Exceeded amount of Storage Units per Bin: ${serials_bin- max_storage_unit_bin}` }])
+                res.json([{ "key": `Exceeded amount of Storage Units per Bin: ${serials_bin - max_storage_unit_bin}` }])
             } else {
                 serials_array.forEach(serial_ => {
                     promises.push(funcion.sapRFC_transferExt(serial_, storage_bin)
@@ -1388,6 +1375,89 @@ controller.postSerialsEXT_POST = (req, res) => {
 
 
 
+}
+
+controller.transferEXTRP_POST = (req, res) => {
+
+    let serial = req.body.serial
+    let serials_array = serial.split(",")
+    let promises = []
+
+
+    serials_array.forEach(serial_ => {
+        promises.push(funcion.sapRFC_transferExtRP(serial_, "GREEN")
+            .catch((err) => { return err }))
+    });
+
+    Promise.all(promises)
+        .then(result => { res.json(result) })
+        .catch(err => { res.json(err) })
+}
+
+
+controller.transferEXTPR_POST = (req, res) => {
+
+    let material = req.body.material
+    let cantidad = req.body.cantidad
+    let cantidad_actual = 0
+    let estacion = req.body.station
+    let operador_name = req.body.operador_name
+
+    funcion.sapRFC_consultaMaterial_EXT(material, "0012", "102", "GREEN")
+        .then(result => {
+            if (result.length == 0) {
+                res.json(JSON.stringify({ "key": `No Material avialbale at selected location` }))
+            } else {
+                result.forEach(element => { cantidad_actual += parseInt((element.GESME).replace(".000", "")) })
+                if (cantidad_actual < parseInt(cantidad)) {
+                    res.json(JSON.stringify({ "key": `Requested amount exceeded by ${Math.round(((parseInt(cantidad) - parseInt(cantidad_actual)) / parseInt(cantidad_actual)) * 100, 2)}% of available material` }))
+                } else {
+                    funcion.sapRFC_transferEXTPR_1(material, cantidad)
+                        .then(r => {
+                            funcion.sapRFC_transferEXTPR_2(material, cantidad)
+                                .then(resultado => {
+                                    res.json(resultado.E_LTAP)
+                                    funcion.getPrinter(estacion)
+                                        .then(printer => {
+                                            funcion.materialEXT(material)
+                                                .then(result => {
+                                                    let data = {
+                                                        "printer": `${printer[0].impre}`,
+                                                        "no_sap": `${result[0].no_sap}`,
+                                                        "description": `${result[0].description}`,
+                                                        "cust_part": `${result[0].cust_part}`,
+                                                        "platform": `${result[0].platform}`,
+                                                        "rack": `${result[0].rack}`,
+                                                        "family": `${result[0].family}`,
+                                                        "length": `${result[0].length}`,
+                                                        "emp_num": `${operador_name}`,
+                                                        "quant": `${cantidad}`,
+                                                        "serial": `${parseInt(resultado.E_LTAP.NLENR)}`
+                                                    }
+                                                    funcion.printLabelTRA(data, "EXT_RE").catch(err => { console.error(err) })
+
+                                                }).catch(err => { res.json(JSON.stringify({ "key": `${err}`}))})
+                                        }).catch(err => { res.json(JSON.stringify({ "key": `${err}`}))})
+                                }).catch(err => { res.json(JSON.stringify({ "key": `${err}`}))})
+                        }).catch(err => { res.json(JSON.stringify({ "key": `${err}`}))})
+                }
+            }
+        }).catch(err => { res.json(JSON.stringify({ "key": `${err}`}))})
+}
+
+controller.auditoriaEXT_POST = (req, res) => {
+    let serial = req.body.serial
+    let serials_array = serial.split(",")
+    let promises = []
+
+    serials_array.forEach(serial_ => {
+        promises.push(funcion.sapRFC_transferEXTProd(serial_)
+            .catch((err) => { return err }))
+    });
+
+    Promise.all(promises)
+        .then(result => { res.json(result) })
+        .catch(err => { res.json(err) })
 }
 
 controller.transferVulProd_POST = (req, res) => {
