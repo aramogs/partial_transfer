@@ -78,7 +78,9 @@ router.get('/transferEXT',middleware.verifyToken, routesController.transferEXT_G
 router.post("/getUbicacionesEXTMandrel", routesController.getUbicacionesEXTMandrel_POST);
 router.post("/getUbicacionesEXTSerial", routesController.getUbicacionesEXTSerial_POST);
 router.post('/postSerialesEXT', routesController.postSerialsEXT_POST);
-
+router.post('/transferEXTRP', routesController.transferEXTRP_POST);
+router.post('/transferEXTPR', routesController.transferEXTPR_POST);
+router.post('/auditoriaEXT', routesController.auditoriaEXT_POST);
 // ##############Vulcanized##################
 // router.get('/consultaVUL',middleware.verifyToken, routesController.consultaVUL_GET);
 // router.get('/transferVUL',middleware.verifyToken, middleware.macFromIP, routesController.transferVUL_GET);
