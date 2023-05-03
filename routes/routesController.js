@@ -550,73 +550,380 @@ controller.transferenciaMaterialMP_POST = (req, res) => {
 
 controller.getBinStatusReport_POST = (req, res) => {
     let estacion = req.res.locals.macIP.mac
+    let storage_bin = req.body.storage_bin
+    let storage_type = req.body.storage_type
+
     let serial = null
     let proceso = req.body.proceso
     let material = null
-    let storage_bin = req.body.storage_bin
     let cantidad = null
     let user_id = req.res.locals.authData.id.id
+
+
+    funcion.sapRFC_SbinOnStypeExists(storage_type, storage_bin)
+        .then(result => {
+            if (result.length == 0) {
+                res.json(JSON.stringify({ "key": `Storage Bin "${storage_bin}" does not exist at Storage Type "${storage_type}"` }))
+            } else {
+                funcion.getStorageLocation(estacion)
+                    .then(resultSL => {
+                        funcion.sapRFC_consultaStorageBin(resultSL[0].storage_location, storage_type, storage_bin)
+                            .then(result => {
+                                info_list = []
+                                result.forEach(element => {
+                                    info_list.push({ "storage_unit": parseInt(element.LENUM) })
+                                })
+                                res.json(JSON.stringify({ "info_list": info_list, "error": "N/A" }))
+                            })
+                            .catch(err => { console.log(err) })
+                    })
+                    .catch(err => { res.json(JSON.stringify({ "key": `Storage Location not set for device "${estacion}"` })) })
+            }
+        })
+        .catch(err => { console.log(err) })
+}
+
+controller.getBinStatusReportEXT_POST = (req, res) => {
+    let estacion = req.body.estacion
+    let storage_bin = req.body.storage_bin
     let storage_type = req.body.storage_type
 
-    let send = `{
-        "station":"${estacion}",
-        "serial_num":"${serial}",
-        "material": "${material}",
-        "cantidad":"${cantidad}", 
-        "process":"${proceso}",  
-        "storage_bin": "${storage_bin}", 
-        "user_id":"${user_id}",
-        "storage_type":"${storage_type}" 
-    }`
+    funcion.sapRFC_SbinOnStypeExists(storage_type, storage_bin)
+        .then(result => {
+            if (result.length == 0) {
+                res.json(JSON.stringify({ "key": `Storage Bin "${storage_bin}" does not exist at Storage Type "${storage_type}"` }))
+            } else {
+                funcion.getStorageLocation(estacion)
+                    .then(resultSL => {
+                        funcion.sapRFC_consultaStorageBin(resultSL[0].storage_location, storage_type, storage_bin)
+                            .then(result => {
+                                info_list = []
+                                result.forEach(element => {
+                                    info_list.push({ "storage_unit": parseInt(element.LENUM) })
+                                })
+                                res.json(JSON.stringify({ "info_list": info_list, "error": "N/A" }))
+                            })
+                            .catch(err => { console.log(err) })
+                    })
+                    .catch(err => { res.json(JSON.stringify({ "key": `Storage Location not set for device "${estacion}"` })) })
+            }
+        })
+        .catch(err => { console.log(err) })
+}
 
+controller.getBinStatusReportVUL_POST = (req, res) => {
+    let estacion = req.body.estacion
+    let storage_bin = req.body.storage_bin
+    let storage_type = req.body.storage_type
 
-    amqpRequest(send, "rpc_cycle")
-        .then((result) => { res.json(result) })
-        .catch((err) => { res.json(err) })
+    funcion.sapRFC_SbinOnStypeExists(storage_type, storage_bin)
+        .then(result => {
+            if (result.length == 0) {
+                res.json(JSON.stringify({ "key": `Storage Bin "${storage_bin}" does not exist at Storage Type "${storage_type}"` }))
+            } else {
+                funcion.getStorageLocation(estacion)
+                    .then(resultSL => {
+                        funcion.sapRFC_consultaStorageBin(resultSL[0].storage_location, storage_type, storage_bin)
+                            .then(result => {
+                                info_list = []
+                                result.forEach(element => {
+                                    info_list.push({ "storage_unit": parseInt(element.LENUM) })
+                                })
+                                res.json(JSON.stringify({ "info_list": info_list, "error": "N/A" }))
+                            })
+                            .catch(err => { console.log(err) })
+                    })
+                    .catch(err => { res.json(JSON.stringify({ "key": `Storage Location not set for device "${estacion}"` })) })
+            }
+        })
+        .catch(err => { console.log(err) })
 }
 
 controller.postCycleSU_POST = (req, res) => {
-    let estacion = req.res.locals.macIP.mac
-    let serial = null
-    let material = null
-    let cantidad = null
-    let proceso = req.body.proceso
+    // let estacion = req.res.locals.macIP.mac
+    // let serial = null
+    // let material = null
+    // let cantidad = null
+    // let proceso = req.body.proceso
 
     let storage_bin = req.body.storage_bin
-
     let user_id = req.res.locals.authData.id.id
     let storage_type = req.body.storage_type
     let listed_storage_units = req.body.listed_storage_units
     let unlisted_storage_units = req.body.unlisted_storage_units
     let not_found_storage_units = req.body.not_found_storage_units
+    let st = ""
+    let sb = ""
+    let listed_storage_units_promises = []
+    let unlisted_storage_units_promises = []
+    let not_found_storage_units_promises = []
 
-    if (listed_storage_units.length !== 0) {
-        funcion.insertListed_storage_units(storage_type, storage_bin.toUpperCase(), listed_storage_units, user_id)
-            .then((result) => { console.info(result) })
-            .catch((err) => { console.error(err) })
+    switch (storage_type) {
+        case "FG":
+            st = "901"
+            sb = "CICLICOFG"
+            break;
+        case "MP1":
+            st = storage_type
+            sb = "CICLICRAW1"
+            break;
+        case "MP":
+            st = storage_type
+            sb = "CICLICORAW"
+            break;
+        case "EXT":
+            st = storage_type
+            sb = "CICLICOEXT"
+            break;
+        case "VUL":
+            st = storage_type
+            sb = "CICLICOVUL"
+            break;
+        default:
+            res.json(JSON.stringify({ "key": `Storage Type: "${storage_type}" not configured for Cycle Control` }))
+            break;
     }
 
-    let send = `{
-            "station":"${estacion}",
-            "serial_num":"${serial}",
-            "material": "${material}",
-            "cantidad":"${cantidad}", 
-            "process":"${proceso}", 
-            "storage_bin": "${storage_bin}",  
-            "user_id":"${user_id}",
-            "storage_type":"${storage_type}", 
-            "listed_storage_units": "${listed_storage_units}", 
-            "unlisted_storage_units": "${unlisted_storage_units}", 
-            "not_found_storage_units": "${not_found_storage_units}" 
-        }`
+
+    if (listed_storage_units.length > 0) {
+        listed_storage_units.forEach(element => {
+            listed_storage_units_promises.push(funcion.dBinsert_cycle_Listed_storage_units(storage_type, storage_bin.toUpperCase(), [element], user_id)
+                .catch((err) => { return err }))
+        })
+    }
+
+    if (not_found_storage_units.length > 0) {
+        not_found_storage_units.forEach(element => {
+            not_found_storage_units_promises.push(funcion.sapRFC_transfer(element, st, sb)
+                .catch((err) => { return err }))
+        })
+
+    }
+
+    if (unlisted_storage_units.length > 0) {
+        unlisted_storage_units.forEach(element => {
+            unlisted_storage_units_promises.push(funcion.sapRFC_transfer(element, storage_type, storage_bin)
+                .catch((err) => { return err }))
+        })
+    }
 
 
+    if (listed_storage_units.length == 0 && unlisted_storage_units.length == 0 && not_found_storage_units.length == 0) {
 
-    amqpRequest(send, "rpc_cycle")
-        .then((result) => { res.json(result) })
-        .catch((err) => { res.json(err) })
+    }
+
+    const lsup = Promise.all(listed_storage_units_promises)
+    const nfsup = Promise.all(not_found_storage_units_promises)
+    const usup = Promise.all(unlisted_storage_units_promises)
+    let response_list = []
+    Promise.all([lsup, nfsup, usup])
+        .then(result => {
+            let lsup_result = result[0]
+            let nfsup_result = result[1]
+            let usup_result = result[2]
+
+
+            nfsup_result.forEach(element => {
+                if (element.key) {
+                    response_list.push({ "serial_num": parseInt(element.abapMsgV1), "result": "N/A", "error": element.key })
+                    funcion.dBinsert_cycle_result(storage_type, storage_bin, element.abapMsgV1, user_id, "NOSCAN-ERROR", element.key)
+                } else {
+                    response_list.push({ "serial_num": parseInt(element.I_LENUM), "result": element.E_TANUM, "error": "N/A" })
+                    funcion.dBinsert_cycle_result(storage_type, storage_bin, parseInt(element.I_LENUM), user_id, "NOSCAN", element.E_TANUM)
+                }
+
+            })
+
+            usup_result.forEach(element => {
+                if (element.key) {
+                    response_list.push({ "serial_num": parseInt(element.abapMsgV1), "result": "N/A", "error": element.key })
+                    funcion.dBinsert_cycle_result(storage_type, storage_bin, element.abapMsgV1, user_id, "WRONGBIN-ERROR", element.key)
+                } else {
+                    response_list.push({ "serial_num": parseInt(element.I_LENUM), "result": element.E_TANUM, "error": "N/A" })
+                    funcion.dBinsert_cycle_result(storage_type, storage_bin, parseInt(element.I_LENUM), user_id, "WRONGBIN", element.E_TANUM)
+                }
+            })
+            
+            res.json(response_list)
+        })
+        .catch(err => { console.log(err) })
 }
 
+controller.postCycleSUEXT_POST = (req, res) => {
+
+    let storage_bin = req.body.storage_bin
+    let user_id = req.body.user_id
+    let storage_type = req.body.storage_type
+    let listed_storage_units = req.body.listed_storage_units == '' ? [] : req.body.listed_storage_units.split(",")
+    let unlisted_storage_units = req.body.unlisted_storage_units == '' ? [] : req.body.unlisted_storage_units.split(",")
+    let not_found_storage_units = req.body.not_found_storage_units == '' ? [] : req.body.not_found_storage_units.split(",")
+    let st = ""
+    let sb = ""
+    let listed_storage_units_promises = []
+    let unlisted_storage_units_promises = []
+    let not_found_storage_units_promises = []
+
+    switch (storage_type) {
+        case "EXT":
+            st = storage_type
+            sb = "CICLICOEXT"
+            break;
+        default:
+            res.json(JSON.stringify({ "key": `Storage Type: "${storage_type}" not configured for Cycle Control` }))
+            break;
+    }
+
+
+    if (listed_storage_units.length > 0) {
+        listed_storage_units.forEach(element => {
+            listed_storage_units_promises.push(funcion.dBinsert_cycle_Listed_storage_units(storage_type, storage_bin.toUpperCase(), [element], user_id)
+                .catch((err) => { return err }))
+        })
+    }
+
+    if (not_found_storage_units.length > 0) {
+        not_found_storage_units.forEach(element => {
+            not_found_storage_units_promises.push(funcion.sapRFC_transfer(element, st, sb)
+                .catch((err) => { return err }))
+        })
+
+    }
+
+    if (unlisted_storage_units.length > 0) {
+        unlisted_storage_units.forEach(element => {
+            unlisted_storage_units_promises.push(funcion.sapRFC_transfer(element, storage_type, storage_bin)
+                .catch((err) => { return err }))
+        })
+    }
+
+
+    if (listed_storage_units.length == 0 && unlisted_storage_units.length == 0 && not_found_storage_units.length == 0) {
+
+    }
+
+    const lsup = Promise.all(listed_storage_units_promises)
+    const nfsup = Promise.all(not_found_storage_units_promises)
+    const usup = Promise.all(unlisted_storage_units_promises)
+    let response_list = []
+    Promise.all([lsup, nfsup, usup])
+        .then(result => {
+            let lsup_result = result[0]
+            let nfsup_result = result[1]
+            let usup_result = result[2]
+
+            nfsup_result.forEach(element => {
+                if (element.key) {
+                    response_list.push({ "serial_num": parseInt(element.abapMsgV1), "result": "N/A", "error": element.key })
+                    funcion.dBinsert_cycle_result(storage_type, storage_bin, element.abapMsgV1, user_id, "NOSCAN-ERROR", element.key)
+                } else {
+                    response_list.push({ "serial_num": parseInt(element.I_LENUM), "result": element.E_TANUM, "error": "N/A" })
+                    funcion.dBinsert_cycle_result(storage_type, storage_bin, parseInt(element.I_LENUM), user_id, "NOSCAN", element.E_TANUM)
+                }
+
+            })
+
+            usup_result.forEach(element => {
+                if (element.key) {
+                    response_list.push({ "serial_num": parseInt(element.abapMsgV1), "result": "N/A", "error": element.key })
+                    funcion.dBinsert_cycle_result(storage_type, storage_bin, element.abapMsgV1, user_id, "WRONGBIN-ERROR", element.key)
+                } else {
+                    response_list.push({ "serial_num": parseInt(element.I_LENUM), "result": element.E_TANUM, "error": "N/A" })
+                    funcion.dBinsert_cycle_result(storage_type, storage_bin, parseInt(element.I_LENUM), user_id, "WRONGBIN", element.E_TANUM)
+                }
+            })
+            
+            res.json(response_list)
+        })
+        .catch(err => { console.log(err) })
+}
+
+controller.postCycleSUVUL_POST = (req, res) => {
+
+    let storage_bin = req.body.storage_bin
+    let user_id = req.body.user_id
+    let storage_type = req.body.storage_type
+    let listed_storage_units = req.body.listed_storage_units == '' ? [] : req.body.listed_storage_units.split(",")
+    let unlisted_storage_units = req.body.unlisted_storage_units == '' ? [] : req.body.unlisted_storage_units.split(",")
+    let not_found_storage_units = req.body.not_found_storage_units == '' ? [] : req.body.not_found_storage_units.split(",")
+    let st = ""
+    let sb = ""
+    let listed_storage_units_promises = []
+    let unlisted_storage_units_promises = []
+    let not_found_storage_units_promises = []
+
+    switch (storage_type) {
+        case "VUL":
+            st = storage_type
+            sb = "CICLICOVUL"
+            break;
+        default:
+            res.json(JSON.stringify({ "key": `Storage Type: "${storage_type}" not configured for Cycle Control` }))
+            break;
+    }
+
+
+    if (listed_storage_units.length > 0) {
+        listed_storage_units.forEach(element => {
+            listed_storage_units_promises.push(funcion.dBinsert_cycle_Listed_storage_units(storage_type, storage_bin.toUpperCase(), [element], user_id)
+                .catch((err) => { return err }))
+        })
+    }
+
+    if (not_found_storage_units.length > 0) {
+        not_found_storage_units.forEach(element => {
+            not_found_storage_units_promises.push(funcion.sapRFC_transfer(element, st, sb)
+                .catch((err) => { return err }))
+        })
+
+    }
+
+    if (unlisted_storage_units.length > 0) {
+        unlisted_storage_units.forEach(element => {
+            unlisted_storage_units_promises.push(funcion.sapRFC_transfer(element, storage_type, storage_bin)
+                .catch((err) => { return err }))
+        })
+    }
+
+
+    if (listed_storage_units.length == 0 && unlisted_storage_units.length == 0 && not_found_storage_units.length == 0) {
+
+    }
+
+    const lsup = Promise.all(listed_storage_units_promises)
+    const nfsup = Promise.all(not_found_storage_units_promises)
+    const usup = Promise.all(unlisted_storage_units_promises)
+    let response_list = []
+    Promise.all([lsup, nfsup, usup])
+        .then(result => {
+            let lsup_result = result[0]
+            let nfsup_result = result[1]
+            let usup_result = result[2]
+
+            nfsup_result.forEach(element => {
+                if (element.key) {
+                    response_list.push({ "serial_num": parseInt(element.abapMsgV1), "result": "N/A", "error": element.key })
+                    funcion.dBinsert_cycle_result(storage_type, storage_bin, element.abapMsgV1, user_id, "NOSCAN-ERROR", element.key)
+                } else {
+                    response_list.push({ "serial_num": parseInt(element.I_LENUM), "result": element.E_TANUM, "error": "N/A" })
+                    funcion.dBinsert_cycle_result(storage_type, storage_bin, parseInt(element.I_LENUM), user_id, "NOSCAN", element.E_TANUM)
+                }
+
+            })
+
+            usup_result.forEach(element => {
+                if (element.key) {
+                    response_list.push({ "serial_num": parseInt(element.abapMsgV1), "result": "N/A", "error": element.key })
+                    funcion.dBinsert_cycle_result(storage_type, storage_bin, element.abapMsgV1, user_id, "WRONGBIN-ERROR", element.key)
+                } else {
+                    response_list.push({ "serial_num": parseInt(element.I_LENUM), "result": element.E_TANUM, "error": "N/A" })
+                    funcion.dBinsert_cycle_result(storage_type, storage_bin, parseInt(element.I_LENUM), user_id, "WRONGBIN", element.E_TANUM)
+                }
+            })
+            
+            res.json(response_list)
+        })
+        .catch(err => { console.log(err) })
+}
 
 controller.cargaListado_GET = (req, res) => {
     user = req.connection.user
@@ -1436,13 +1743,13 @@ controller.transferEXTPR_POST = (req, res) => {
                                                     }
                                                     funcion.printLabelTRA(data, "EXT_RE").catch(err => { console.error(err) })
 
-                                                }).catch(err => { res.json(JSON.stringify({ "key": `${err}`}))})
-                                        }).catch(err => { res.json(JSON.stringify({ "key": `${err}`}))})
-                                }).catch(err => { res.json(JSON.stringify({ "key": `${err}`}))})
-                        }).catch(err => { res.json(JSON.stringify({ "key": `${err}`}))})
+                                                }).catch(err => { res.json(JSON.stringify({ "key": `${err}` })) })
+                                        }).catch(err => { res.json(JSON.stringify({ "key": `${err}` })) })
+                                }).catch(err => { res.json(JSON.stringify({ "key": `${err}` })) })
+                        }).catch(err => { res.json(JSON.stringify({ "key": `${err}` })) })
                 }
             }
-        }).catch(err => { res.json(JSON.stringify({ "key": `${err}`}))})
+        }).catch(err => { res.json(JSON.stringify({ "key": `${err}` })) })
 }
 
 controller.auditoriaEXT_POST = (req, res) => {

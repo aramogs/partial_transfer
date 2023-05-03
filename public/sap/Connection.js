@@ -12,7 +12,7 @@ const abapSystem = {
 const SAP_RFC_Pool = new Pool({
     connectionParameters: abapSystem,
     clientOptions: {},
-    poolOptions: { low: 0, high: 4 },
+    poolOptions: { low: 0, high: 10 },
 });
 
 module.exports = SAP_RFC_Pool;
