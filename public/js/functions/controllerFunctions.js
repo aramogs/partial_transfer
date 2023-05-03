@@ -5,6 +5,7 @@ const dbC = require('../../db/conn_cycle');
 const dbEX = require('../../db/conn_extr');
 const dbA = require('../../db/conn_areas');
 const dbBartender = require('../../db/conn_b10_bartender');
+const dbBartenderExt = require('../../db/conn_b10_bartender_ext');
 const dbB10 = require('../../db/conn_b10');
 //Require Node-RFC
 const node_RFC = require('../../sap/Connection');
@@ -389,7 +390,7 @@ funcion.sapFromMandrel = (mandrel, table) => {
 
 funcion.materialEXT = (material) => {
     return new Promise((resolve, reject) => {
-        dbBartender(`
+        dbBartenderExt(`
         SELECT
             *
         FROM
@@ -784,7 +785,7 @@ funcion.sapRFC_transferProdVul_2 = (material, qty) => {
                         I_LETYP: `IP`,
                         I_NLTYP: `VUL`,
                         I_NLBER: `001`,
-                        I_NLPLA: `TEMPR`
+                        I_NLPLA: `TEMPR_VUL`
 
 
                     }
@@ -1301,6 +1302,63 @@ funcion.sapRFC_transferEXTPR_2 = (material, cantidad) => {
             });
     })
 }
+
+funcion.sapRFC_consultaMaterial_VUL = (material_number, storage_location, storage_type, storage_bin) => {
+    return new Promise((resolve, reject) => {
+        node_RFC.acquire()
+            .then(managed_client => {
+                managed_client.call('RFC_READ_TABLE',
+                    {
+                        QUERY_TABLE: 'LQUA',
+                        DELIMITER: ",",
+                        OPTIONS: [{ TEXT: `MATNR EQ ${material_number.toUpperCase()} AND LGTYP EQ '${storage_type}' AND LGPLA EQ '${storage_bin}'` }]
+                        // FIELDS: ["MATNR", "LGORT", "LGTYP", "LGPLA"]
+                    }
+                )
+                    .then(result => {
+                        console.log(result);
+                        let columns = []
+                        let rows = []
+                        let fields = result.FIELDS
+
+                        fields.forEach(field => {
+                            columns.push(field.FIELDNAME)
+                        });
+
+                        let data = result.DATA
+
+                        
+                        data.forEach(data_ => {
+                            rows.push(data_.WA.split(","))
+                        });
+
+                        let res = rows.map(row => Object.fromEntries(
+                            columns.map((key, i) => [key, row[i]])
+                        ))
+                        
+                        resolve(res)
+                        managed_client.release()
+                    })
+                    .catch(err => {
+                        
+                        reject(err)
+                        managed_client.release()
+                    })
+            })
+            .catch(err => {
+                reject(err)
+                managed_client.release()
+            })
+    })
+}
+
+
+
+
+
+
+
+
 
 //LT01
 // node_RFC.acquire()

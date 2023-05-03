@@ -1535,4 +1535,28 @@ controller.transferProdSem_POST = (req, res) => {
 }
 
 
+
+controller.consultaVulProductionStock_POST = (req, res) => {
+
+    let material = req.body.material
+    let cantidad_actual = 0
+
+    funcion.sapRFC_consultaMaterial_VUL("'"+material+"'", "0012", "102", "103")
+        .then(result => {
+            
+            if (result.length == 0) {               
+                res.json({ "qty": `${0}`})
+            }else{
+                result.forEach(element => { cantidad_actual += parseInt((element.GESME).replace(".000", "")) })
+                res.json({ "qty": `${cantidad_actual}`})
+            }
+
+        })
+        .catch(err => {
+            
+            res.json(err)
+        })
+}
+
+
 module.exports = controller;

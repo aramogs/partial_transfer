@@ -91,6 +91,7 @@ router.post('/transferVUL_Confirmed', routesController.transferVUL_Confirmed);
 
 router.post('/transferVulProd', routesController.transferVulProd_POST);
 router.post('/transferProdVul', routesController.transferProdVul_POST);
+router.post('/consultaVulProduccionStock', routesController.consultaVulProductionStock_POST);
 
 router.post('/auditoriaVUL', routesController.auditoriaVUL_POST);
 
