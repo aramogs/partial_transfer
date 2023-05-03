@@ -13,7 +13,7 @@ let Bmaterial = document.getElementById("Bmaterial")
 let Bstock = document.getElementById("Bstock")
 let Bdescription = document.getElementById("Bdescription")
 let Bweigth = document.getElementById("Bweigth")
-
+let tabla_consulta = document.getElementById("tabla_consulta").tBodies[0]
 
 let errorText = document.getElementById("errorText")
 let errorText2 = document.getElementById("errorText2")
@@ -84,11 +84,8 @@ submitBin.addEventListener("submit", function (e) {
         soundWrong()
     } else {
 
-
-
         $('#modalSpinner').modal({ backdrop: 'static', keyboard: false })
         storage_bin.disabled = true
-
 
         let data = { "proceso": "cycle_count_status", "storage_type": `${storage_type.innerHTML}`, "storage_bin": `${storage_bin.value.toUpperCase()}`, "user_id": user_id.innerHTML };
         axios({
@@ -100,35 +97,22 @@ submitBin.addEventListener("submit", function (e) {
             data: JSON.stringify(data)
         })
             .then((result) => {
-
-                if ((result.data).includes("<!DOCTYPE html>")) {
-
-                    setTimeout(() => {
-                        location.href = "/login"
-                    }, 1000);
-                    soundWrong()
-                }
                 let response = JSON.parse(result.data)
-
-                if (response.error !== "N/A") {
+                if (response.key) {
                     soundWrong()
-                    errorText2.innerHTML = response.error
+                    errorText2.innerHTML = response.key
                     setTimeout(() => { $('#modalSpinner').modal('hide') }, 500);
                     $('#modalError2').modal({ backdrop: 'static', keyboard: false })
                 } else {
-
                     soundOk()
-                    let result = response.storage_units
-
-                    for (let i = 0; i < result.length; i++) {
-                        if (storage_units.indexOf(result[i].storage_unit) === -1) {
-                            storage_units.push(parseInt(result[i].storage_unit))
+                    for (let i = 0; i < response.info_list.length; i++) {
+                        if (storage_units.indexOf(response.info_list[i].storage_unit) === -1) {
+                            storage_units.push(parseInt(response.info_list[i].storage_unit))
                         }
                     }
-                    storage_units_count.innerHTML = result.length
+                    storage_units_count.innerHTML = response.info_list.length
                     sbin.innerHTML = storage_bin.value.toUpperCase()
                     storage_units.forEach(element => {
-
                         if (isNaN(element)) {
                             badge = `<span class="badge badge-warning  m-1 serialBadge">EMPTY</span>`
                             current_storage_units.innerHTML = current_storage_units.innerHTML + badge
@@ -147,6 +131,7 @@ submitBin.addEventListener("submit", function (e) {
 
             })
             .catch((err) => { console.error(err) })
+
     }
 })
 
@@ -261,110 +246,68 @@ btn_verifyCount.addEventListener("click", () => {
         data: JSON.stringify(data)
     })
         .then((result) => {
+            response = result.data
+            console.log(response);
 
-            if ((result.data).includes("<!DOCTYPE html>")) {
-
-                setTimeout(() => {
-                    location.href = "/login"
-                }, 1000);
-                soundWrong()
-            }
-
-            
-            setTimeout(() => {
-                response = JSON.parse(result.data)
-
-            
-
-
-            if (response.error !== "N/A") {
-
-                errorTextField.innerHTML = response.error
+            if (response.key) {
+                errorTextField.innerHTML = response.key
                 errorText.hidden = false
                 tabla_consulta_container.hidden = true
                 storage_units = []
                 // currentST.innerHTML = ""
-                btn_transferFG.disabled = true
+                // btn_transferFG.disabled = true
                 clearInterval(interval);
-                setTimeout(() => { soundWrong(), $('#modalSpinner').modal('hide') }, 500);
+                setTimeout(() => { soundWrong(), $('#modalCountDown').modal('hide') }, 500);
                 $('#modalError').modal({ backdrop: 'static', keyboard: false })
 
             } else {
                 soundOk()
                 errorText.hidden = true
                 tabla_consulta_container.hidden = false
-                let result = response.result
-                let result_mod = ""
-
-                result_mod = result.replace("[", "").replace("]", "").replace(/'/g, '"')
-                let objectStringArray = (new Function("return [" + result_mod + "];")());
                 let errors = 0
-
-                objectStringArray.forEach(element => {
-                    if (typeof (element.result) != "number") {
-                        errors++
-                    }
-                });
-
-                // if (errors != 0) {
-                //     tabla_consulta.innerHTML = ""
-                //     objectStringArray.forEach(element => {
-                //         let newRow = tabla_consulta.insertRow(tabla_consulta.rows.length);
-                //         if (typeof (element.result) != "number") {
-                //             let row = `
-                //                 <tr class="bg-danger">
-                //                     <td>${element.serial_num}</td>
-                //                     <td>${element.result}</td>
-                //                 </tr>
-                //                 `
-                //             newRow.classList.add("bg-danger", "text-white")
-                //             return newRow.innerHTML = row;
-                //         }
-
-                //     })
-                //     cantidadErrores.innerHTML = errors
-                //     $('#modalSpinner').modal('hide')
-                //     $('#modalError').modal({ backdrop: 'static', keyboard: false })
-                // } else {
-                //     setTimeout(() => { $('#modalSpinner').modal('hide') }, 500);
-                //     setTimeout(() => { $('#modalSuccess').modal({ backdrop: 'static', keyboard: false }) }, 800);
+                response.forEach(element => { if (element.error != "N/A") { errors++ } })
 
 
-                // }
-                if (errors != 0) {
-                    tabla_consulta.innerHTML = ""
-                    objectStringArray.forEach(element => {
+                tabla_consulta.innerHTML = ""
+                cantidadErrores.innerHTML = errors
+                if (response.length != 0) {
+
+
+                    response.forEach(element => {
                         let newRow = tabla_consulta.insertRow(tabla_consulta.rows.length);
-                        if (typeof (element.result) != "number") {
+                        if (element.error !== "N/A") {
                             let row = `
                                 <tr class="bg-danger">
                                     <td>${element.serial_num}</td>
-                                    <td>${element.result}</td>
+                                    <td>${element.error}</td>
                                 </tr>
                                 `
                             newRow.classList.add("bg-danger", "text-white")
                             return newRow.innerHTML = row;
+                        } else {
+                            let row = `
+                        <tr>
+                            <td>${element.serial_num}</td>
+                            <td>${element.result}</td>
+                        </tr>
+                        `
+                            return newRow.innerHTML = row;
                         }
-
-
                     })
-                    cantidadErrores.innerHTML = errors
-                    // $('#modalSpinner').modal('hide')
-                    // $('#modalError').modal({ backdrop: 'static', keyboard: false })
                     setTimeout(function () {
                         clearInterval(interval);
-                        $('#modalCountDown').modal('hide')
+                        setTimeout(() => {  $('#modalCountDown').modal('hide') }, 500);
                         $('#modalError').modal({ backdrop: 'static', keyboard: false })
                     }, 500);
                 } else {
                     // $('#modalSpinner').modal('hide')
                     // $('#modalSuccess').modal({ backdrop: 'static', keyboard: false })
                     clearInterval(interval);
-                    $('#modalCountDown').modal('hide')
+                    setTimeout(() => { soundOk(), $('#modalCountDown').modal('hide') }, 500);
                     $('#modalSuccess').modal({ backdrop: 'static', keyboard: false })
                 }
             }
-        }, 500);
+
         })
         .catch((err) => {
             console.error(err);

@@ -36,7 +36,7 @@ funcion.getUsers = (user) => {
 }
 
 
-funcion.insertListed_storage_units = (storage_type, storage_bin, storage_units, emp_num) => {
+funcion.dBinsert_cycle_Listed_storage_units = (storage_type, storage_bin, storage_units, emp_num) => {
     return new Promise((resolve, reject) => {
         let valores_finales = []
         let arreglo_arreglos = []
@@ -64,7 +64,21 @@ funcion.insertListed_storage_units = (storage_type, storage_bin, storage_units, 
 
 }
 
-funcion.insertListed_OKBIN = (storage_type, storage_bin, storage_units, emp_num) => {
+funcion.dBinsert_cycle_result = (storage_type, storage_bin, storage_unit, emp_num, status, sap_result) => {
+    return new Promise((resolve, reject) => {
+
+
+
+        dbC(`INSERT INTO cycle_count (storage_type, storage_bin, storage_unit, emp_num, status, sap_result) 
+                VALUES ("${storage_type}", "${storage_bin}", "${storage_unit}", "${emp_num}", "${status}", "${sap_result}")`)
+            .then((result) => { resolve(result) })
+            .catch((error) => { reject(error) })
+
+    })
+
+}
+
+funcion.dBinsertListed_OKBIN = (storage_type, storage_bin, storage_units, emp_num) => {
     return new Promise((resolve, reject) => {
 
 
@@ -1303,6 +1317,51 @@ funcion.sapRFC_transferEXTPR_2 = (material, cantidad) => {
     })
 }
 
+funcion.sapRFC_SbinOnStypeExists = (storage_type, storage_bin) => {
+    return new Promise((resolve, reject) => {
+        node_RFC.acquire()
+            .then(managed_client => {
+                managed_client.call('RFC_READ_TABLE',
+                    {
+                        QUERY_TABLE: 'LAGP',
+                        DELIMITER: ",",
+                        OPTIONS: [{ TEXT: `LGNUM EQ 521 AND LGTYP EQ '${storage_type}' AND LGPLA EQ '${storage_bin}'` }]
+                        // FIELDS: ["MATNR", "LGORT", "LGTYP", "LGPLA"]
+                    }
+                )
+                    .then(result => {
+                        let columns = []
+                        let rows = []
+                        let fields = result.FIELDS
+
+                        fields.forEach(field => {
+                            columns.push(field.FIELDNAME)
+                        });
+
+                        let data = result.DATA
+
+                        data.forEach(data_ => {
+                            rows.push(data_.WA.split(","))
+                        });
+
+                        let res = rows.map(row => Object.fromEntries(
+                            columns.map((key, i) => [key, row[i]])
+                        ))
+                        resolve(res)
+                        managed_client.release()
+                    })
+                    .catch(err => {
+                        reject(err)
+                        managed_client.release()
+                    })
+            })
+            .catch(err => {
+                reject(err)
+                managed_client.release()
+            })
+    })
+}
+
 funcion.sapRFC_consultaMaterial_VUL = (material_number, storage_location, storage_type, storage_bin) => {
     return new Promise((resolve, reject) => {
         node_RFC.acquire()
@@ -1320,27 +1379,20 @@ funcion.sapRFC_consultaMaterial_VUL = (material_number, storage_location, storag
                         let columns = []
                         let rows = []
                         let fields = result.FIELDS
-
                         fields.forEach(field => {
                             columns.push(field.FIELDNAME)
                         });
-
                         let data = result.DATA
-
-                        
                         data.forEach(data_ => {
                             rows.push(data_.WA.split(","))
                         });
-
                         let res = rows.map(row => Object.fromEntries(
                             columns.map((key, i) => [key, row[i]])
                         ))
-                        
                         resolve(res)
                         managed_client.release()
                     })
                     .catch(err => {
-                        
                         reject(err)
                         managed_client.release()
                     })
@@ -1352,11 +1404,46 @@ funcion.sapRFC_consultaMaterial_VUL = (material_number, storage_location, storag
     })
 }
 
+funcion.getStorageLocation = (station) => {
+    return new Promise((resolve, reject) => {
+        dbB10(`
+        SELECT storage_location
+        FROM b10.station_conf
+        WHERE no_estacion = '${station}'
+            `)
+            .then((result) => { resolve(result) })
+            .catch((error) => { reject(error) })
+    })
+}
 
-
-
-
-
+funcion.sapRFC_transfer = (serial, storage_type, storage_bin) => {
+    return new Promise((resolve, reject) => {
+        node_RFC.acquire()
+            .then(managed_client => {
+               
+                managed_client.call('L_TO_CREATE_MOVE_SU',
+                    {
+                        I_LENUM: `${funcion.addLeadingZeros(serial, 20)}`,
+                        I_BWLVS: `998`,
+                        I_NLTYP: `${storage_type}`,
+                        I_NLBER: `001`,
+                        I_NLPLA: `${storage_bin.toUpperCase()}`
+                    }
+                )
+                    .then(result => {
+                        managed_client.release()
+                        resolve(result)
+                    })
+                    .catch(err => {
+                        managed_client.release()
+                        reject(err)
+                    });
+            })
+            .catch(err => {
+                reject(err)
+            });
+    })
+}
 
 
 
@@ -1468,5 +1555,108 @@ funcion.sapRFC_consultaMaterial_VUL = (material_number, storage_location, storag
 //                 managed_client.release()
 //             })
 //     })
+
+
+// // todo probar promise all
+// node_RFC.acquire()
+//     .then(managed_client => {
+//         managed_client.call('BAPI_GOODSMVT_CREATE',
+//             {
+//                 GOODSMVT_CODE: { GM_CODE: "06" },
+//                 GOODSMVT_HEADER: {
+//                     PSTNG_DATE: '20230202',
+//                     DOC_DATE: '20230202',
+//                     HEADER_TXT: 'NODEJS_TEST',
+//                 },
+//                 GOODSMVT_ITEM: [
+//                     {
+//                         MATERIAL: '5000010065A0',
+//                         PLANT: '5210',
+//                         STGE_LOC: '0012',
+//                         MOVE_TYPE: '551',
+//                         ENTRY_QNT: '1.000',
+//                         COSTCENTER: '0052101020',
+//                         MOVE_REAS: '5204',
+//                         PROFIT_CTR: '0052100000',
+//                         BASE_UOM: 'PC',
+//                     }
+//                 ]
+//             }
+//         )
+//             .then(result => {
+//                 console.log(result);
+//                 managed_client.call("BAPI_TRANSACTION_COMMIT",{WAIT:"X"})
+//                 managed_client.release()
+
+//                 // managed_client.invoke('BAPI_GOODSMVT_CREATE', structure_scrap, function(err,res){       
+//                 //     managed_client.invoke('BAPI_TRANSACTION_COMMIT',{}, function(err,res){
+//                 //         console.log('committed?');
+//                 //         console.log(err);
+//                 //         console.log(res);
+//                 //     });
+                    
+//                 //     if (err) {
+//                 //         return console.error('Error invoking BAPI_COSTCENTER_CHANGEMULTIPLE:', err);
+//                 //     }
+            
+//                 //     console.log('update cc res:', res);
+//                 // })   
+
+//             })
+//             .catch(err => {
+//                 console.error(err);
+//                 managed_client.release()
+//             })
+//     })
+//     .catch(err => {
+//         console.error(err);
+//         managed_client.release()
+//     })
+
+
+    // node_RFC.acquire()
+    // .then(managed_client => {
+
+    //     structure_scrap =  {
+    //         GOODSMVT_CODE: { GM_CODE: "06" },
+    //         GOODSMVT_HEADER: {
+    //             PSTNG_DATE: '20230213',
+    //             DOC_DATE: '20230213',
+    //             HEADER_TXT: 'NODEJS_TEST',
+    //         },
+    //         GOODSMVT_ITEM: [
+    //             {
+    //                 MATERIAL: '5000010065A0',
+    //                 PLANT: '5210',
+    //                 STGE_LOC: '0012',
+    //                 MOVE_TYPE: '551',
+    //                 ENTRY_QNT: '1.000',
+    //                 COSTCENTER: '0052101020',
+    //                 MOVE_REAS: '5204',
+    //                 PROFIT_CTR: '0052100000',
+    //                 BASE_UOM: 'PC',
+    //             }
+    //         ]
+    //     }
+
+    //     managed_client.invoke('BAPI_GOODSMVT_CREATE', structure_scrap, function(err,res){       
+    //         managed_client.invoke('BAPI_TRANSACTION_COMMIT',{}, function(err,res){
+    //             console.log('committed?');
+    //             console.log(err);
+    //             console.log(res);
+    //         });
+            
+    //         if (err) {
+    //             return console.error('Error invoking BAPI_COSTCENTER_CHANGEMULTIPLE:', err);
+    //         }
+    
+    //         console.log('update cc res:', res);
+    //     })  
+
+    // })
+    // .catch(err => {
+    //     console.error(err);
+    //     managed_client.release()
+    // })
 
 module.exports = funcion;

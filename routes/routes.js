@@ -81,6 +81,8 @@ router.post('/postSerialesEXT', routesController.postSerialsEXT_POST);
 router.post('/transferEXTRP', routesController.transferEXTRP_POST);
 router.post('/transferEXTPR', routesController.transferEXTPR_POST);
 router.post('/auditoriaEXT', routesController.auditoriaEXT_POST);
+router.post("/getBinStatusReportEXT", routesController.getBinStatusReportEXT_POST);
+router.post("/postCycleSUEXT", routesController.postCycleSUEXT_POST);
 // ##############Vulcanized##################
 // router.get('/consultaVUL',middleware.verifyToken, routesController.consultaVUL_GET);
 // router.get('/transferVUL',middleware.verifyToken, middleware.macFromIP, routesController.transferVUL_GET);
@@ -88,14 +90,13 @@ router.post("/getUbicacionesVULMaterial",  routesController.getUbicacionesVULMat
 router.post("/getUbicacionesVULMandrel",  routesController.getUbicacionesVULMandrel_POST);
 router.post("/getUbicacionesVULSerial",  routesController.getUbicacionesVULSerial_POST);
 router.post('/transferVUL_Confirmed', routesController.transferVUL_Confirmed);
-
 router.post('/transferVulProd', routesController.transferVulProd_POST);
 router.post('/transferProdVul', routesController.transferProdVul_POST);
 router.post('/consultaVulProduccionStock', routesController.consultaVulProductionStock_POST);
 
 router.post('/auditoriaVUL', routesController.auditoriaVUL_POST);
-
-
+router.post("/getBinStatusReportVUL", routesController.getBinStatusReportVUL_POST);
+router.post("/postCycleSUVUL", routesController.postCycleSUVUL_POST);
 // ##############Sub Assembly##################
 router.post('/transferSemProd', routesController.transferSemProd_POST);
 router.post('/transferProdSem', routesController.transferProdSem_POST);
