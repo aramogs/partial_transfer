@@ -260,21 +260,27 @@ submitSerials.addEventListener("submit", function (e) {
         inp_verifyFIFO.value = ""
         lower_date = "12/12/9999"
     } else {
-        soundOk()
-        currentCount = currentCount + 1
-        cScan.innerHTML = `${currentCount}/${contenedores}`
-        dates[`${lower_date}`] = dates[`${lower_date}`] - 1;
-        inp_verifyFIFO.value = ""
-        currentSU.classList.add("bg-success", "text-white")
 
-        // Deshabilitando el boton para enviar a ciclicos
-        currentSU.childNodes[7].children[0].classList.remove("btn-warning")
-        currentSU.childNodes[7].children[0].classList.add("btn-success")
-        currentSU.childNodes[7].children[0].disabled = true
+        if (!selected_serials.includes(serial)) {
+            soundOk()
+            currentCount = currentCount + 1
+            cScan.innerHTML = `${currentCount}/${contenedores}`
+            dates[`${lower_date}`] = dates[`${lower_date}`] - 1;
+            inp_verifyFIFO.value = ""
+            currentSU.classList.add("bg-success", "text-white")
 
-        btnTransferir.disabled = false
-        selected_serials.push(serial)
-        lower_date = "12/12/9999"
+            // Deshabilitando el boton para enviar a ciclicos
+            currentSU.childNodes[7].children[0].classList.remove("btn-warning")
+            currentSU.childNodes[7].children[0].classList.add("btn-success")
+            currentSU.childNodes[7].children[0].disabled = true
+
+            btnTransferir.disabled = false
+            selected_serials.push(serial)
+            lower_date = "12/12/9999"
+        } else {
+            inp_verifyFIFO.value = ""
+            soundWrong()
+        }
     }
 })
 
