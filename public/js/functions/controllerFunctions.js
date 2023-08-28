@@ -619,7 +619,7 @@ funcion.sapRFC_consultaStorageBin = (storage_location, storage_type, storage_bin
                     {
                         QUERY_TABLE: 'LQUA',
                         DELIMITER: ",",
-                        OPTIONS: [{ TEXT: `LGORT EQ '${storage_location}'   AND LGTYP EQ '${storage_type}' AND LGPLA EQ '${storage_bin.toUpperCase()}'` }]
+                        OPTIONS: [{ TEXT: `LGORT EQ '${storage_location}' AND LGTYP EQ '${storage_type}' AND LGPLA EQ '${storage_bin.toUpperCase()}'` }]
                     }
                 )
                     .then(result => {
@@ -690,34 +690,46 @@ funcion.sapRFC_partialTransferStorageUnit = (material_number, transfer_quantity,
     })
 }
 
-funcion.sapRFC_transferEXTProd = (serial) => {
-    return new Promise((resolve, reject) => {
-        node_RFC.acquire()
-            .then(managed_client => {
-                managed_client.call('L_TO_CREATE_MOVE_SU',
-                    {
-                        I_LENUM: `${funcion.addLeadingZeros(serial, 20)}`,
-                        I_BWLVS: `998`,
-                        I_LETYP: `IP`,
-                        I_NLTYP: `102`,
-                        I_NLBER: `001`,
-                        I_NLPLA: `GREEN`
-                    }
-                )
-                    .then(result => {
-                        managed_client.release()
-                        resolve(result)
-                    })
-                    .catch(err => {
-                        managed_client.release()
-                        reject(err)
-                    });
-            })
-            .catch(err => { reject(err) })
+funcion.sapRFC_transferEXTProd = async (serial, storage_location, storage_type, storage_bin) => {
+    console.log(serial, storage_location, storage_type, storage_bin);
+    try {
+        const managed_client = await node_RFC.acquire();
 
-    })
+        const result_suCheck = await managed_client.call('RFC_READ_TABLE', {
+            QUERY_TABLE: 'LQUA',
+            DELIMITER: ",",
+            OPTIONS: [{ TEXT: `LENUM EQ '${funcion.addLeadingZeros(serial, 20)}'` }]
+        });
+        const columns = result_suCheck.FIELDS.map(field => field.FIELDNAME);
+        const rows = result_suCheck.DATA.map(data_ => data_.WA.split(","));
 
+        const res = rows.map(row => Object.fromEntries(
+            columns.map((key, i) => [key, row[i]])
+        ));
+        managed_client.release();
+        if (res.length === 0) {
+            return ({ "key": "SU_DOESNT_EXIST", "abapMsgV1": `${serial}` });
+
+        } else if (res[0].LGORT !== storage_location) {
+            return ({ "key": "Storage Locations do not match", "abapMsgV1": `${serial}` });
+        } else {
+            const managed_client2 = await node_RFC.acquire();
+            const result = await managed_client2.call('L_TO_CREATE_MOVE_SU', {
+                I_LENUM: `${funcion.addLeadingZeros(serial, 20)}`,
+                I_BWLVS: '998',
+                I_LETYP: 'IP',
+                I_NLTYP: storage_type.toUpperCase(),
+                I_NLBER: '001',
+                I_NLPLA: storage_bin.toUpperCase()
+            });
+            managed_client2.release();
+            return result;
+        }
+    } catch (err) {
+        throw err;
+    }
 }
+
 
 funcion.sapRFC_transferVulProd = (serial) => {
     return new Promise((resolve, reject) => {
@@ -1172,7 +1184,7 @@ funcion.sapRFC_transferExt = (serial, storage_bin) => {
     })
 }
 
-funcion.sapRFC_transferExtRP = (serial, storage_bin) => {
+funcion.sapRFC_transferExtRP = (serial, storage_type, storage_bin) => {
     return new Promise((resolve, reject) => {
         node_RFC.acquire()
             .then(managed_client => {
@@ -1181,7 +1193,7 @@ funcion.sapRFC_transferExtRP = (serial, storage_bin) => {
                         I_LENUM: `${funcion.addLeadingZeros(serial, 20)}`,
                         I_BWLVS: `998`,
                         I_LETYP: `IP`,
-                        I_NLTYP: `102`,
+                        I_NLTYP: `${storage_type.toUpperCase()}`,
                         I_NLBER: `001`,
                         I_NLPLA: `${storage_bin.toUpperCase()}`
                     }
@@ -1246,7 +1258,7 @@ funcion.sapRFC_consultaMaterial_EXT = (material_number, storage_location, storag
     })
 }
 
-funcion.sapRFC_transferEXTPR_1 = (material, cantidad) => {
+funcion.sapRFC_transferEXTPR_1 = (material, cantidad, fromStorageLocation, fromStorageType, fromStorageBin) => {
     return new Promise((resolve, reject) => {
 
         node_RFC.acquire()
@@ -1258,11 +1270,11 @@ funcion.sapRFC_transferEXTPR_1 = (material, cantidad) => {
                         I_MATNR: `${material}`,
                         I_WERKS: `5210`,
                         I_ANFME: `${cantidad}`,
-                        I_LGORT: `0012`,
+                        I_LGORT: `${fromStorageLocation.toUpperCase()}`,
                         I_LETYP: `IP`,
-                        I_VLTYP: `102`,
+                        I_VLTYP: `${fromStorageType.toUpperCase()}`,
                         I_VLBER: `001`,
-                        I_VLPLA: `GREEN`
+                        I_VLPLA: `${fromStorageBin.toUpperCase()}`
 
                     }
                 )
@@ -1281,7 +1293,7 @@ funcion.sapRFC_transferEXTPR_1 = (material, cantidad) => {
     })
 }
 
-funcion.sapRFC_transferEXTPR_2 = (material, cantidad) => {
+funcion.sapRFC_transferEXTPR_2 = (material, cantidad, toStorageLocation) => {
     return new Promise((resolve, reject) => {
 
         node_RFC.acquire()
@@ -1293,7 +1305,7 @@ funcion.sapRFC_transferEXTPR_2 = (material, cantidad) => {
                         I_MATNR: `${material}`,
                         I_WERKS: `5210`,
                         I_ANFME: `${cantidad}`,
-                        I_LGORT: `0012`,
+                        I_LGORT: `${toStorageLocation.toUpperCase()}`,
                         I_LETYP: `IP`,
                         I_NLTYP: `EXT`,
                         I_NLBER: `001`,
@@ -1444,6 +1456,71 @@ funcion.sapRFC_transfer = (serial, storage_type, storage_bin) => {
             });
     })
 }
+
+funcion.sapRFC_transferSlocCheck = async (serial, storage_location, storage_type, storage_bin) => {
+    try {
+        const managed_client = await node_RFC.acquire();
+
+        const result_suCheck = await managed_client.call('RFC_READ_TABLE', {
+            QUERY_TABLE: 'LQUA',
+            DELIMITER: ",",
+            OPTIONS: [{ TEXT: `LENUM EQ '${funcion.addLeadingZeros(serial, 20)}'` }]
+        });
+        const columns = result_suCheck.FIELDS.map(field => field.FIELDNAME);
+        const rows = result_suCheck.DATA.map(data_ => data_.WA.split(","));
+
+        const res = rows.map(row => Object.fromEntries(
+            columns.map((key, i) => [key, row[i]])
+        ));
+        managed_client.release();
+
+        if (res.length === 0) {
+            return ({ "key": "SU_DOESNT_EXIST", "abapMsgV1": `${serial}` });
+
+        } else if (res[0].LGORT !== storage_location) {
+            return ({ "key": "Storage Locations do not match", "abapMsgV1": `${serial}` });
+        } else {
+            const inputParameters = {
+                I_LENUM: funcion.addLeadingZeros(serial, 20),
+                I_BWLVS: '998',
+                I_NLTYP: storage_type,
+                I_NLBER: '001',
+                I_NLPLA: storage_bin.toUpperCase()
+            };
+            const managed_client2 = await node_RFC.acquire();
+            const result = await managed_client2.call('L_TO_CREATE_MOVE_SU', inputParameters);
+            managed_client2.release();
+            return result;
+        }
+    } catch (err) {
+        throw err;
+    }
+};
+
+funcion.sapRFC_consultaStorageUnit = async (storage_unit) => {
+    try {
+        const managed_client = await node_RFC.acquire();
+
+        const result = await managed_client.call('RFC_READ_TABLE', {
+            QUERY_TABLE: 'LQUA',
+            DELIMITER: ",",
+            OPTIONS: [{ TEXT: `LENUM EQ '${storage_unit}'` }]
+        });
+
+        const columns = result.FIELDS.map(field => field.FIELDNAME);
+        const rows = result.DATA.map(data_ => data_.WA.split(","));
+
+        const res = rows.map(row => Object.fromEntries(
+            columns.map((key, i) => [key, row[i]])
+        ));
+
+        managed_client.release();
+        return res;
+    } catch (err) {
+        throw err;
+    }
+};
+
 
 
 
@@ -1614,49 +1691,154 @@ funcion.sapRFC_transfer = (serial, storage_type, storage_bin) => {
 //     })
 
 
-    // node_RFC.acquire()
-    // .then(managed_client => {
+// node_RFC.acquire()
+// .then(managed_client => {
 
-    //     structure_scrap =  {
-    //         GOODSMVT_CODE: { GM_CODE: "06" },
-    //         GOODSMVT_HEADER: {
-    //             PSTNG_DATE: '20230213',
-    //             DOC_DATE: '20230213',
-    //             HEADER_TXT: 'NODEJS_TEST',
-    //         },
-    //         GOODSMVT_ITEM: [
-    //             {
-    //                 MATERIAL: '5000010065A0',
-    //                 PLANT: '5210',
-    //                 STGE_LOC: '0012',
-    //                 MOVE_TYPE: '551',
-    //                 ENTRY_QNT: '1.000',
-    //                 COSTCENTER: '0052101020',
-    //                 MOVE_REAS: '5204',
-    //                 PROFIT_CTR: '0052100000',
-    //                 BASE_UOM: 'PC',
-    //             }
-    //         ]
-    //     }
+//     structure_scrap =  {
+//         GOODSMVT_CODE: { GM_CODE: "06" },
+//         GOODSMVT_HEADER: {
+//             PSTNG_DATE: '20230213',
+//             DOC_DATE: '20230213',
+//             HEADER_TXT: 'NODEJS_TEST',
+//         },
+//         GOODSMVT_ITEM: [
+//             {
+//                 MATERIAL: '5000010065A0',
+//                 PLANT: '5210',
+//                 STGE_LOC: '0012',
+//                 MOVE_TYPE: '551',
+//                 ENTRY_QNT: '1.000',
+//                 COSTCENTER: '0052101020',
+//                 MOVE_REAS: '5204',
+//                 PROFIT_CTR: '0052100000',
+//                 BASE_UOM: 'PC',
+//             }
+//         ]
+//     }
 
-    //     managed_client.invoke('BAPI_GOODSMVT_CREATE', structure_scrap, function(err,res){       
-    //         managed_client.invoke('BAPI_TRANSACTION_COMMIT',{}, function(err,res){
-    //             console.log('committed?');
-    //             console.log(err);
-    //             console.log(res);
-    //         });
-            
-    //         if (err) {
-    //             return console.error('Error invoking BAPI_COSTCENTER_CHANGEMULTIPLE:', err);
-    //         }
-    
-    //         console.log('update cc res:', res);
-    //     })  
+//     managed_client.invoke('BAPI_GOODSMVT_CREATE', structure_scrap, function(err,res){       
+//         managed_client.invoke('BAPI_TRANSACTION_COMMIT',{}, function(err,res){
+//             console.log('committed?');
+//             console.log(err);
+//             console.log(res);
+//         });
 
-    // })
-    // .catch(err => {
-    //     console.error(err);
-    //     managed_client.release()
-    // })
+//         if (err) {
+//             return console.error('Error invoking BAPI_COSTCENTER_CHANGEMULTIPLE:', err);
+//         }
+
+//         console.log('update cc res:', res);
+//     })  
+
+// })
+// .catch(err => {
+//     console.error(err);
+//     managed_client.release()
+// })
+
+
+
+// node_RFC.acquire()
+//     .then(managed_client => {
+//         managed_client.call('ZWM_HU_MFHU',
+//             {
+//                 I_EXIDV: `${funcion.addLeadingZeros(185173746, 20)}`,
+//                 I_VERID: '1'
+//             }
+//         )
+//             .then(result => {
+//                 console.log(result);
+//             })
+//             .catch(err => {
+//                 console.log(err);
+//                 managed_client.release()
+//             })
+//     })
+
+// //* NO BORRAR CON ESTE PROCESO SE CREA ETIQUETA Y SE ACREDITA
+// node_RFC.acquire()
+//     .then(managed_client => {
+//         (async () => {
+//             sap_number = '7000016497A0'
+//             sap_cantidad = '80'
+//             try {
+
+//                 const result_packing_object = await managed_client.call('RFC_READ_TABLE',
+//                     {
+//                         QUERY_TABLE: 'PACKKP',
+//                         DELIMITER: ",",
+//                         OPTIONS: [{ TEXT: `POBJID EQ 'UC${sap_number}'` }],
+//                         FIELDS: ['PACKNR']
+//                     })
+
+//                 const result_packing_material = await managed_client.call('RFC_READ_TABLE',
+//                     {
+//                         QUERY_TABLE: 'PACKPO',
+//                         DELIMITER: ",",
+//                         OPTIONS: [{ TEXT: `PACKNR EQ '${result_packing_object.DATA[0].WA}' AND PAITEMTYPE EQ 'P'` }],
+//                         FIELDS: ['MATNR']
+//                     })
+
+//                 const result_hu_create = await managed_client.call('BAPI_HU_CREATE ',
+//                     {
+//                         HEADERPROPOSAL:
+//                         {
+
+//                             PACK_MAT: result_packing_material.DATA[0].WA,
+//                             HU_GRP3: 'UC11',
+//                             PACKG_INSTRUCT: result_packing_object.DATA[0].WA,
+//                             PLANT: '5210',
+//                             // STGE_LOC: '0014',
+//                             L_PACKG_STATUS_HU: '2',
+//                             HU_STATUS_INIT: 'A',
+//                             // HU_EXID_TYPE: 'G'
+
+//                         },
+//                         ITEMSPROPOSAL: [{
+//                             HU_ITEM_TYPE: '1',
+//                             MATERIAL: sap_number,
+//                             PACK_QTY: sap_cantidad,
+//                             PLANT: '5210',
+//                             // STGE_LOC: '0014',
+//                         }],
+//                     })
+//                 const result_commit = await managed_client.call("BAPI_TRANSACTION_COMMIT", { WAIT: "X" })
+//                 //* NO BORRAR CON ESTA SECCION SE PUEDO AGREGAR MATERIAL UN HU
+//                 const result_hu_change_header = await managed_client.call('BAPI_HU_CHANGE_HEADER ',
+//                     {
+//                         HUKEY: result_hu_create.HUKEY,
+//                         HUCHANGED: {
+//                             CLIENT: '200',
+//                             PACK_MAT_OBJECT: '07',
+//                             WAREHOUSE_NUMBER: '521',
+//                             HU_STOR_LOC: 'A'
+//                         },
+
+//                     })
+//                 const result_commit2 = await managed_client.call("BAPI_TRANSACTION_COMMIT", { WAIT: "X" })
+
+
+//                 const result_backflush = await managed_client.call('ZWM_HU_MFHU',
+//                     {
+//                         I_EXIDV: `${result_hu_change_header.HUKEY}`,
+//                         I_VERID: '1',
+//                         I_LGORT: '0014'
+//                     }
+//                 )
+//                 managed_client.release()
+//                 console.log("@@@@@@@@@@@@@@@@@@@@", result_hu_create);
+//                 console.log("####################", result_hu_change_header);
+//                 console.log("####################", result_backflush);
+
+
+
+//             } catch (err) {
+//                 console.error(err);
+//             }
+//         })()
+//     })
+
+
+
 
 module.exports = funcion;

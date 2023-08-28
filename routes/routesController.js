@@ -583,33 +583,38 @@ controller.getBinStatusReport_POST = (req, res) => {
         .catch(err => { console.log(err) })
 }
 
-controller.getBinStatusReportEXT_POST = (req, res) => {
-    let estacion = req.body.estacion
-    let storage_bin = req.body.storage_bin
-    let storage_type = req.body.storage_type
+controller.getBinStatusReportEXT_POST = async (req, res) => {
+    const estacion = req.body.estacion;
+    const storage_bin = req.body.storage_bin;
+    const storage_type = req.body.storage_type;
 
-    funcion.sapRFC_SbinOnStypeExists(storage_type, storage_bin)
-        .then(result => {
-            if (result.length == 0) {
-                res.json(JSON.stringify({ "key": `Storage Bin "${storage_bin}" does not exist at Storage Type "${storage_type}"` }))
-            } else {
-                funcion.getStorageLocation(estacion)
-                    .then(resultSL => {
-                        funcion.sapRFC_consultaStorageBin(resultSL[0].storage_location, storage_type, storage_bin)
-                            .then(result => {
-                                info_list = []
-                                result.forEach(element => {
-                                    info_list.push({ "storage_unit": parseInt(element.LENUM) })
-                                })
-                                res.json(JSON.stringify({ "info_list": info_list, "error": "N/A" }))
-                            })
-                            .catch(err => { console.log(err) })
-                    })
-                    .catch(err => { res.json(JSON.stringify({ "key": `Storage Location not set for device "${estacion}"` })) })
+    try {
+        const result = await funcion.sapRFC_SbinOnStypeExists(storage_type, storage_bin);
+
+        if (result.length === 0) {
+            return res.json({ key: `Storage Bin "${storage_bin}" does not exist at Storage Type "${storage_type}"` });
+        } else {
+            const resultSL = await funcion.getStorageLocation(estacion);
+
+            if (resultSL.length === 0) {
+                return res.json({ key: `Storage Location not set for device "${estacion}"` });
             }
-        })
-        .catch(err => { console.log(err) })
-}
+
+            const storageLocation = resultSL[0].storage_location;
+            const storageBinInfo = await funcion.sapRFC_consultaStorageBin(storageLocation, storage_type, storage_bin);
+
+            const info_list = storageBinInfo.map(element => ({
+                storage_unit: parseInt(element.LENUM)
+            }));
+
+            return res.json({ info_list, error: "N/A" });
+        }
+    } catch (err) {
+        console.log(err);
+        return res.json({ error: "An error occurred" });
+    }
+};
+
 
 controller.getBinStatusReportVUL_POST = (req, res) => {
     let estacion = req.body.estacion
@@ -749,7 +754,7 @@ controller.postCycleSU_POST = (req, res) => {
         .catch(err => { console.log(err) })
 }
 
-controller.postCycleSUEXT_POST = (req, res) => {
+controller.postCycleSUEXT_POST = async (req, res) => {
 
     let storage_bin = req.body.storage_bin
     let user_id = req.body.user_id
@@ -762,6 +767,7 @@ controller.postCycleSUEXT_POST = (req, res) => {
     let listed_storage_units_promises = []
     let unlisted_storage_units_promises = []
     let not_found_storage_units_promises = []
+    let estacion = req.body.estacion
 
     switch (storage_type) {
         case "EXT":
@@ -773,6 +779,14 @@ controller.postCycleSUEXT_POST = (req, res) => {
             break;
     }
 
+    const resultSL = await funcion.getStorageLocation(estacion);
+
+    if (resultSL.length === 0) {
+        return res.json({ key: `Storage Location not set for device "${estacion}"` });
+    }
+
+    let storage_location = resultSL[0].storage_location
+
 
     if (listed_storage_units.length > 0) {
         listed_storage_units.forEach(element => {
@@ -783,7 +797,7 @@ controller.postCycleSUEXT_POST = (req, res) => {
 
     if (not_found_storage_units.length > 0) {
         not_found_storage_units.forEach(element => {
-            not_found_storage_units_promises.push(funcion.sapRFC_transfer(element, st, sb)
+            not_found_storage_units_promises.push(funcion.sapRFC_transferSlocCheck(element, storage_location, st, sb)
                 .catch((err) => { return err }))
         })
 
@@ -791,7 +805,7 @@ controller.postCycleSUEXT_POST = (req, res) => {
 
     if (unlisted_storage_units.length > 0) {
         unlisted_storage_units.forEach(element => {
-            unlisted_storage_units_promises.push(funcion.sapRFC_transfer(element, storage_type, storage_bin)
+            unlisted_storage_units_promises.push(funcion.sapRFC_transferSlocCheck(element, storage_location, storage_type, storage_bin)
                 .catch((err) => { return err }))
         })
     }
@@ -1586,61 +1600,92 @@ controller.getUbicacionesVULMandrel_POST = (req, res) => {
 }
 
 
-controller.getUbicacionesEXTMandrel_POST = (req, res) => {
+controller.getUbicacionesEXTMandrel_POST = async (req, res) => {
+    try {
+        const estacion = req.body.station;
+        const mandrel = req.body.mandrel;
+        const proceso = req.body.proceso;
+        const user_id = req.body;
 
-    let estacion = req.body
-    let mandrel = req.body.mandrel
-    let proceso = req.body.proceso
-    let user_id = req.body
+        const storageLocation = await funcion.getStorageLocation(estacion);
+        const storage_location = storageLocation[0].storage_location;
 
-    funcion.sapFromMandrel(mandrel, "extr")
-        .then((result) => {
-            if (result.length == 0) {
-                res.json(JSON.stringify({ "key": "Check Mandrel Number" }))
-            } else {
-                funcion.sapRFC_consultaMaterial_ST(result[0].no_sap, "0012", "EXT")
-                    .then(resultado => {
-                        res.json(resultado)
-                    })
-                    .catch(err => {
-                        res.json(err)
-                    })
-            }
+        const result = await funcion.sapFromMandrel(mandrel, "extr");
 
-        })
-        .catch((err) => { res.json(err) })
-
-
-
-}
-
-controller.getUbicacionesEXTSerial_POST = (req, res) => {
-    let estacion = req.body
-    let serial = req.body.serial
-    let proceso = req.body.proceso
-    let user_id = req.body
-
-    funcion.sapRFC_consultaStorageUnit(funcion.addLeadingZeros(serial, 20))
-        .then(resultado => {
-            if (resultado.length == 0) {
-                res.json(JSON.stringify({ "key": "Check Serial Number" }))
-            } else {
-                funcion.sapRFC_consultaMaterial(resultado[0].MATNR, "0012")
-                    .then(resultado => {
-                        res.json(resultado)
-                    })
-                    .catch(err => {
-                        res.json(err)
-                    })
-            }
-        })
-        .catch(err => { res.json(err) })
-}
+        if (result.length === 0) {
+            return res.json({ key: "Check Mandrel Number" });
+        } else {
+            const materialResult = await funcion.sapRFC_consultaMaterial_ST(result[0].no_sap, storage_location, "EXT");
+            return res.json(materialResult);
+        }
+    } catch (err) {
+        console.log(err);
+        return res.json(err);
+    }
+};
 
 
+// controller.getUbicacionesEXTMandrel_POST = async (req, res) => {
 
-controller.postSerialsEXT_POST = (req, res) => {
-    let estacion = req.vody
+//     let estacion = req.body
+//     let mandrel = req.body.mandrel
+//     let proceso = req.body.proceso
+//     let user_id = req.body
+
+//     try {
+//         const storageLocation = await funcion.getStorageLocation(estacion);
+//         let storage_location = storageLocation[0].storage_location;
+
+//         funcion.sapFromMandrel(mandrel, "extr")
+//         .then((result) => {
+//             if (result.length == 0) {
+//                 res.json(JSON.stringify({ "key": "Check Mandrel Number" }))
+//             } else {
+//                 funcion.sapRFC_consultaMaterial_ST(result[0].no_sap, storage_location, "EXT")
+//                     .then(resultado => {
+//                         res.json(resultado)
+//                     })
+//                     .catch(err => {
+//                         res.json(err)
+//                     })
+//             }
+
+//         })
+//         .catch((err) => { res.json(err) })
+
+//     } catch (err) {
+//         res.json(err)
+//     }
+
+// }
+
+controller.getUbicacionesEXTSerial_POST = async (req, res) => {
+    const estacion = req.body.station;
+    const serial = req.body.serial;
+    const proceso = req.body.proceso;
+    const user_id = req.body;
+    try {
+        const storageLocation = await funcion.getStorageLocation(estacion);
+        const serialResult = await funcion.sapRFC_consultaStorageUnit(funcion.addLeadingZeros(serial, 20));
+        const storage_location = storageLocation[0].storage_location;
+        if (serialResult.length === 0) {
+            return res.json({ key: "Check Serial Number" });
+        } else if (serialResult[0].LGORT !== storage_location) {
+            
+            return res.json({ "key": "Storage Locations do not match", "abapMsgV1": `${serial}` });
+        } else {
+            const materialResult = await funcion.sapRFC_consultaMaterial(serialResult[0].MATNR, storage_location);
+            return res.json(materialResult);
+        }
+    } catch (err) {
+        return res.json(err);
+    }
+};
+
+
+
+controller.postSerialsEXT_POST = async (req, res) => {
+    let estacion = req.body.station
     let serial = req.body.serial
     let material = null
     let cantidad = null
@@ -1649,60 +1694,76 @@ controller.postSerialsEXT_POST = (req, res) => {
     let user_id = req.body
     let max_storage_unit_bin = 5
 
-    let send = `{
-            "station":"${estacion}",
-            "serial_num":"${serial}",
-            "material": "${material}",
-            "cantidad":"${cantidad}", 
-            "process":"${proceso}", 
-            "storage_bin": "${storage_bin}", 
-            "user_id":"${user_id}"
-        }`
-
     let serials_array = serial.split(",")
-    let promises = []
+    let promises = [];
+    let errorsArray = [];
 
-    funcion.sapRFC_consultaStorageBin("0012", "EXT", storage_bin)
-        .then(result => {
-            let serials_bin = serials_array.length + result.length
-            if (storage_bin[0] == "r" || storage_bin[0] == "R" && serials_bin > max_storage_unit_bin) {
-                res.json([{ "key": `Exceeded amount of Storage Units per Bin: ${serials_bin - max_storage_unit_bin}` }])
+
+    const result_getStorageLocation = await funcion.getStorageLocation(estacion);
+    const result_consultaStorageBin = await funcion.sapRFC_consultaStorageBin(result_getStorageLocation[0].storage_location, "EXT", storage_bin);
+    if (result_consultaStorageBin.length === 0) {
+        res.json([{ "key": `Storage Bin ${storage_bin} not found in Storage Type EXT`, "abapMsgV1": "ALL" }]);
+    } else if (result_consultaStorageBin[0] == "r" || result_consultaStorageBin[0] == "R" && serials_bin > max_storage_unit_bin) {
+        res.json([{ "key": `Exceeded amount of Storage Units per Bin: ${serials_bin - max_storage_unit_bin}` }]);
+    } else {
+        const innerPromises = serials_array.map(async (serial_) => {
+            const result_consultaStorageUnit = await funcion.sapRFC_consultaStorageUnit(funcion.addLeadingZeros(serial_, 20));
+            if (result_consultaStorageUnit.length === 0) {
+                errorsArray.push({ "key": `Check SU ${serial_}`, "abapMsgV1": `${serial_}` });
+            } else if (result_consultaStorageUnit[0].LGORT !== result_getStorageLocation[0].storage_location) {
+                errorsArray.push({ "key": `SU ${serial_} is in a different storage location`, "abapMsgV1": `${serial_}` });
             } else {
-                serials_array.forEach(serial_ => {
-                    promises.push(funcion.sapRFC_transferExt(serial_, storage_bin)
-                        .catch((err) => { return err }))
-                });
-
-                Promise.all(promises)
-                    .then(result => { res.json(result) })
-                    .catch(err => { res.json(err) })
+                promises.push(await funcion.sapRFC_transferExt(serial_, storage_bin))
             }
-        })
-        .catch(err => { res.json(err) })
-
-
-
+        });
+        await Promise.all(innerPromises);
+        await Promise.all(promises);
+        const newArray = promises.concat(errorsArray);
+        res.json(newArray);
+    }
 }
 
-controller.transferEXTRP_POST = (req, res) => {
+controller.transferEXTRP_POST = async (req, res) => {
 
     let serial = req.body.serial
     let serials_array = serial.split(",")
     let promises = []
+    let estacion = req.body.station;
+    let errorsArray = [];
 
+    let resultEstacion = await funcion.getStorageLocation(estacion)
+    let storage_location = resultEstacion[0].storage_location
 
-    serials_array.forEach(serial_ => {
-        promises.push(funcion.sapRFC_transferExtRP(serial_, "GREEN")
-            .catch((err) => { return err }))
+    if (storage_location == "0012") {
+        storage_type = "102"
+        storage_bin = "GREEN"
+    }
+    if (storage_location == "0002") {
+        storage_type = "100"
+        storage_bin = "101"
+    }
+
+    const innerPromises = serials_array.map(async (serial_) => {
+        let resultConsultaserial = await funcion.sapRFC_consultaStorageUnit(funcion.addLeadingZeros(serial_, 20))
+        if (resultConsultaserial.length == 0) {
+            errorsArray.push({ "key": `Check Serial Number not found`, "abapMsgV1": `${serial_}` })
+        } else if (resultConsultaserial[0].LGTYP !== "EXT" || resultConsultaserial[0].LGORT !== storage_location) {
+            errorsArray.push({ "key": `Check SU SType: ${resultConsultaserial[0].LGTYP}, SLocation: ${resultConsultaserial[0].LGORT}`, "abapMsgV1": `${serial_}` })
+        } else {
+            let resultTransferEXTRP = await funcion.sapRFC_transferExtRP(serial_, storage_type, storage_bin)
+            promises.push(resultTransferEXTRP)
+        }
     });
 
-    Promise.all(promises)
-        .then(result => { res.json(result) })
-        .catch(err => { res.json(err) })
+    await Promise.all(innerPromises);
+    await Promise.all(promises);
+
+    const newArray = promises.concat(errorsArray);
+    res.json(newArray);
 }
 
 
-controller.transferEXTPR_POST = (req, res) => {
+controller.transferEXTPR_POST = async (req, res) => {
 
     let material = req.body.material
     let cantidad = req.body.cantidad
@@ -1710,55 +1771,86 @@ controller.transferEXTPR_POST = (req, res) => {
     let estacion = req.body.station
     let operador_name = req.body.operador_name
 
-    funcion.sapRFC_consultaMaterial_EXT(material, "0012", "102", "GREEN")
-        .then(result => {
-            if (result.length == 0) {
-                res.json(JSON.stringify({ "key": `No Material avialbale at selected location` }))
-            } else {
-                result.forEach(element => { cantidad_actual += parseInt((element.GESME).replace(".000", "")) })
-                if (cantidad_actual < parseInt(cantidad)) {
-                    res.json(JSON.stringify({ "key": `Requested amount exceeded by ${Math.round(((parseInt(cantidad) - parseInt(cantidad_actual)) / parseInt(cantidad_actual)) * 100, 2)}% of available material` }))
-                } else {
-                    funcion.sapRFC_transferEXTPR_1(material, cantidad)
-                        .then(r => {
-                            funcion.sapRFC_transferEXTPR_2(material, cantidad)
-                                .then(resultado => {
-                                    res.json(resultado.E_LTAP)
-                                    funcion.getPrinter(estacion)
-                                        .then(printer => {
-                                            funcion.materialEXT(material)
-                                                .then(result => {
-                                                    let data = {
-                                                        "printer": `${printer[0].impre}`,
-                                                        "no_sap": `${result[0].no_sap}`,
-                                                        "description": `${result[0].description}`,
-                                                        "cust_part": `${result[0].cust_part}`,
-                                                        "platform": `${result[0].platform}`,
-                                                        "rack": `${result[0].rack}`,
-                                                        "family": `${result[0].family}`,
-                                                        "length": `${result[0].length}`,
-                                                        "emp_num": `${operador_name}`,
-                                                        "quant": `${cantidad}`,
-                                                        "serial": `${parseInt(resultado.E_LTAP.NLENR)}`
-                                                    }
-                                                    funcion.printLabelTRA(data, "EXT_RE").catch(err => { console.error(err) })
+    let resultEstacion = await funcion.getStorageLocation(estacion)
+    let storage_location = resultEstacion[0].storage_location
 
-                                                }).catch(err => { res.json(JSON.stringify({ "key": `${err}` })) })
-                                        }).catch(err => { res.json(JSON.stringify({ "key": `${err}` })) })
-                                }).catch(err => { res.json(JSON.stringify({ "key": `${err}` })) })
-                        }).catch(err => { res.json(JSON.stringify({ "key": `${err}` })) })
-                }
-            }
-        }).catch(err => { res.json(JSON.stringify({ "key": `${err}` })) })
+    if (storage_location == "0012") {
+        storage_type = "102"
+        storage_bin = "GREEN"
+    }
+    if (storage_location == "0002") {
+        storage_type = "100"
+        storage_bin = "101"
+    }
+    const materialData = await funcion.sapRFC_consultaMaterial_EXT(material, storage_location, storage_type, storage_bin);
+
+    if (materialData.length === 0) {
+        res.json({ key: "No Material available at selected location" });
+    } else {
+        let cantidad_actual = 0;
+        materialData.forEach(element => {
+            cantidad_actual += parseInt(element.GESME.replace(".000", ""));
+        });
+
+        if (cantidad_actual < parseInt(cantidad)) {
+            const percentageExceeded = Math.round(
+                ((parseInt(cantidad) - cantidad_actual) / cantidad_actual) * 100
+            );
+            res.json({
+                key: `Requested amount exceeded by ${percentageExceeded}% of available material`
+            });
+        } else {
+            const transferResult1 = await funcion.sapRFC_transferEXTPR_1(material, cantidad, storage_location, storage_type, storage_bin);
+            const transferResult2 = await funcion.sapRFC_transferEXTPR_2(material, cantidad, storage_location);
+            const labelData = await funcion.getPrinter(estacion);
+            const materialResult = await funcion.materialEXT(material);
+
+            const data = {
+                printer: labelData[0].impre,
+                no_sap: materialResult[0].no_sap,
+                description: materialResult[0].description,
+                cust_part: materialResult[0].cust_part,
+                platform: materialResult[0].platform,
+                rack: materialResult[0].rack,
+                family: materialResult[0].family,
+                length: materialResult[0].length,
+                emp_num: operador_name,
+                quant: cantidad,
+                serial: parseInt(transferResult2.E_LTAP.NLENR)
+            };
+
+            await funcion.printLabelTRA(data, "EXT_RE");
+
+            res.json(transferResult2.E_LTAP);
+        }
+    }
 }
 
-controller.auditoriaEXT_POST = (req, res) => {
+controller.auditoriaEXT_POST = async (req, res) => {
     let serial = req.body.serial
     let serials_array = serial.split(",")
     let promises = []
+    let estacion = req.body.station
+
+    const resultSL = await funcion.getStorageLocation(estacion);
+
+    if (resultSL.length === 0) {
+        return res.json({ key: `Storage Location not set for device "${estacion}"` });
+    }
+
+    let storage_location = resultSL[0].storage_location
+
+    if (storage_location == "0012") {
+        storage_type = "102"
+        storage_bin = "GREEN"
+    }
+    if (storage_location == "0002") {
+        storage_type = "100"
+        storage_bin = "101"
+    }
 
     serials_array.forEach(serial_ => {
-        promises.push(funcion.sapRFC_transferEXTProd(serial_)
+        promises.push(funcion.sapRFC_transferEXTProd(serial_, storage_location, storage_type, storage_bin)
             .catch((err) => { return err }))
     });
 
@@ -1848,19 +1940,19 @@ controller.consultaVulProductionStock_POST = (req, res) => {
     let material = req.body.material
     let cantidad_actual = 0
 
-    funcion.sapRFC_consultaMaterial_VUL("'"+material+"'", "0012", "102", "103")
+    funcion.sapRFC_consultaMaterial_VUL("'" + material + "'", "0012", "102", "103")
         .then(result => {
-            
-            if (result.length == 0) {               
-                res.json({ "qty": `${0}`})
-            }else{
+
+            if (result.length == 0) {
+                res.json({ "qty": `${0}` })
+            } else {
                 result.forEach(element => { cantidad_actual += parseInt((element.GESME).replace(".000", "")) })
-                res.json({ "qty": `${cantidad_actual}`})
+                res.json({ "qty": `${cantidad_actual}` })
             }
 
         })
         .catch(err => {
-            
+
             res.json(err)
         })
 }
