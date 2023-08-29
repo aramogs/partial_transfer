@@ -617,9 +617,9 @@ funcion.sapRFC_consultaStorageBin = (storage_location, storage_type, storage_bin
             .then(managed_client => {
                 managed_client.call('RFC_READ_TABLE',
                     {
-                        QUERY_TABLE: 'LAGP',
+                        QUERY_TABLE: 'LQUA',
                         DELIMITER: ",",
-                        OPTIONS: [{ TEXT: `LGNUM EQ '521' AND LGTYP EQ '${storage_type}' AND LGPLA EQ '${storage_bin.toUpperCase()}'` }]
+                        OPTIONS: [{ TEXT: `LGORT EQ '${storage_location}' AND LGTYP EQ '${storage_type}' AND LGPLA EQ '${storage_bin.toUpperCase()}'` }]
                     }
                 )
                     .then(result => {

@@ -558,7 +558,7 @@ controller.getBinStatusReport_POST = (req, res) => {
     let material = null
     let cantidad = null
     let user_id = req.res.locals.authData.id.id
-
+    console.log(req.body);
 
     funcion.sapRFC_SbinOnStypeExists(storage_type, storage_bin)
         .then(result => {
@@ -590,7 +590,6 @@ controller.getBinStatusReportEXT_POST = async (req, res) => {
 
     try {
         const result = await funcion.sapRFC_SbinOnStypeExists(storage_type, storage_bin);
-
         if (result.length === 0) {
             return res.json({ key: `Storage Bin "${storage_bin}" does not exist at Storage Type "${storage_type}"` });
         } else {
@@ -1700,10 +1699,12 @@ controller.postSerialsEXT_POST = async (req, res) => {
 
 
     const result_getStorageLocation = await funcion.getStorageLocation(estacion);
+    const binExists = await funcion.sapRFC_SbinOnStypeExists("EXT", storage_bin)
     const result_consultaStorageBin = await funcion.sapRFC_consultaStorageBin(result_getStorageLocation[0].storage_location, "EXT", storage_bin);
-    if (result_consultaStorageBin.length === 0) {
+    let serials_bin = serials_array.length + result_consultaStorageBin.length
+    if (binExists.length === 0) {
         res.json([{ "key": `Storage Bin ${storage_bin} not found in Storage Type EXT`, "abapMsgV1": "ALL" }]);
-    } else if (result_consultaStorageBin[0] == "r" || result_consultaStorageBin[0] == "R" && serials_bin > max_storage_unit_bin) {
+    } else if (storage_bin[0] == "r" || storage_bin[0] == "R" && serials_bin > max_storage_unit_bin) {
         res.json([{ "key": `Exceeded amount of Storage Units per Bin: ${serials_bin - max_storage_unit_bin}` }]);
     } else {
         const innerPromises = serials_array.map(async (serial_) => {
