@@ -1689,7 +1689,7 @@ controller.postSerialsEXT_POST = async (req, res) => {
     let material = null
     let cantidad = null
     let proceso = req.body.proceso
-    let storage_bin = req.body.storage_bin
+    let storage_bin = req.body.storage_bin.toUpperCase()
     let user_id = req.body
     let max_storage_unit_bin = 5
 
