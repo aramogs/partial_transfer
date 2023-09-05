@@ -20,6 +20,7 @@ let btnCerrar = document.querySelectorAll(".btnCerrar")
 let successText = document.getElementById("successText")
 let btnTransferir = document.getElementById("btnTransferir")
 let user_id = document.getElementById("user_id")
+let cPartNum = document.getElementById("cPartNum")
 
 let tabla_consulta = document.getElementById('tabla_consulta').getElementsByTagName('tbody')[0];
 
@@ -88,16 +89,17 @@ submitSerial.addEventListener("submit", function (e) {
                     setTimeout(() => { $('#modalSpinner').modal('hide') }, 500);
                     $('#modalError').modal({ backdrop: 'static', keyboard: false })
                 } else {
-
+                    let storage_types = []
                     let storage_bins = []
                     let arregloFinal = []
                     tabla_consulta.innerHTML = ""
                     soundOk()
                     let result_array = result.data
-
+                    cPartNum.innerHTML = result_array[0].MATNR
                     for (let i = 0; i < result_array.length; i++) {
                         if (storage_bins.indexOf(result_array[i].LGPLA) === -1) {
                             storage_bins.push(`${result_array[i].LGPLA}`)
+                            storage_types.push(`${result_array[i].LGTYP}`)
                         }
                     }
 
@@ -114,7 +116,7 @@ submitSerial.addEventListener("submit", function (e) {
 
                             }
                         }
-                        let push = { "storage_bin": `${storage_bins[i]}`, "count": `${count}`, "date": `${recentDate}` }
+                        let push = {"storage_type": `${storage_types[i]}`, "storage_bin": `${storage_bins[i]}`, "count": `${count}`, "date": `${recentDate}` }
                         arregloFinal.push(push)
 
                     }
@@ -122,6 +124,7 @@ submitSerial.addEventListener("submit", function (e) {
                     arregloFinalSortDate.forEach(element => {
                         row = `
                         <tr>
+                            <td>${element.storage_type}</td>
                             <td>${element.storage_bin}</td>
                             <td>${element.count}</td>
                             <td>${element.date}</td>

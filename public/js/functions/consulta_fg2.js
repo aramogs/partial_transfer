@@ -20,7 +20,7 @@ let btnCerrar = document.querySelectorAll(".btnCerrar")
 let successText = document.getElementById("successText")
 let btnTransferir = document.getElementById("btnTransferir")
 let user_id = document.getElementById("user_id")
-
+let cPartNum = document.getElementById("cPartNum")
 let tabla_consulta = document.getElementById('tabla_consulta').getElementsByTagName('tbody')[0];
 
 serial_num.focus()
@@ -91,40 +91,17 @@ submitSerial.addEventListener("submit", function (e) {
                     $('#modalError').modal({ backdrop: 'static', keyboard: false })
                 } else {
 
-                    let storage_bins = []
-                    let arregloFinal = []
                     tabla_consulta.innerHTML = ""
                     soundOk()
                     let result_array = result.data
-
-                    // for (let i = 0; i < result_array.length; i++) {
-                    //     if (storage_bins.indexOf(result_array[i].LGPLA) === -1) {
-                    //         storage_bins.push(`${result_array[i].LGPLA}`)
-                    //     }
-                    // }
-
-                    // for (let i = 0; i < storage_bins.length; i++) {
-                    //     let count = 0
-                    //     let recentDate = "12/12/1900"
-                    //     for (let y = 0; y < result_array.length; y++) {
-                    //         if (storage_bins[i] == result_array[y].LGPLA) {
-                    //             count++
-
-                    //             if (moment(result_array[y].WDATU, "YYYYMMDD") > moment(recentDate, 'MM/DD/YYYY')) {
-                    //                 recentDate = moment(result_array[y].WDATU, "YYYYMMDD").format('MM/DD/YYYY')
-                    //             }
-
-                    //         }
-                    //     }
-                    //     let push = { "storage_bin": `${storage_bins[i]}`, "count": `${count}`, "date": `${recentDate}` }
-                    //     arregloFinal.push(push)
-
-                    // }
+                    cPartNum.innerHTML = result_array[0].MATNR
                     const arregloFinalSortDate = result_array.sort((d1, d2) =>  new moment(d1.WDATU, "YYYYMMDD") - new moment(d2.WDATU, "YYYYMMDD") )
                     arregloFinalSortDate.forEach(element => {
                         row = `
                         <tr>
+                            <td>${element.LGTYP}</td>
                             <td>${element.LGPLA}</td>
+                            <td>${(element.LENUM).replace(/^0+/gm, "")}</td>
                             <td>${moment(element.WDATU, "YYYYMMDD").format("MM/DD/YYYY")}</td>
                         </tr>
                         `

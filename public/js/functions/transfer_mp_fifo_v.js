@@ -53,6 +53,7 @@ let regexBefore = /\-(.*)/
 let regexAfter = /^(.*?)\-/
 let currentCount = 0
 let procesoActual = ""
+let destino = document.getElementById("destino").innerText
 ///////////////////////////////////////
 
 $(document).ready(function () {
@@ -72,14 +73,15 @@ $(document).ready(function () {
                 }, 1000);
                 soundWrong()
             }
-
             response.forEach(element => {
-                table.row.add([
-                    `<button id="${element.id}" onClick="submitMaterial(this, 'inicio')" class="btn btn-outline-dark btn-sm ">${element.numero_sap}-${element.turno}</button>`,
-                    element.contenedores,
-                    element.descripcion_sap,
-                    moment(element.fecha).format('MM/DD/YYYY')
-                ]).draw(false);
+                if (destino === element.destino) {
+                    table.row.add([
+                        `<button id="${element.id}" onClick="submitMaterial(this, 'inicio')" class="btn btn-outline-dark btn-sm ">${element.numero_sap}-${element.turno}</button>`,
+                        element.contenedores,
+                        element.descripcion_sap,
+                        moment(element.fecha).format('MM/DD/YYYY')
+                    ]).draw(false);
+                }
             });
         })
         .catch((err) => { console.error(err) })
@@ -291,7 +293,7 @@ function transferSU() {
 
     $('#myModal').modal('hide')
     $('#modalSpinner').modal({ backdrop: 'static', keyboard: false })
-    let data = { "proceso": "raw_mp_confirmed_v", "user_id": user_id.innerHTML, "serial": `${selected_serials}`, "storage_type": `${storage_type.innerHTML}`, "raw_id": `${id}`, "shift": `${turno}`, "clear": `${clear}`, "serials_obsoletos": `${serials_obsoletos}` };
+    let data = { "proceso": "raw_mp_confirmed_v", "user_id": user_id.innerHTML, "serial": `${selected_serials}`, "storage_type": `${storage_type.innerHTML}`, "raw_id": `${id}`, "shift": `${turno}`, "clear": `${clear}`, "serials_obsoletos": `${serials_obsoletos}`, "destino": `${destino}` };
     axios({
         method: 'post',
         url: "/postSerialesMP1_RAW",
@@ -311,12 +313,12 @@ function transferSU() {
             tabla_consulta2.innerHTML = ""
             response.forEach(element => {
                 let newRow = tabla_consulta2.insertRow(tabla_consulta2.rows.length);
-                if (element.name) {
+                if (element.key) {
                     console.log(element);
                     let row = `
                             <tr class="bg-danger">
                                 <td>${element.abapMsgV1}</td>
-                                <td>${element.key ? element.key : element.message}</td>
+                                <td>${element.key ? element.key : element.abapMsgV1}</td>
                             </tr>
                             `
                     newRow.classList.add("bg-danger", "text-white")
@@ -325,7 +327,7 @@ function transferSU() {
                 } else {
                     let row = `
                             <tr >
-                                <td>${(element.I_LENUM).replace(/^0+/gm, "")}</td>
+                                <td>${(element.I_NLENR).replace(/^0+/gm, "")}</td>
                                 <td>${element.E_TANUM}</td>
                             </tr>
                             `

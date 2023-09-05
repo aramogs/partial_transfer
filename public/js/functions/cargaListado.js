@@ -19,6 +19,7 @@ let turno
 let turnos_programados = []
 let modal_errorText = document.getElementById("modal_errorText")
 let modal_btnCerrar_Error = document.getElementById("modal_btnCerrar_Error")
+let destino = document.getElementById("destino")
 
 btnCancelar.forEach(element => {
     element.addEventListener('click', clearAll)
@@ -123,10 +124,9 @@ function sendData() {
     formData.delete('excelFile')
     formData.append('excelFile', excelFile.files[0])
     formData.append("data", JSON.stringify({ "fecha": myDateString, "turno": turno }));
-
     axios({
         method: 'post',
-        url: `/verificarSAP/${excelFile.files[0].name}`,
+        url: `/verificarSAP/${destino.innerHTML}`,
         data: formData,
         headers: { 'Content-Type': 'multipart/form-data', 'Accept': 'application/json', }
     })

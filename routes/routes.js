@@ -34,7 +34,8 @@ router.get('/transferMP',middleware.verifyToken, routesController.transferMP_GET
 router.get('/transferMP/:storage_type',middleware.verifyToken, middleware.macFromIP, routesController.transferMP_ST_GET);
 router.post('/postSerialesMP',middleware.verifyToken, middleware.macFromIP, routesController.postSerialsMP_POST);
 router.get('/transfer_MP_FIFO',middleware.verifyToken, routesController.transfer_MP_FIFO_GET);
-router.get('/transfer_MP_FIFO/:storage_type',middleware.verifyToken, routesController.transferMP_FIFO_GET);
+router.get('/transfer_MP_FIFO/:storage_type/',middleware.verifyToken, routesController.transferMP_FIFO_GET);
+router.get('/transfer_MP_FIFO/:storage_type/:destino',middleware.verifyToken, routesController.transferMP_FIFO_GET);
 router.get('/consultaMP',middleware.verifyToken, routesController.consultaMP_GET);
 router.get('/consultaMP/:storage_type',middleware.verifyToken, routesController.consultaMP_ST_GET);
 router.post('/postSerialesMP_RAW',middleware.verifyToken,  middleware.macFromIP, routesController.postSerialsMP_RAW_POST);
@@ -46,11 +47,11 @@ router.get('/getRawListado', middleware.verifyToken, routesController.getRawList
 router.get('/getRawListadoProcesado', middleware.verifyToken, routesController.getRawListadoProcesado_GET);
 router.post("/getUbicacionesMPSerial",middleware.verifyToken, middleware.macFromIP, routesController.getUbicacionesMPSerial_POST);
 router.post("/getUbicacionesMPMaterial",middleware.verifyToken, middleware.macFromIP, routesController.getUbicacionesMPMaterial_POST);
-router.get('/cargaListado', middleware.sspi, routesController.cargaListado_GET);
+router.get('/cargaListado/:destino?', middleware.sspi, routesController.cargaListado_GET);
 router.post('/getListado',routesController.getListado_POST);
 router.get('/getTurnos',routesController.getTurnos_GET);
 router.post('/verificarSAP/:id_carga', middleware.sspi, upload.single("excelFile"), middleware.macFromIP, routesController.verificarSAP_POST);
-router.get('/editarListado/:fecha?', middleware.sspi, routesController.editarListado_GET);
+router.get('/editarListado/:destino?', middleware.sspi, routesController.editarListado_GET);
 router.post('/tablaListado', routesController.tablaListado_POST);
 router.post('/idListadoInfo',routesController.idListadoInfo_POST);
 router.post('/cancelarIdListado',routesController.cancelarIdListado_POST);
@@ -65,8 +66,9 @@ router.get('/transferFG',middleware.verifyToken, middleware.macFromIP, routesCon
 router.get('/masterFG',middleware.verifyToken, routesController.masterFG_GET);
 
 router.post("/getUbicacionesFG",middleware.verifyToken, middleware.macFromIP, routesController.getUbicacionesFG_POST);
-router.post('/postSerialesRedisFG',middleware.verifyToken, middleware.macFromIP, routesController.postSerialsFG_POST);
-
+router.post('/postSerialesFG',middleware.verifyToken, middleware.macFromIP, routesController.postSerialsFG_POST);
+router.post("/getBinStatusReportFG",middleware.verifyToken, middleware.macFromIP, routesController.getBinStatusReportFG_POST);
+router.post("/postCycleSU",middleware.verifyToken, middleware.macFromIP, routesController.postCycleSU_POST);
 // ##############Master GM##################
 router.get('/master_fg_gm',middleware.verifyToken, routesController.master_FG_GM_GET);
 router.post('/master_request_gm',middleware.verifyToken, middleware.macFromIP, routesController.master_request_GM_POST);

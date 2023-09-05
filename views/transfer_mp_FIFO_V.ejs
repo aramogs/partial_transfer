@@ -11,7 +11,7 @@
                 class="fas fa-arrow-circle-left text-success"></span> Menu</a></li>
           <li class="breadcrumb-item"><a href="/transfer_MP_FIFO" class="text-success"><span
                 class="fas fa-arrow-circle-left text-success"></span> SType</a></li>
-          <li class="breadcrumb-item active" aria-current="page">Transferencia FIFO</li>
+          <li class="breadcrumb-item active" aria-current="page">Transferencia FIFO <span id="destino"><%= destino  %></span></li>
         </ol>
       </nav>
 
@@ -58,7 +58,7 @@
 
 
             <h4 class="text-center animate__animated animate__bounceIn d-none d-md-block" display: inline-block>
-              Transferencia FIFO MP: <span class="fas fa-clipboard-list text-success mt-2"
+              Transferencia FIFO MP -> <span><%= destino  %>: <span class="fas fa-clipboard-list text-success mt-2"
                 style="font-size: 2rem;"></span></h4>
             <br>
 

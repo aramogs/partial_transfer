@@ -30,8 +30,7 @@ let msg_add_sap = document.getElementById("msg_add_sap")
 const queryString = window.location.search;
 const urlParams = new URLSearchParams(queryString);
 const fecha = urlParams.get('fecha')
-
-
+let destino = document.getElementById("destino").innerText
 
 btnCerrar.forEach(element => {
   element.addEventListener('click', clearAll)
@@ -94,19 +93,20 @@ function fillTable() {
                       `
       }
 
-
-      table.row.add([
-        cancelar,
-        result.data[y].id,
-        result.data[y].numero_sap,
-        result.data[y].contenedores,
-        result.data[y].sup_name,
-        new Date(result.data[y].fecha).toLocaleDateString(),
-        result.data[y].turno,
-        result.data[y].status,
-        result.data[y].motivo_cancel,
-      ]).draw(false);
-
+      if (destino === result.data[y].destino) {
+        table.row.add([
+          cancelar,
+          result.data[y].id,
+          result.data[y].numero_sap,
+          result.data[y].contenedores,
+          result.data[y].sup_name,
+          new Date(result.data[y].fecha).toLocaleDateString(),
+          result.data[y].turno,
+          result.data[y].status,
+          result.data[y].destino,
+          result.data[y].motivo_cancel,
+        ]).draw(false);
+      }
     }
   })
     .catch((err) => { console.error(err) })

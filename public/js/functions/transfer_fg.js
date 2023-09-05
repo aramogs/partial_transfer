@@ -193,7 +193,7 @@ function transferFG(e) {
     let data = { "estacion": `${estacion}`, "proceso": "transfer_fg_confirmed", "user_id": user_id.innerHTML, "serial": `${serialsArray}`, "storage_bin": `${storage_bin}` };
     axios({
         method: 'post',
-        url: "/postSerialesRedisFG",
+        url: "/postSerialesFG",
         headers: {
             'Content-Type': 'application/json'
         },
@@ -209,11 +209,11 @@ function transferFG(e) {
             tabla_consulta.innerHTML = ""
             response.forEach(element => {
                 let newRow = tabla_consulta.insertRow(tabla_consulta.rows.length);
-                if (element.name) {
+                if (element.key) {
                     let row = `
                                 <tr class="bg-danger">
                                     <td>${element.abapMsgV1}</td>
-                                    <td>${element.key ? element.key : element.message}</td>
+                                    <td>${element.key ? element.key : element.abapMsgV1}</td>
                                 </tr>
                                 `
                     newRow.classList.add("bg-danger", "text-white")

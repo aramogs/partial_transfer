@@ -129,12 +129,12 @@ function transferSU() {
             tabla_consulta2.innerHTML = ""
             response.forEach(element => {
                 let newRow = tabla_consulta2.insertRow(tabla_consulta2.rows.length);
-                if (element.name) {
+                if (element.key) {
                     console.log(element);
                     let row = `
                         <tr class="bg-danger">
                             <td>${element.abapMsgV1}</td>
-                            <td>${element.key ? element.key : element.message}</td>
+                            <td>${element.key ? element.key : element.abapMsgV1}</td>
                         </tr>
                         `
                     newRow.classList.add("bg-danger", "text-white")

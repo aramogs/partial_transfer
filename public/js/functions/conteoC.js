@@ -97,7 +97,7 @@ submitBin.addEventListener("submit", function (e) {
             data: JSON.stringify(data)
         })
             .then((result) => {
-                let response = JSON.parse(result.data)
+                let response = result.data
                 if (response.key) {
                     soundWrong()
                     errorText2.innerHTML = response.key
@@ -236,7 +236,7 @@ btn_verifyCount.addEventListener("click", () => {
     })
 
     let data = { "proceso": "cycle_count_transfer", "storage_type": `${storage_type.innerHTML}`, "storage_bin": `${storage_bin.value.toUpperCase()}`, "user_id": user_id.innerHTML, "listed_storage_units": listed_storage_units, "unlisted_storage_units": unlisted_storage_units, "not_found_storage_units": not_found_storage_units }
-    let interval = setInterval(() => verify_hashRedis(storage_units), 800);
+    // let interval = setInterval(() => verify_hashRedis(storage_units), 800);
     axios({
         method: 'post',
         url: "/postCycleSU",
@@ -256,7 +256,7 @@ btn_verifyCount.addEventListener("click", () => {
                 storage_units = []
                 // currentST.innerHTML = ""
                 // btn_transferFG.disabled = true
-                clearInterval(interval);
+                // clearInterval(interval);
                 setTimeout(() => { soundWrong(), $('#modalCountDown').modal('hide') }, 500);
                 $('#modalError').modal({ backdrop: 'static', keyboard: false })
 
@@ -295,14 +295,14 @@ btn_verifyCount.addEventListener("click", () => {
                         }
                     })
                     setTimeout(function () {
-                        clearInterval(interval);
+                        // clearInterval(interval);
                         setTimeout(() => {  $('#modalCountDown').modal('hide') }, 500);
                         $('#modalError').modal({ backdrop: 'static', keyboard: false })
                     }, 500);
                 } else {
                     // $('#modalSpinner').modal('hide')
                     // $('#modalSuccess').modal({ backdrop: 'static', keyboard: false })
-                    clearInterval(interval);
+                    // clearInterval(interval);
                     setTimeout(() => { soundOk(), $('#modalCountDown').modal('hide') }, 500);
                     $('#modalSuccess').modal({ backdrop: 'static', keyboard: false })
                 }

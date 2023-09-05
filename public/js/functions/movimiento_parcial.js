@@ -81,7 +81,7 @@ submitSerial.addEventListener("submit", function (e) {
             data: JSON.stringify(data)
         })
             .then((result) => {
-                response = JSON.parse(result.data)
+                response = result.data
                 if (response.error) {
                     soundWrong()
                     errorText.innerHTML = response.error
@@ -139,7 +139,7 @@ submitCantidad.addEventListener("submit", function (e) {
                     $('#modalError').modal({ backdrop: 'static', keyboard: false })
                 }, 500);
             } else {
-                response = JSON.parse(result.data)
+                response = result.data
                 soundOk()
                 btnTransferir.disabled = false
                 successText.innerHTML = response.result

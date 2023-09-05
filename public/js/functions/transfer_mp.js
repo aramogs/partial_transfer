@@ -229,7 +229,7 @@ function transferFG(e) {
 
     // estacion = uuidv4()
     let data = { "estacion": `${estacion}`,"proceso": "transfer_mp_confirmed", "user_id": user_id.innerHTML, "serial": `${serialsArray}`, "storage_bin": `${storage_bin}`, "storage_type": `${storage_type.innerHTML}` };
-    let interval = setInterval(verify_hashRedis, 800);
+    // let interval = setInterval(verify_hashRedis, 800);
     axios({
         method: 'post',
         url: "/postSerialesMP",
@@ -248,7 +248,7 @@ function transferFG(e) {
             tabla_consulta.innerHTML = ""
             response.forEach(element => {
                 let newRow = tabla_consulta.insertRow(tabla_consulta.rows.length);
-                if (element.name) {
+                if (element.key || element.message) {
                     let row = `
                                 <tr class="bg-danger">
                                     <td>${element.abapMsgV1}</td>
