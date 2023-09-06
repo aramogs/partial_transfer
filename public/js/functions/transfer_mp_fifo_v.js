@@ -327,7 +327,7 @@ function transferSU() {
                 } else {
                     let row = `
                             <tr >
-                                <td>${(element.I_NLENR).replace(/^0+/gm, "")}</td>
+                                <td>${(element.I_LENUM).replace(/^0+/gm, "")}</td>
                                 <td>${element.E_TANUM}</td>
                             </tr>
                             `
