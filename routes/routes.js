@@ -69,6 +69,9 @@ router.post("/getUbicacionesFG",middleware.verifyToken, middleware.macFromIP, ro
 router.post('/postSerialesFG',middleware.verifyToken, middleware.macFromIP, routesController.postSerialsFG_POST);
 router.post("/getBinStatusReportFG",middleware.verifyToken, middleware.macFromIP, routesController.getBinStatusReportFG_POST);
 router.post("/postCycleSU",middleware.verifyToken, middleware.macFromIP, routesController.postCycleSU_POST);
+router.get('/verificarAcreditacionFG',middleware.verifyToken,  middleware.macFromIP, routesController.verificarAcreditacionFG_GET);
+router.post('/postSerialesAcreditacionFG',middleware.verifyToken, middleware.macFromIP, routesController.postSerialesAcreditacionFG_POST);
+
 // ##############Master GM##################
 router.get('/master_fg_gm',middleware.verifyToken, routesController.master_FG_GM_GET);
 router.post('/master_request_gm',middleware.verifyToken, middleware.macFromIP, routesController.master_request_GM_POST);

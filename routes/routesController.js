@@ -796,8 +796,35 @@ controller.postCycleSU_POST = async (req, res) => {
 
             res.json(response_list)
         })
-        .catch(err => {  })
+        .catch(err => { })
 }
+
+controller.verificarAcreditacionFG_GET = (req, res) => {
+    let user_id = req.res.locals.authData.id.id
+    let user_name = req.res.locals.authData.id.username
+    let estacion = req.res.locals.macIP.mac
+    res.render('verificarAcreditacionFG.ejs', {
+        user_id,
+        user_name,
+        estacion
+    })
+}
+
+controller.postSerialesAcreditacionFG_POST = async (req, res) => {
+    let estacion = req.res.locals.macIP.mac
+    let serial = req.body.serial
+
+    let serials_array = serial.split(",");
+    const result_getStorageLocation = await funcion.getStorageLocation(estacion);
+    const newArray = [];
+
+    for (let i = 0; i < serials_array.length; i++) {
+            let resultBackflush = await funcion.backflushFG(serials_array[i]);
+            newArray.push(resultBackflush)
+    }
+    res.json(newArray);
+}
+
 
 controller.postCycleSUEXT_POST = async (req, res) => {
 
@@ -989,7 +1016,7 @@ controller.postCycleSUVUL_POST = async (req, res) => {
 
             res.json(response_list)
         })
-        .catch(err => {  })
+        .catch(err => { })
 }
 
 controller.cargaListado_GET = (req, res) => {
@@ -1126,7 +1153,7 @@ controller.verificarSAP_POST = async (req, res) => {
         funcion.insertRawDelivery(extendedValores)
         res.json(extendedValores);
     } catch (err) {
-        res.json({"message": err});
+        res.json({ "message": err });
     }
 };
 
@@ -1207,7 +1234,7 @@ controller.transferMP_FIFO_GET = (req, res) => {
     let storage_type = req.params.storage_type
     let user_id = req.res.locals.authData.id.id
     let user_name = req.res.locals.authData.id.username
-    
+
     if (storage_type === "MP") {
         res.render('transfer_mp_FIFO.ejs', {
             user_id,
@@ -1240,7 +1267,7 @@ controller.getRawFIFO_POST = async (req, res) => {
 
         res.json(result);
     } catch (error) {
-        
+
         res.json(error);
     }
 };
@@ -1269,7 +1296,7 @@ controller.getRawFIFOSerial_POST = async (req, res) => {
         const materialInfo = await funcion.sapRFC_consultaMaterial_ST(serialResult[0].MATNR, "0011", storage_type);
         res.json(materialInfo);
     } catch (error) {
-        
+
         res.json(error);
     }
 };
@@ -1444,7 +1471,7 @@ controller.getRawListado_GET = async (req, res) => {
         const result = await funcion.getListadoPendiente();
         res.json(result);
     } catch (err) {
-        
+
     }
 };
 
@@ -1454,7 +1481,7 @@ controller.getRawListadoProcesado_GET = async (req, res) => {
         const result = await funcion.getListadoProcesado();
         res.json(result);
     } catch (err) {
-        
+
         res.json({ error: 'An error occurred while fetching the list.' });
     }
 };

@@ -511,7 +511,7 @@ funcion.sapRFC_consultaMaterial_ST = async (material_number, storage_location, s
         return res;
     } catch (error) {
         throw error;
-};
+    };
 }
 
 
@@ -602,32 +602,32 @@ funcion.sapRFC_consultaStorageBin = (storage_location, storage_type, storage_bin
 
 funcion.sapRFC_partialTransferStorageUnit = async (material_number, transfer_quantity, source_storage_location, source_storage_type, source_storage_unit, destination_storage_type, destination_storage_bin) => {
     try {
-      const managed_client = await node_RFC.acquire();
-  
-      const result = await managed_client.call('L_TO_CREATE_SINGLE', {
-        I_LGNUM: '521',                             /* Warehouse number */
-        I_BWLVS: '998',                             /* Movement type    */
-        I_MATNR: `${material_number}`,              /* Material no. */
-        I_WERKS: '5210',                            /* Plant    */
-        I_ANFME: `${transfer_quantity}`,            /* Requested Qty    */
-        I_ALTME: '',                                /* Unit of measure  */
-        I_LGORT: `${source_storage_location}`,      /* Storage Location */
-        I_LETYP: '001',                             /* Storage Unit Type    */
-        I_VLTYP: `${source_storage_type}`,           /* Source storage type  */
-        I_VLBER: '001',                             /* Source storage section   */
-        I_VLENR: `${funcion.addLeadingZeros(source_storage_unit, 20)}`, /* Source storage unit   */
-        I_NLTYP: `${destination_storage_type}`,     /*  Destination storage type    */
-        I_NLBER: '001',                             /* Destination storage section  */
-        I_NLPLA: `${destination_storage_bin}`,      /* Destination Storage Bin  */
-      });
-  
-      managed_client.release();
-      return result;
+        const managed_client = await node_RFC.acquire();
+
+        const result = await managed_client.call('L_TO_CREATE_SINGLE', {
+            I_LGNUM: '521',                             /* Warehouse number */
+            I_BWLVS: '998',                             /* Movement type    */
+            I_MATNR: `${material_number}`,              /* Material no. */
+            I_WERKS: '5210',                            /* Plant    */
+            I_ANFME: `${transfer_quantity}`,            /* Requested Qty    */
+            I_ALTME: '',                                /* Unit of measure  */
+            I_LGORT: `${source_storage_location}`,      /* Storage Location */
+            I_LETYP: '001',                             /* Storage Unit Type    */
+            I_VLTYP: `${source_storage_type}`,           /* Source storage type  */
+            I_VLBER: '001',                             /* Source storage section   */
+            I_VLENR: `${funcion.addLeadingZeros(source_storage_unit, 20)}`, /* Source storage unit   */
+            I_NLTYP: `${destination_storage_type}`,     /*  Destination storage type    */
+            I_NLBER: '001',                             /* Destination storage section  */
+            I_NLPLA: `${destination_storage_bin}`,      /* Destination Storage Bin  */
+        });
+
+        managed_client.release();
+        return result;
     } catch (error) {
-      throw error;
+        throw error;
     }
-  }
-  
+}
+
 
 funcion.sapRFC_transferEXTProd = async (serial, storage_location, storage_type, storage_bin) => {
     try {
@@ -748,7 +748,7 @@ funcion.sapRFC_transferProdVul_2 = async (material, qty, storage_location, stora
                 I_MATNR: material,
                 I_WERKS: '5210',
                 I_ANFME: qty,
-                I_LGORT:  storage_location,
+                I_LGORT: storage_location,
                 I_LETYP: 'IP',
                 I_NLTYP: storage_type,
                 I_NLBER: '001',
@@ -770,7 +770,7 @@ funcion.sapRFC_transferProdVul_2 = async (material, qty, storage_location, stora
 funcion.sapRFC_transferVul = async (serial, storage_bin) => {
     try {
         const managed_client = await node_RFC.acquire();
-        
+
         const result = await managed_client.call('L_TO_CREATE_MOVE_SU', {
             I_LENUM: `${funcion.addLeadingZeros(serial, 20)}`,
             I_BWLVS: `998`,
@@ -779,7 +779,7 @@ funcion.sapRFC_transferVul = async (serial, storage_bin) => {
             I_NLBER: `001`,
             I_NLPLA: `${storage_bin.toUpperCase()}`
         });
-        
+
         managed_client.release();
         return result;
     } catch (err) {
@@ -904,7 +904,7 @@ funcion.sapRFC_transferMP = async (storage_unit, storage_type, storage_bin, emp_
         if (result[0].LGORT !== storage_location) {
             error = "DEL: Storage Locations do not match"
             funcion.insertCompleteTransfer(emp_num, storage_type, storage_unit, storage_bin.toUpperCase(), error);
-            return  ({ "key": `${error}`, "abapMsgV1": `${storage_unit}` });
+            return ({ "key": `${error}`, "abapMsgV1": `${storage_unit}` });
         }
 
         if ((result[0].LGTYP).trim() !== (storage_type).trim()) {
@@ -992,40 +992,40 @@ funcion.sapRFC_transferMP1_DELX = async (storage_unit, storage_type, storage_bin
         const managed_client = await node_RFC.acquire();
 
         const result_transfer199 = await managed_client.call('L_TO_CREATE_SINGLE',
-        {
-            I_LGNUM: `521`,
-            I_BWLVS: `100`,
-            I_MATNR: `${material}`,
-            I_WERKS: `5210`,
-            I_ANFME: `${cantidad}`,
-            I_LGORT: `0011`,
-            I_LETYP: `IP`,
-            I_VLENR: `${funcion.addLeadingZeros(storage_unit, 20)}`
-        }
-    )
+            {
+                I_LGNUM: `521`,
+                I_BWLVS: `100`,
+                I_MATNR: `${material}`,
+                I_WERKS: `5210`,
+                I_ANFME: `${cantidad}`,
+                I_LGORT: `0011`,
+                I_LETYP: `IP`,
+                I_VLENR: `${funcion.addLeadingZeros(storage_unit, 20)}`
+            }
+        )
         managed_client.release();
         const managed_client2 = await node_RFC.acquire();
         const result_transfer998 = await managed_client2.call('L_TO_CREATE_SINGLE',
-        {
-            I_LGNUM: `521`,
-            I_BWLVS: `998`,
-            I_MATNR: `${material}`,
-            I_WERKS: `5210`,
-            I_ANFME: `${cantidad}`,
-            I_LGORT: `0001`,
-            I_LETYP: `IP`,
-            I_VLTYP: `199`,
-            I_VLBER: `001`,
-            I_VLPLA: `199`,
-            I_NLTYP: `MP`,
-            I_NLBER: `001`,
-            I_NLPLA: storage_bin,
-            I_NLENR: `${funcion.addLeadingZeros(storage_unit, 20)}`
-        }
-    )
+            {
+                I_LGNUM: `521`,
+                I_BWLVS: `998`,
+                I_MATNR: `${material}`,
+                I_WERKS: `5210`,
+                I_ANFME: `${cantidad}`,
+                I_LGORT: `0001`,
+                I_LETYP: `IP`,
+                I_VLTYP: `199`,
+                I_VLBER: `001`,
+                I_VLPLA: `199`,
+                I_NLTYP: `MP`,
+                I_NLBER: `001`,
+                I_NLPLA: storage_bin,
+                I_NLENR: `${funcion.addLeadingZeros(storage_unit, 20)}`
+            }
+        )
         managed_client2.release();
         funcion.insertRawMovement(raw_id, storage_type, emp_num, storage_unit, result_transfer998.E_TANUM);
-        
+
         return result_transfer998;
     } catch (err) {
         funcion.insertRawMovement(raw_id, storage_type, emp_num, storage_unit, err.message);
@@ -1302,7 +1302,7 @@ funcion.getStorageLocation = (station) => {
         FROM b10.station_conf
         WHERE no_estacion = '${station}'
             `)
-            .then((result) => { resolve(result)})
+            .then((result) => { resolve(result) })
             .catch((error) => { reject(error) })
     })
 }
@@ -1311,7 +1311,7 @@ funcion.sapRFC_transfer = (serial, storage_type, storage_bin) => {
     return new Promise((resolve, reject) => {
         node_RFC.acquire()
             .then(managed_client => {
-               
+
                 managed_client.call('L_TO_CREATE_MOVE_SU',
                     {
                         I_LENUM: `${funcion.addLeadingZeros(serial, 20)}`,
@@ -1424,6 +1424,21 @@ funcion.insertRawDelivery = async (valores) => {
         console.error('DB-Error:', error.message);
         // You can log the error or handle it as needed
         throw error; // Rethrow the error for further handling
+    }
+}
+
+funcion.backflushFG = async (serial) => {
+    try {
+        const managed_client = await node_RFC.acquire();
+
+        const result = await managed_client.call('ZWM_HU_MFHU', {
+            I_EXIDV: `${funcion.addLeadingZeros(serial, 20)}`,
+            I_VERID: '1'
+        });
+        managed_client.release();
+        return result;
+    } catch {
+        throw err;
     }
 }
 
@@ -1575,11 +1590,11 @@ funcion.insertRawDelivery = async (valores) => {
 //                 //         console.log(err);
 //                 //         console.log(res);
 //                 //     });
-                    
+
 //                 //     if (err) {
 //                 //         return console.error('Error invoking BAPI_COSTCENTER_CHANGEMULTIPLE:', err);
 //                 //     }
-            
+
 //                 //     console.log('update cc res:', res);
 //                 // })   
 
