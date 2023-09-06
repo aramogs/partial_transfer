@@ -1417,7 +1417,7 @@ funcion.sapRFC_materialDescription = async (material_number) => {
 
 funcion.insertRawDelivery = async (valores) => {
     try {
-        const query = "INSERT INTO raw_delivery (numero_sap, descripcion_sap, contenedores, sup_name, turno, status, destino) VALUES ?";
+        const query = "INSERT INTO raw_delivery (numero_sap, descripcion_sap, contenedores, sup_name,fecha, turno, status, destino) VALUES ?";
         const result = await dbC(query, [valores]); // Wrap the valores array in another array
         return result.affectedRows; // Returns the number of affected rows
     } catch (error) {

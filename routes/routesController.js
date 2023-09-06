@@ -437,7 +437,6 @@ controller.getUbicacionesMPMaterial_POST = async (req, res) => {
 
         res.json(resultado);
     } catch (error) {
-        console.error(error);
         res.json(error);
     }
 }
@@ -655,7 +654,6 @@ controller.getBinStatusReportEXT_POST = async (req, res) => {
             return res.json({ info_list, error: "N/A" });
         }
     } catch (err) {
-        console.log(err);
         return res.json({ error: "An error occurred" });
     }
 };
@@ -684,7 +682,6 @@ controller.getBinStatusReportVUL_POST = async (req, res) => {
 
         }
     } catch (err) {
-        console.error(err);
         res.json({ "error": "An error occurred" });
     }
 };
@@ -799,7 +796,7 @@ controller.postCycleSU_POST = async (req, res) => {
 
             res.json(response_list)
         })
-        .catch(err => { console.log(err) })
+        .catch(err => {  })
 }
 
 controller.postCycleSUEXT_POST = async (req, res) => {
@@ -896,7 +893,7 @@ controller.postCycleSUEXT_POST = async (req, res) => {
 
             res.json(response_list)
         })
-        .catch(err => { console.log(err) })
+        .catch(err => { })
 }
 controller.postCycleSUVUL_POST = async (req, res) => {
 
@@ -992,7 +989,7 @@ controller.postCycleSUVUL_POST = async (req, res) => {
 
             res.json(response_list)
         })
-        .catch(err => { console.log(err) })
+        .catch(err => {  })
 }
 
 controller.cargaListado_GET = (req, res) => {
@@ -1097,17 +1094,17 @@ const arreglosExcel = (bufferExcel) => {
 }
 
 controller.verificarSAP_POST = async (req, res) => {
-    console.log(req.res.socket.user);
     try {
         const body = JSON.parse(req.body.data);
+
         const destino = req.params.id_carga;
         const turno = body.turno;
+        const fecha = body.fecha
         const bufferExcel = req.file.buffer;
         const excel = await arreglosExcel(bufferExcel);
         const titulos = excel[0];
         const valoresArray = excel[1];
         let user = (req.res.socket.user).substring(4)
-
 
         const materialDescriptionPromises = valoresArray.map(async (element) => {
             const result = await funcion.sapRFC_materialDescription(element[0]);
@@ -1118,18 +1115,18 @@ controller.verificarSAP_POST = async (req, res) => {
                 materialDescription,
                 element[1],
                 user,
+                fecha,
                 turno,
                 "Pendiente",
                 destino
             ]
-            console.log(response);
             return response
         });
         const extendedValores = await Promise.all(materialDescriptionPromises);
         funcion.insertRawDelivery(extendedValores)
         res.json(extendedValores);
     } catch (err) {
-        res.send({ message: err.message });
+        res.json({"message": err});
     }
 };
 
@@ -1159,7 +1156,7 @@ controller.tablaListado_POST = (req, res) => {
     let fecha = req.body.fecha
     funcion.getListadoFecha(fecha)
         .then((result) => { res.json(result) })
-        .catch((err) => { console.error(err) })
+        .catch((err) => { })
 
 }
 
@@ -1168,7 +1165,7 @@ controller.idListadoInfo_POST = (req, res) => {
     let id = req.body.id
     funcion.getInfoIdListado(id)
         .then((result) => { res.json(result) })
-        .catch((err) => { console.error(err) })
+        .catch((err) => { })
 
 
 }
@@ -1180,7 +1177,7 @@ controller.cancelarIdListado_POST = (req, res) => {
 
     funcion.cancelarIdListado(idListado, motivo)
         .then((result) => { res.json(result) })
-        .catch((err) => { console.error(err) })
+        .catch((err) => { })
 
 
 }
@@ -1191,7 +1188,7 @@ controller.editarIdListado_POST = (req, res) => {
     let contenedores = req.body.contenedores
     funcion.editarIdListado(id, contenedores)
         .then((result) => { res.json(result) })
-        .catch((err) => { console.error(err) })
+        .catch((err) => { })
 
 
 }
@@ -1202,7 +1199,7 @@ controller.checkSap_POST = (req, res) => {
 
     funcion.checkSap(sap)
         .then((result) => { res.json(result) })
-        .catch((err) => { console.error(err) })
+        .catch((err) => { })
 
 }
 
@@ -1243,7 +1240,7 @@ controller.getRawFIFO_POST = async (req, res) => {
 
         res.json(result);
     } catch (error) {
-        console.error(error);
+        
         res.json(error);
     }
 };
@@ -1272,7 +1269,7 @@ controller.getRawFIFOSerial_POST = async (req, res) => {
         const materialInfo = await funcion.sapRFC_consultaMaterial_ST(serialResult[0].MATNR, "0011", storage_type);
         res.json(materialInfo);
     } catch (error) {
-        console.error(error);
+        
         res.json(error);
     }
 };
@@ -1447,7 +1444,7 @@ controller.getRawListado_GET = async (req, res) => {
         const result = await funcion.getListadoPendiente();
         res.json(result);
     } catch (err) {
-        console.error(err);
+        
     }
 };
 
@@ -1457,7 +1454,7 @@ controller.getRawListadoProcesado_GET = async (req, res) => {
         const result = await funcion.getListadoProcesado();
         res.json(result);
     } catch (err) {
-        console.error(err);
+        
         res.json({ error: 'An error occurred while fetching the list.' });
     }
 };
@@ -1475,7 +1472,7 @@ controller.reprintLabel_POST = (req, res) => {
         data: JSON.stringify(data)
     })
     // .then((result) => { res.json(result) })
-    // .catch((err) => { console.error(err) })
+    // .catch((err) => { })
 
 }
 
@@ -1483,7 +1480,7 @@ function amqpRequest(send, queue) {
     return new Promise((resolve, reject) => {
         var args = process.argv.slice(2);
         if (args.length == 0) {
-            console.error("Usage: rpc_client.js num");
+            // console.error("Usage: rpc_client.js num");
             // process.exit(1);
         }
 
@@ -1572,25 +1569,6 @@ controller.transferVUL_GET = (req, res) => {
 }
 
 
-// controller.transferVUL_Confirmed = async (req, res) => {
-//     try {
-//         console.log(req.body);
-//         const estacion = req.body.station;
-//         const serial = req.body.serial;
-//         const proceso = req.body.proceso;
-//         const storage_bin = req.body.storage_bin;
-
-//         const serials_array = serial.split(",");
-//         const promises = serials_array.map(serial_ =>
-//             funcion.sapRFC_transferVul(serial_, storage_bin).catch(err => err)
-//         );
-
-//         const results = await Promise.all(promises);
-//         res.json(results);
-//     } catch (err) {
-//         res.json(err);
-//     }
-// };
 controller.transferVUL_Confirmed = async (req, res) => {
     let estacion = req.body.station
     let serial = req.body.serial

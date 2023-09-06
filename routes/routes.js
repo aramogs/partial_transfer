@@ -51,7 +51,7 @@ router.get('/cargaListado/:destino?', middleware.sspi, routesController.cargaLis
 router.post('/getListado',routesController.getListado_POST);
 router.get('/getTurnos',routesController.getTurnos_GET);
 router.post('/verificarSAP/:id_carga', middleware.sspi, upload.single("excelFile"), middleware.macFromIP, routesController.verificarSAP_POST);
-router.get('/editarListado/:destino?', middleware.sspi, routesController.editarListado_GET);
+router.get('/editarListado/:destino/:fecha?', middleware.sspi, routesController.editarListado_GET);
 router.post('/tablaListado', routesController.tablaListado_POST);
 router.post('/idListadoInfo',routesController.idListadoInfo_POST);
 router.post('/cancelarIdListado',routesController.cancelarIdListado_POST);

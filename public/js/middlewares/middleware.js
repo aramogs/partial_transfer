@@ -92,25 +92,45 @@ function validMac(mac) {
     return /^[0-9a-f]{1,2}([.:-])[0-9a-f]{1,2}(?:\1[0-9a-f]{1,2}){4}$/.test(mac)
 }
 
-middleware.macFromIP = (req, res, next) => {
-    const regex = /::ffff:/gm;
-    let ip = (req.ip).replace(regex, "")
-    let localIp = (req.hostname).replace(regex, "")
+const regex = /::ffff:/gm;
 
-    if (ip === "::1" || ip === localIp) {
-        res.locals.macIP = { "mac": "00-00-00-00-00-00", "ip": "10.56.99.21" }; next()
-    } else {
+middleware.macFromIP = async (req, res, next) => {
+    try {
+        const ip = req.ip.replace(regex, "");
+        const localIp = req.hostname.replace(regex, "");
+
+        if (ip === "::1" || ip === localIp) {
+            res.locals.macIP = { "mac": "00-00-00-00-00-00", "ip": "10.56.99.21" };
+            return next();
+        }
+        const mac = await getMacAsync(ip);
+
+        if (!validMac(mac)) {
+            res.render('mac_invalida.ejs', { mac });
+        } else {
+            res.locals.macIP = { "mac": mac, "ip": ip };
+        }
+        next();
+    } catch (err) {
+        // if (err === "The IP address cannot be self") {
+        //     return next();
+        // }
+        next(err);
+    }
+};
+
+// Define an async wrapper for the getMac function
+const getMacAsync = (ip) => {
+    return new Promise((resolve, reject) => {
         macfromip.getMac(ip, (err, mac) => {
-
-            if (err == "The IP address cannot be self") {/* DO NOTHING*/ }
-
-            if (!validMac(mac)) {
-                res.render('mac_invalida.ejs', { mac })
+            if (err) {
+                reject(err);
             } else {
-                res.locals.macIP = { "mac": mac, "ip": ip }; next()
+                resolve(mac);
             }
         });
-    }
-}
+    });
+};
+
 
 module.exports = middleware;

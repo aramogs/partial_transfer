@@ -36,6 +36,7 @@ btnCerrar.forEach(element => {
   element.addEventListener('click', clearAll)
 });
 
+console.log(fecha);
 
 if (fecha != "") {
   selectFecha.value = fecha
