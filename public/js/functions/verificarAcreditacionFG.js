@@ -24,6 +24,8 @@ let btnCerrar_Bin = document.getElementById("btnCerrar_Bin")
 let submitArray_Bin = document.getElementById("submitArray_Bin")
 let spanBin = document.getElementById("spanBin")
 let estacion = document.getElementById("estacion").innerHTML
+let btnTransferir_acreditados = document.getElementById("btnTransferir_acreditados")
+
 
 serial_num.focus()
 btnCerrar.forEach(element => {
@@ -50,6 +52,8 @@ btnCerrar_Bin.addEventListener("click", () => {
         $('#myModal').modal('show'),
         $('#modalStorage').modal('hide')
 })
+
+btnTransferir_acreditados.addEventListener("click", verifyBinModal)
 
 function cleanInput() {
     serial_num.disabled = false
@@ -152,13 +156,14 @@ function verifyQuantity() {
         // submitArray.focus()
         // div_storage_bin.classList.remove("animate__flipOutX", "animate__animated")
         // div_storage_bin.classList.add("animate__flipInX", "animate__animated")
-        transferFG()
+        acreditarFG()
     }
 }
 
 function verifyBinModal(e) {
     e.preventDefault()
     $('#myModal').modal('hide')
+    $('#modalError').modal({ backdrop: 'static', keyboard: false })
     $('#modalStorage').modal('show')
     spanBin.innerHTML = submitArray.value
     setTimeout(() => {
@@ -170,8 +175,16 @@ function verifyBinModal(e) {
 }
 function verifyBin(e) {
     e.preventDefault()
+    let temp_storage_bin = ""
 
-    if (submitArray.value == verifySBin.value) {
+    if (submitArray.value == "") {
+        temp_storage_bin = verifySBin.value
+        temp_storage_bin = ""
+        spanBin.innerHTML = verifySBin.value
+        submitArray.value = verifySBin.value
+        verifySBin.value = ""
+        soundOk()
+    }else if (submitArray.value == verifySBin.value) {
         transferFG()
     } else {
         setTimeout(() => {
@@ -182,7 +195,7 @@ function verifyBin(e) {
 }
 
 
-function transferFG(e) {
+function acreditarFG(e) {
     $('#modalStorage').modal('hide')
     setTimeout(() => {
         soundOk()
@@ -206,6 +219,7 @@ function transferFG(e) {
             soundOk()
             errorText.hidden = true
             tabla_consulta_container.hidden = false
+            btnTransferir_acreditados.hidden = false
 
             tabla_consulta.innerHTML = ""
             response.forEach(element => {
@@ -225,6 +239,79 @@ function transferFG(e) {
                                 <tr >
                                     <td>${(element.I_EXIDV).replace(/^0+/gm, "")}</td>
                                     <td>${element.E_RETURN.MESSAGE}</td>
+                                </tr>
+                                `
+
+                    return newRow.innerHTML = row;
+                }
+
+
+            })
+            cantidadErrores.innerHTML = errors
+
+            setTimeout(function () {
+                $('#modalCountDown').modal('hide')
+                $('#modalError').modal({ backdrop: 'static', keyboard: false })
+            }, 500);
+
+        })
+        .catch(err =>{
+
+            setTimeout(function () {
+                cantidadErrores.innerHTML = err
+                $('#modalCountDown').modal('hide')
+                $('#modalError').modal({ backdrop: 'static', keyboard: false })
+            }, 500);
+        })
+        
+}
+
+
+
+function transferFG(e) {
+    $('#modalStorage').modal('hide')
+    setTimeout(() => {
+        soundOk()
+    }, 150);
+    soundOk()
+    let storage_bin = submitArray.value
+    $('#myModal').modal('hide')
+    $('#modalCountDown').modal({ backdrop: 'static', keyboard: false })
+    let data = { "estacion": `${estacion}`, "proceso": "transfer_fg_confirmed", "user_id": user_id.innerHTML, "serial": `${serialsArray}`, "storage_bin": `${storage_bin}` };
+    axios({
+        method: 'post',
+        url: "/postSerialesFG",
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        data: JSON.stringify(data)
+    })
+        .then((result) => {
+            let response = result.data
+            let errors = 0
+            soundOk()
+            errorText.hidden = true
+            btnTransferir_acreditados.hidden = true
+            tabla_consulta_container.hidden = false
+
+            tabla_consulta.innerHTML = ""
+            response.forEach(element => {
+                let newRow = tabla_consulta.insertRow(tabla_consulta.rows.length);
+                if (element.key) {
+                    let row = `
+                                <tr class="bg-danger">
+                                    <td>${element.abapMsgV1}</td>
+                                    <td>${element.key ? element.key : element.abapMsgV1}</td>
+                                </tr>
+                                `
+                    newRow.classList.add("bg-danger", "text-white")
+                    errors++
+                    return newRow.innerHTML = row;
+                } else {
+                    let row = `
+                                <tr >
+                                    <td>${(element.I_LENUM).replace(/^0+/gm, "")}</td>
+                                    <td>${element.E_TANUM}</td>
                                 </tr>
                                 `
 

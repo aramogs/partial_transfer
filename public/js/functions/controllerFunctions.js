@@ -1674,88 +1674,99 @@ funcion.backflushFG = async (serial) => {
 //             })
 //     })
 
-// //* NO BORRAR CON ESTE PROCESO SE CREA ETIQUETA Y SE ACREDITA
-// node_RFC.acquire()
-//     .then(managed_client => {
-//         (async () => {
-//             sap_number = '7000016497A0'
-//             sap_cantidad = '80'
-//             try {
+// * NO BORRAR CON ESTE PROCESO SE CREA ETIQUETA Y SE ACREDITA
+// const sap_number = '7000016497A0';
+// const sap_cantidad = '2';
 
-//                 const result_packing_object = await managed_client.call('RFC_READ_TABLE',
-//                     {
-//                         QUERY_TABLE: 'PACKKP',
-//                         DELIMITER: ",",
-//                         OPTIONS: [{ TEXT: `POBJID EQ 'UC${sap_number}'` }],
-//                         FIELDS: ['PACKNR']
-//                     })
+// funcion.sapRFC_createHU = async function main() {
+//     try {
+//         const managed_client = await node_RFC.acquire();
 
-//                 const result_packing_material = await managed_client.call('RFC_READ_TABLE',
-//                     {
-//                         QUERY_TABLE: 'PACKPO',
-//                         DELIMITER: ",",
-//                         OPTIONS: [{ TEXT: `PACKNR EQ '${result_packing_object.DATA[0].WA}' AND PAITEMTYPE EQ 'P'` }],
-//                         FIELDS: ['MATNR']
-//                     })
+//         const result_packing_object = await managed_client.call('RFC_READ_TABLE', {
+//             QUERY_TABLE: 'PACKKP',
+//             DELIMITER: ",",
+//             OPTIONS: [{ TEXT: `POBJID EQ 'UC${sap_number}'` }],
+//             FIELDS: ['PACKNR']
+//         });
 
-//                 const result_hu_create = await managed_client.call('BAPI_HU_CREATE ',
-//                     {
-//                         HEADERPROPOSAL:
-//                         {
+//         const result_packing_material = await managed_client.call('RFC_READ_TABLE', {
+//             QUERY_TABLE: 'PACKPO',
+//             DELIMITER: ",",
+//             OPTIONS: [{ TEXT: `PACKNR EQ '${result_packing_object.DATA[0].WA}' AND PAITEMTYPE EQ 'P'` }],
+//             FIELDS: ['MATNR']
+//         });
 
-//                             PACK_MAT: result_packing_material.DATA[0].WA,
-//                             HU_GRP3: 'UC11',
-//                             PACKG_INSTRUCT: result_packing_object.DATA[0].WA,
-//                             PLANT: '5210',
-//                             // STGE_LOC: '0014',
-//                             L_PACKG_STATUS_HU: '2',
-//                             HU_STATUS_INIT: 'A',
-//                             // HU_EXID_TYPE: 'G'
+//         const result_hu_create = await managed_client.call('BAPI_HU_CREATE', {
+//             HEADERPROPOSAL: {
+//                 PACK_MAT: result_packing_material.DATA[0].WA,
+//                 HU_GRP3: 'UC11',
+//                 PACKG_INSTRUCT: result_packing_object.DATA[0].WA,
+//                 PLANT: '5210',
+//                 L_PACKG_STATUS_HU: '2',
+//                 HU_STATUS_INIT: 'A',
+//             },
+//             ITEMSPROPOSAL: [{
+//                 HU_ITEM_TYPE: '1',
+//                 MATERIAL: sap_number,
+//                 PACK_QTY: sap_cantidad,
+//                 PLANT: '5210',
+//             }],
+//         });
 
-//                         },
-//                         ITEMSPROPOSAL: [{
-//                             HU_ITEM_TYPE: '1',
-//                             MATERIAL: sap_number,
-//                             PACK_QTY: sap_cantidad,
-//                             PLANT: '5210',
-//                             // STGE_LOC: '0014',
-//                         }],
-//                     })
-//                 const result_commit = await managed_client.call("BAPI_TRANSACTION_COMMIT", { WAIT: "X" })
-//                 //* NO BORRAR CON ESTA SECCION SE PUEDO AGREGAR MATERIAL UN HU
-//                 const result_hu_change_header = await managed_client.call('BAPI_HU_CHANGE_HEADER ',
-//                     {
-//                         HUKEY: result_hu_create.HUKEY,
-//                         HUCHANGED: {
-//                             CLIENT: '200',
-//                             PACK_MAT_OBJECT: '07',
-//                             WAREHOUSE_NUMBER: '521',
-//                             HU_STOR_LOC: 'A'
-//                         },
+//         const result_commit = await managed_client.call("BAPI_TRANSACTION_COMMIT", { WAIT: "X" });
 
-//                     })
-//                 const result_commit2 = await managed_client.call("BAPI_TRANSACTION_COMMIT", { WAIT: "X" })
+//         const result_hu_change_header = await managed_client.call('BAPI_HU_CHANGE_HEADER', {
+//             HUKEY: result_hu_create.HUKEY,
+//             HUCHANGED: {
+//                 CLIENT: '200',
+//                 PACK_MAT_OBJECT: '07',
+//                 WAREHOUSE_NUMBER: '521',
+//                 HU_STOR_LOC: 'A'
+//             },
+//         });
 
+//         const result_commit2 = await managed_client.call("BAPI_TRANSACTION_COMMIT", { WAIT: "X" });
 
-//                 const result_backflush = await managed_client.call('ZWM_HU_MFHU',
-//                     {
-//                         I_EXIDV: `${result_hu_change_header.HUKEY}`,
-//                         I_VERID: '1',
-//                         I_LGORT: '0014'
-//                     }
-//                 )
-//                 managed_client.release()
-//                 console.log("@@@@@@@@@@@@@@@@@@@@", result_hu_create);
-//                 console.log("####################", result_hu_change_header);
-//                 console.log("####################", result_backflush);
+//         const result_backflush = await managed_client.call('ZWM_HU_MFHU', {
+//             I_EXIDV: `${result_hu_change_header.HUKEY}`,
+//             I_VERID: '1',
+//             I_LGORT: '0014'
+//         });
 
 
 
-//             } catch (err) {
-//                 console.error(err);
-//             }
-//         })()
-//     })
+//         const result_hu_get_list_msg = await managed_client.call('BAPI_HU_GET_LIST_MSG', {
+
+//                 HUKEY: [result_backflush.I_EXIDV],
+//                 MESSAGEKEY: [result_backflush.E_RETURN.MESSAGE],
+//                 RETURN: [result_backflush.E_RETURN]
+            
+//         });
+//         console.log("⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐\n", result_hu_create);
+//         console.log("✋✋✋✋✋✋✋✋✋✋✋✋✋✋✋✋✋✋✋✋✋✋✋\n", result_hu_change_header);
+//         console.log("⚔️⚔️⚔️⚔️⚔️⚔️⚔️⚔️⚔️⚔️⚔️⚔️⚔️⚔️⚔️⚔️⚔️⚔️⚔️\n", result_backflush);
+//         console.log("⚓⚓⚓⚓⚓⚓⚓⚓⚓⚓⚓⚓⚓⚓⚓⚓⚓⚓⚓\n", result_hu_get_list_msg);
+
+//         const result_hu_process_msg = await managed_client.call('BAPI_HU_PROCESS_MSG', {
+
+//             MESSAGEKEY: result_hu_get_list_msg.MESSAGEKEY,
+//             MESSAGEPROTOCOL:[],
+//             RETURN: result_hu_get_list_msg.RETURN
+        
+//     });
+
+//         managed_client.release();
+
+        
+//         console.log("✒️✒️✒️✒️✒️✒️✒️✒️✒️✒️✒️✒️✒️✒️✒️✒️✒️✒️✒️", result_hu_process_msg);
+
+//     } catch (err) {
+//         console.error(err);
+//     }
+// }
+
+// funcion.sapRFC_createHU()
+
 
 
 
