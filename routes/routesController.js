@@ -2021,15 +2021,8 @@ controller.auditoriaVUL_POST = async (req, res) => {
         );
 
         const results = await Promise.all(promises);
-        const errors = results
-            .filter(result => result.error) // Extract error objects
-            .map(result => result.error); // Extract just the error object
 
-        if (errors.length > 0) {
-            res.json(errors);
-        } else {
-            res.json({ success: true });
-        }
+        res.json(results)
     } catch (err) {
         res.json(err);
     }
