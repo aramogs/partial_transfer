@@ -760,7 +760,7 @@ controller.postCycleSU_POST = async (req, res) => {
 
 
     if (listed_storage_units.length == 0 && unlisted_storage_units.length == 0 && not_found_storage_units.length == 0) {
-
+        funcion.dBinsert_cycle_result(storage_type, storage_bin, "", user_id, "OK-BIN", "")
     }
 
     const lsup = Promise.all(listed_storage_units_promises)
@@ -884,7 +884,7 @@ controller.postCycleSUEXT_POST = async (req, res) => {
 
 
     if (listed_storage_units.length == 0 && unlisted_storage_units.length == 0 && not_found_storage_units.length == 0) {
-
+        funcion.dBinsert_cycle_result(storage_type, storage_bin, "", user_id, "OK-BIN", "")
     }
 
     const lsup = Promise.all(listed_storage_units_promises)
@@ -923,7 +923,7 @@ controller.postCycleSUEXT_POST = async (req, res) => {
         .catch(err => { })
 }
 controller.postCycleSUVUL_POST = async (req, res) => {
-
+    console.log(req.body);
     let storage_bin = req.body.storage_bin
     let user_id = req.body.user_id
     let storage_type = req.body.storage_type
@@ -980,7 +980,7 @@ controller.postCycleSUVUL_POST = async (req, res) => {
 
 
     if (listed_storage_units.length == 0 && unlisted_storage_units.length == 0 && not_found_storage_units.length == 0) {
-
+        funcion.dBinsert_cycle_result(storage_type, storage_bin, "", user_id, "OK-BIN", "")
     }
 
     const lsup = Promise.all(listed_storage_units_promises)
