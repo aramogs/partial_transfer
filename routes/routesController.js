@@ -1792,6 +1792,8 @@ controller.transferEXTRP_POST = async (req, res) => {
     let promises = []
     let estacion = req.body.station;
     let errorsArray = [];
+    let storage_type = ""
+    let storage_bin = ""
 
     let resultEstacion = await funcion.getStorageLocation(estacion)
     let storage_location = resultEstacion[0].storage_location
@@ -2017,7 +2019,6 @@ controller.auditoriaVUL_POST = async (req, res) => {
 
         const promises = serials_array.map(serial_ =>
             funcion.sapRFC_transferVULProd(serial_, storage_location, storage_type, storage_bin)
-                .catch(error => ({ serial: serial_, error })) // Wrap errors in an object
         );
 
         const results = await Promise.all(promises);

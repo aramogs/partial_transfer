@@ -686,10 +686,10 @@ funcion.sapRFC_transferVULProd = async (serial, storage_location, storage_type, 
         ));
         managed_client.release();
         if (res.length === 0) {
-            throw ({ "key": "SU_DOESNT_EXIST", "abapMsgV1": `${serial}` });
+            return ({ "key": "SU_DOESNT_EXIST", "abapMsgV1": `${serial}` });
 
-        } else if (res[0].LGORT !== storage_location) {
-            throw ({ "key": "Storage Locations do not match", "abapMsgV1": `${serial}` });
+        } else if (res[0].LGTYP !== "VUL" || res[0].LGORT !== storage_location) {
+            return ({ "key": `Check SU SType: ${res[0].LGTYP}, SLocation: ${res[0].LGORT}`, "abapMsgV1": `${serial}` });
         } else {
             const managed_client2 = await node_RFC.acquire();
             const result = await managed_client2.call('L_TO_CREATE_MOVE_SU', {
