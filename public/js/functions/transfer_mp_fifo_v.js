@@ -79,7 +79,7 @@ $(document).ready(function () {
                         `<button id="${element.id}" onClick="submitMaterial(this, 'inicio')" class="btn btn-outline-dark btn-sm ">${element.numero_sap}-${element.turno}</button>`,
                         element.contenedores,
                         element.descripcion_sap,
-                        moment(element.fecha).format('MM/DD/YYYY')
+                        new Date(element.fecha).toISOString().split('T')[0]
                     ]).draw(false);
                 }
             });
@@ -325,9 +325,10 @@ function transferSU() {
                     errors++
                     return newRow.innerHTML = row;
                 } else {
+                    let handling_unit = typeof element.I_LENUM !== 'undefined' ? element.I_LENUM : element.I_NLENR;
                     let row = `
                             <tr >
-                                <td>${(element.I_LENUM).replace(/^0+/gm, "")}</td>
+                                <td>${(handling_unit).replace(/^0+/gm, "")}</td>
                                 <td>${element.E_TANUM}</td>
                             </tr>
                             `

@@ -766,6 +766,62 @@ funcion.sapRFC_transferProdVul_2 = async (material, qty, storage_location, stora
     }
 };
 
+funcion.sapRFC_transferProdSem_1 = async (material, qty, storage_location, storage_type, storage_bin) => {
+    try {
+        const managed_client = await node_RFC.acquire();
+        try {
+            const result = await managed_client.call('L_TO_CREATE_SINGLE', {
+                I_LGNUM: '521',
+                I_BWLVS: '100',
+                I_MATNR: material,
+                I_WERKS: '5210',
+                I_ANFME: qty,
+                I_LGORT: storage_location,
+                I_LETYP: 'IP',
+                I_VLTYP: storage_type,
+                I_VLBER: '001',
+                I_VLPLA: storage_bin
+            });
+            
+            managed_client.release();
+            return result;
+        } catch (err) {
+            managed_client.release();
+            throw err;
+        }
+    } catch (err) {
+        throw err;
+    }
+};
+
+
+funcion.sapRFC_transferProdSem_2 = async (material, qty, storage_location, storage_type, storage_bin) => {
+    try {
+        const managed_client = await node_RFC.acquire();
+        try {
+            const result = await managed_client.call('L_TO_CREATE_SINGLE', {
+                I_LGNUM: '521',
+                I_BWLVS: '199',
+                I_MATNR: material,
+                I_WERKS: '5210',
+                I_ANFME: qty,
+                I_LGORT: storage_location,
+                I_LETYP: 'IP',
+                I_NLTYP: storage_type,
+                I_NLBER: '001',
+                I_NLPLA: storage_bin
+            });
+            
+            managed_client.release();
+            return result;
+        } catch (err) {
+            managed_client.release();
+            throw err;
+        }
+    } catch (err) {
+        throw err;
+    }
+};
 
 funcion.sapRFC_transferVul = async (serial, storage_bin) => {
     try {
@@ -788,107 +844,80 @@ funcion.sapRFC_transferVul = async (serial, storage_bin) => {
 };
 
 
-funcion.sapRFC_transferSemProd = (serial) => {
-    return new Promise((resolve, reject) => {
+funcion.sapRFC_transferSemProd = async(serial, storage_type, storage_bin) =>{
+    try {
+        const managed_client = await node_RFC.acquire();
 
-        node_RFC.acquire()
-            .then(managed_client => {
-                managed_client.call('L_TO_CREATE_MOVE_SU',
-                    {
-                        I_LENUM: `${funcion.addLeadingZeros(serial, 20)}`,
-                        I_BWLVS: `998`,
-                        I_LETYP: `IP`,
-                        I_NLTYP: `102`,
-                        I_NLBER: `001`,
-                        I_NLPLA: `103`
-                    }
-                )
-                    .then(result => {
-                        managed_client.release()
-                        resolve(result)
-                    })
-                    .catch(err => {
-                        managed_client.release()
-                        reject(err)
-                    });
-            })
-            .catch(err => {
-                reject(err)
-            });
-    })
-}
+        const parameters = {
+            I_LENUM: `${funcion.addLeadingZeros(serial, 20)}`,
+            I_BWLVS: `998`,
+            I_LETYP: `IP`,
+            I_NLTYP: `${storage_type}`,
+            I_NLBER: `001`,
+            I_NLPLA: `${storage_bin}`
+        };
 
-funcion.sapRFC_transferProdSem_1 = (material, qty) => {
-    return new Promise((resolve, reject) => {
-
-        node_RFC.acquire()
-            .then(managed_client => {
-                managed_client.call('L_TO_CREATE_SINGLE',
-                    {
-                        I_LGNUM: `521`,
-                        I_BWLVS: `100`,
-                        I_MATNR: `${material}`,
-                        I_WERKS: `5210`,
-                        I_ANFME: `${qty}`,
-                        I_LGORT: `0012`,
-                        I_LETYP: `IP`,
-                        I_VLTYP: `102`,
-                        I_VLBER: `001`,
-                        I_VLPLA: `103`
-
-                    }
-                )
-                    .then(result => {
-                        managed_client.release()
-                        resolve(result)
-                    })
-                    .catch(err => {
-                        managed_client.release()
-                        reject(err)
-                    });
-            })
-            .catch(err => {
-                reject(err)
-            });
-    })
+        const result = await managed_client.call('L_TO_CREATE_MOVE_SU', parameters);
+        managed_client.release();
+        return result;
+    } catch (err) {
+        throw err;
+    }
 }
 
 
-funcion.sapRFC_transferProdSem_2 = (material, qty) => {
-    return new Promise((resolve, reject) => {
+// funcion.sapRFC_transferProdSem_1 = async (material, qty) =>{
+//     try {
+//         const managed_client = await node_RFC.acquire();
 
-        node_RFC.acquire()
-            .then(managed_client => {
-                managed_client.call('L_TO_CREATE_SINGLE',
-                    {
-                        I_LGNUM: `521`,
-                        I_BWLVS: `199`,
-                        I_MATNR: `${material}`,
-                        I_WERKS: `5210`,
-                        I_ANFME: `${qty}`,
-                        I_LGORT: `0012`,
-                        I_LETYP: `IP`,
-                        I_NLTYP: `SEM`,
-                        I_NLBER: `001`,
-                        I_NLPLA: `TEMPR_SEM`
+//         const parameters = {
+//             I_LGNUM: `521`,
+//             I_BWLVS: `100`,
+//             I_MATNR: `${material}`,
+//             I_WERKS: `5210`,
+//             I_ANFME: `${qty}`,
+//             I_LGORT: `0012`,
+//             I_LETYP: `IP`,
+//             I_VLTYP: `102`,
+//             I_VLBER: `001`,
+//             I_VLPLA: `103`
+//         };
 
-                    }
-                )
-                    .then(result => {
-                        managed_client.release()
-                        resolve(result)
-                    })
-                    .catch(err => {
-                        log(err)
-                        managed_client.release()
-                        reject(err)
-                    });
-            })
-            .catch(err => {
-                reject(err)
-            });
-    })
-}
+//         const result = await managed_client.call('L_TO_CREATE_SINGLE', parameters);
+//         managed_client.release();
+//         return result;
+//     } catch (err) {
+//         throw err;
+//     }
+// }
+
+
+
+// funcion.sapRFC_transferProdSem_2 =  async (material, qty) =>{
+//     try {
+//         const managed_client = await node_RFC.acquire();
+
+//         const parameters = {
+//             I_LGNUM: '521',
+//             I_BWLVS: '199',
+//             I_MATNR: material,
+//             I_WERKS: '5210',
+//             I_ANFME: qty,
+//             I_LGORT: '0012',
+//             I_LETYP: 'IP',
+//             I_NLTYP: 'SEM',
+//             I_NLBER: '001',
+//             I_NLPLA: 'TEMPR_SEM'
+//         };
+
+//         const result = await managed_client.call('L_TO_CREATE_SINGLE', parameters);
+//         managed_client.release();
+//         return result;
+//     } catch (err) {
+//         console.error(err); // Log the error
+//         throw err;
+//     }
+// }
 
 funcion.sapRFC_transferMP = async (storage_unit, storage_type, storage_bin, emp_num, estacion) => {
     try {
@@ -1295,6 +1324,27 @@ funcion.sapRFC_consultaMaterial_VUL = (material_number, storage_location, storag
     })
 }
 
+funcion.sapRFC_consultaMaterial_SEM = async (material_number, storage_location, storage_type) => {
+    try {
+        const managed_client = await node_RFC.acquire();
+        const result = await managed_client.call('RFC_READ_TABLE', {
+            QUERY_TABLE: 'LQUA',
+            DELIMITER: ",",
+            OPTIONS: [{ TEXT: `MATNR EQ ${material_number.toUpperCase()} AND LGTYP EQ '${storage_type}' AND LGORT EQ '${storage_location}'` }]
+        });
+
+        const columns = result.FIELDS.map(field => field.FIELDNAME);
+        const rows = result.DATA.map(data_ => data_.WA.split(","));
+        const res = rows.map(row => Object.fromEntries(columns.map((key, i) => [key, row[i]])));
+
+        managed_client.release();
+        return res;
+    } catch (err) {
+        throw err;
+    }
+};
+
+
 funcion.getStorageLocation = (station) => {
     return new Promise((resolve, reject) => {
         dbB10(`
@@ -1376,30 +1426,6 @@ funcion.sapRFC_transferSlocCheck = async (serial, storage_location, storage_type
     }
 };
 
-funcion.sapRFC_consultaStorageUnit = async (storage_unit) => {
-    try {
-        const managed_client = await node_RFC.acquire();
-
-        const result = await managed_client.call('RFC_READ_TABLE', {
-            QUERY_TABLE: 'LQUA',
-            DELIMITER: ",",
-            OPTIONS: [{ TEXT: `LENUM EQ '${storage_unit}'` }]
-        });
-
-        const columns = result.FIELDS.map(field => field.FIELDNAME);
-        const rows = result.DATA.map(data_ => data_.WA.split(","));
-
-        const res = rows.map(row => Object.fromEntries(
-            columns.map((key, i) => [key, row[i]])
-        ));
-
-        managed_client.release();
-        return res;
-    } catch (err) {
-        throw err;
-    }
-};
-
 
 funcion.sapRFC_materialDescription = async (material_number) => {
     try {
@@ -1440,6 +1466,74 @@ funcion.backflushFG = async (serial) => {
     } catch {
         throw err;
     }
+}
+
+funcion.getCurrentStockSem = async (part_number) => {
+    try {
+        const sql = `
+            SELECT
+                *
+            FROM
+                sem
+            WHERE
+                no_sap = "${part_number}"
+        `;
+
+        const result = await dbBartender(sql);
+        return result;
+    } catch (error) {
+        throw error;
+    }
+};
+
+
+
+funcion.update_sem_current_stock = async (part_number, current_stock) => {
+    try {
+        const sql = `
+            UPDATE sem
+            SET current_stock = "${current_stock}"
+            WHERE no_sap = "${part_number}"
+        `;
+
+        const result = await dbBartender(sql, current_stock);
+        return result;
+    } catch (error) {
+        throw error;
+    }
+};
+
+
+
+
+funcion.update_sem_current_employee = async (part_number) => {
+    try {
+        const sql = `
+            UPDATE sem
+            SET current_employee = ''
+            WHERE no_sap = "${part_number}"
+        `;
+
+        const result = await dbBartender(sql);
+        return result;
+    } catch (error) {
+        throw error;
+    }
+};
+
+funcion.mpStdQuant = (no_sap, table) => {
+    return new Promise((resolve, reject) => {
+        dbBartender(`
+        SELECT
+            std_pack
+        FROM
+            ${table}
+        WHERE
+            no_sap = "${no_sap}"
+        `)
+            .then((result) => { resolve(result) })
+            .catch((error) => { reject(error) })
+    })
 }
 
 

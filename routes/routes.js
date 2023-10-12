@@ -105,6 +105,7 @@ router.post("/postCycleSUVUL", routesController.postCycleSUVUL_POST);
 // ##############Sub Assembly##################
 router.post('/transferSemProd', routesController.transferSemProd_POST);
 router.post('/transferProdSem', routesController.transferProdSem_POST);
+router.post('/consultaSemProduccionStock', routesController.consultaSemProductionStock_POST);
 // // router.get('*', (req, res) => {
 // //   res.redirect('http://tftdelsrv001:3000/not_found');
 // // });

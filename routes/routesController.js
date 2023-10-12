@@ -819,8 +819,8 @@ controller.postSerialesAcreditacionFG_POST = async (req, res) => {
     const newArray = [];
 
     for (let i = 0; i < serials_array.length; i++) {
-            let resultBackflush = await funcion.backflushFG(serials_array[i]);
-            newArray.push(resultBackflush)
+        let resultBackflush = await funcion.backflushFG(serials_array[i]);
+        newArray.push(resultBackflush)
     }
     res.json(newArray);
 }
@@ -923,7 +923,6 @@ controller.postCycleSUEXT_POST = async (req, res) => {
         .catch(err => { })
 }
 controller.postCycleSUVUL_POST = async (req, res) => {
-    console.log(req.body);
     let storage_bin = req.body.storage_bin
     let user_id = req.body.user_id
     let storage_type = req.body.storage_type
@@ -1328,13 +1327,18 @@ controller.postSerialsMP_RAW_POST = async (req, res) => {
         let raw_id = req.body.raw_id;
         let serials_obsoletos = req.body.serials_obsoletos;
 
-        let serials_array = serial.split(",");
+        let serials_array = JSON.parse(`[${serial}]`)
         let serials_obsoletos_array = serials_obsoletos.split(",");
         let promises = [];
         let promises_obsoletos = [];
+        let to_storage_type = "";
+        let to_storage_bin = "";
 
         const storageLocation = await funcion.getStorageLocation(estacion);
         const storage_location = storageLocation[0].storage_location;
+        const res_std_pack = await funcion.mpStdQuant(serials_array[0].part_number, "mp")
+        const std_pack = res_std_pack.length > 0 ? res_std_pack[0].std_pack : 0;
+
 
         if (storage_location == "0011") {
             to_storage_type = "102"
@@ -1349,7 +1353,7 @@ controller.postSerialsMP_RAW_POST = async (req, res) => {
         for (const serial_ of serials_array) {
             try {
                 const result = await funcion.sapRFC_transferMP_BetweenStorageTypes(
-                    funcion.addLeadingZeros(serial_, 20),
+                    funcion.addLeadingZeros(serial_.serial, 20),
                     to_storage_type,
                     to_storage_bin,
                     user_id,
@@ -1365,18 +1369,43 @@ controller.postSerialsMP_RAW_POST = async (req, res) => {
 
         const result_printer = await funcion.getPrinter(estacion);
 
-        for (const element of promises) {
-            let dataTRAB = {
-                "labels": `1`,
-                "printer": `${result_printer[0].impre}`,
-                "cantidad": `${element.T_LTAP_VB[0].VSOLM}`,
-                "descripcion": `${element.T_LTAP_VB[0].MAKTX}`,
-                "lote": `${element.T_LTAP_VB[0].ZEUGN}`,
-                "material": `${element.T_LTAP_VB[0].MATNR}`,
-                "serial": `${(element.T_LTAP_VB[0].VLENR).replace(/^0+/gm, "")}`
-            };
-            await funcion.printLabelTRA(dataTRAB, "TRAB");
+        if (std_pack == 0) {
+            for (const element of promises) {
+
+                let dataTRAB = {
+                    "labels": `1`,
+                    "printer": `${result_printer[0].impre}`,
+                    "cantidad": `${parseInt(parseFloat(element.T_LTAP_VB[0].VISTA))}`,
+                    "descripcion": `${element.T_LTAP_VB[0].MAKTX}`,
+                    "lote": `${element.T_LTAP_VB[0].ZEUGN}`,
+                    "material": `${element.T_LTAP_VB[0].MATNR}`,
+                    "serial": `${(element.T_LTAP_VB[0].VLENR).replace(/^0+/gm, "")}`
+                };
+                await funcion.printLabelTRA(dataTRAB, "TRAB");
+
+            }
+        } else {
+
+            for (const element of promises) {
+
+                for (let i = 0; i < Math.ceil(element.T_LTAP_VB[0].VISTA / std_pack); i++) {
+                    let dataTRAB = {
+                        "labels": `1`,
+                        "printer": `${result_printer[0].impre}`,
+                        "cantidad": `${std_pack}`,
+                        "descripcion": `${element.T_LTAP_VB[0].MAKTX}`,
+                        "lote": `${element.T_LTAP_VB[0].ZEUGN}`,
+                        "material": `${element.T_LTAP_VB[0].MATNR}`,
+                        "serial": `${(element.T_LTAP_VB[0].VLENR).replace(/^0+/gm, "")}`
+                    };
+                    await funcion.printLabelTRA(dataTRAB, "TRAB");
+                }
+
+            }
         }
+
+
+
 
         if (serials_obsoletos_array[0] !== "") {
             for (const serial_ of serials_obsoletos_array) {
@@ -2031,37 +2060,90 @@ controller.auditoriaVUL_POST = async (req, res) => {
 
 
 
+controller.transferSemProd_POST = async (req, res) => {
+    try {
+        const serial = req.body.serial;
+        const estacion = req.body.station
 
-controller.transferSemProd_POST = (req, res) => {
-    let serial = req.body.serial
-    funcion.sapRFC_transferSemProd(funcion.addLeadingZeros(serial, 20))
-        .then(resultado => {
-            res.json(resultado.T_LTAK[0])
-        })
-        .catch(err => {
-            res.json(err)
-        })
-}
+        const resultSL = await funcion.getStorageLocation(estacion);
+        if (resultSL.length === 0) { return res.json({ key: `Storage Location not set for device "${estacion}"` }); }
+        let storage_location = resultSL[0].storage_location
+
+        if (storage_location == "0012") {
+            storage_type = "102"
+            storage_bin = "103"
+        }
+        if (storage_location == "0002") {
+            storage_type = "100"
+            storage_bin = "101"
+        }
+        const result_consultaStorageUnit = await funcion.sapRFC_consultaStorageUnit(funcion.addLeadingZeros(serial, 20));
+        const resultado_transferSemProd = await funcion.sapRFC_transferSemProd(funcion.addLeadingZeros(serial, 20), storage_type, storage_bin);
+        const result_consulta = await funcion.sapRFC_consultaMaterial_SEM("'" + result_consultaStorageUnit[0].MATNR + "'", storage_location, "SEM");
+        if (result_consulta.length === 0) {
+            cantida_sap = 0
+        } else {
+            cantida_sap = result_consulta.reduce((total, element) => total + parseFloat(element.GESME.trim()), 0);
+        }
+        result_current_stock_db = await funcion.getCurrentStockSem(`P${result_consultaStorageUnit[0].MATNR}`);
+        if (cantida_sap >= parseInt(result_current_stock_db[0].minimum_stock)) {
+            await funcion.update_sem_current_stock(`P${result_consultaStorageUnit[0].MATNR}`, cantida_sap);
+            await funcion.update_sem_current_employee(`P${result_consultaStorageUnit[0].MATNR}`);
+        } else {
+            await funcion.update_sem_current_stock(`P${result_consultaStorageUnit[0].MATNR}`, cantida_sap);
+        }
+
+        res.json(resultado_transferSemProd.T_LTAK[0]);
+    } catch (err) {
+        res.json(err);
+    }
+};
 
 
+controller.transferProdSem_POST = async (req, res) => {
+    try {
+        const material = req.body.material;
+        const qty = req.body.qty;
+        const estacion = req.body.station
+        let cantidad_sap
 
-controller.transferProdSem_POST = (req, res) => {
-    let material = req.body.material
-    let qty = req.body.qty
-    funcion.sapRFC_transferProdSem_1(material, qty)
-        .then(r => {
-            funcion.sapRFC_transferProdSem_2(material, qty)
-                .then(resultado => {
-                    res.json(resultado.E_LTAP)
-                })
-                .catch(err => {
-                    res.json(err)
-                })
-        })
-        .catch(err => {
-            res.json(err)
-        })
-}
+        const resultSL = await funcion.getStorageLocation(estacion);
+        if (resultSL.length === 0) { return res.json({ key: `Storage Location not set for device "${estacion}"` }); }
+        let storage_location = resultSL[0].storage_location
+        if (storage_location === "0012") {
+            from_storage_type = "102"
+            from_storage_bin = "103"
+            to_storage_type = "SEM"
+            to_storage_bin = "TEMPR_SEM"
+        }
+        if (storage_location === "0002") {
+            from_storage_type = "100"
+            from_storage_bin = "101"
+            to_storage_type = "SEM"
+            to_storage_bin = "TEMPR_SEM"
+        }
+        const transfer100 = await funcion.sapRFC_transferProdSem_1(material, qty, storage_location, from_storage_type, from_storage_bin);
+        const transfer998 = await funcion.sapRFC_transferProdSem_2(material, qty, storage_location, to_storage_type, to_storage_bin);
+        const result_consulta = await funcion.sapRFC_consultaMaterial_SEM("'" + material + "'", storage_location, to_storage_type);
+        if (result_consulta.length === 0) {
+            cantidad_sap = 0
+        } else {
+            cantidad_sap = result_consulta.reduce((total, element) => total + parseFloat(element.GESME.trim()), 0);
+        }
+        result_current_stock_db = await funcion.getCurrentStockSem(`P${material}`);
+        if (cantidad_sap >= parseInt(result_current_stock_db[0].minimum_stock)) {
+            await funcion.update_sem_current_stock(`P${material}`, cantidad_sap);
+            await funcion.update_sem_current_employee(`P${material}`);
+        } else {
+            await funcion.update_sem_current_stock(`P${material}`, cantidad_sap);
+        }
+        res.json(transfer998.E_LTAP);
+    } catch (err) {
+        res.json(err);
+    }
+};
+
+
 
 
 
@@ -2101,6 +2183,40 @@ controller.consultaVulProductionStock_POST = async (req, res) => {
     }
 };
 
+
+controller.consultaSemProductionStock_POST = async (req, res) => {
+    try {
+        const material = req.body.material;
+        const estacion = req.body.station;
+
+        const resultSL = await funcion.getStorageLocation(estacion);
+
+        if (resultSL.length === 0) { return res.json({ key: `Storage Location not set for device "${estacion}"` }); }
+
+        let storage_location = resultSL[0].storage_location;
+        let storage_type, storage_bin;
+
+        if (storage_location == "0012") {
+            storage_type = "102";
+            storage_bin = "103";
+        } else if (storage_location == "0002") {
+            storage_type = "100";
+            storage_bin = "101";
+        } else {
+            return res.json({ key: `Invalid storage location "${storage_location}"` });
+        }
+
+        const result = await funcion.sapRFC_consultaMaterial_VUL("'" + material + "'", storage_location, storage_type, storage_bin);
+
+        if (result.length === 0) { return res.json({ "qty": 0 }); }
+
+        const cantidad_actual = result.reduce((total, element) => total + parseInt(element.GESME.replace(".000", "")), 0);
+
+        res.json({ "qty": cantidad_actual });
+    } catch (err) {
+        res.json(err);
+    }
+};
 
 
 module.exports = controller;

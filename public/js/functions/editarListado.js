@@ -101,7 +101,7 @@ function fillTable() {
           result.data[y].numero_sap,
           result.data[y].contenedores,
           result.data[y].sup_name,
-          new Date(result.data[y].fecha).toLocaleDateString(),
+          new Date(result.data[y].fecha).toISOString().split('T')[0],
           result.data[y].turno,
           result.data[y].status,
           result.data[y].destino,

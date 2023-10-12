@@ -310,6 +310,8 @@ function consultarMaterial() {
 
                     let newRow = tabla_consulta.insertRow(tabla_consulta.rows.length);
                     newRow.setAttribute("id", `${(element.LENUM).replace(/^0+/gm, "")}`)
+                    newRow.setAttribute("hu_quantity", `${(parseInt(parseFloat(element.VERME)))}`)
+                    newRow.setAttribute("part_number", `${(element.MATNR).trim()}`)
 
                     if ((element.LGPLA).toUpperCase().includes("CICLI")) {
                         newRow.setAttribute("class", "bg-secondary text-white")
@@ -415,6 +417,8 @@ function consultaSerial() {
                     partNum = element.MATNR
                     let newRow = tabla_consulta.insertRow(tabla_consulta.rows.length);
                     newRow.setAttribute("id", `${(element.LENUM).replace(/^0+/gm, "")}`)
+                    newRow.setAttribute("hu_quantity", `${(parseInt(parseFloat(element.VERME)))}`)
+                    newRow.setAttribute("part_number", `${(element.MATNR).trim()}`)
 
                     if ((element.LGPLA).toUpperCase().includes("CICLI")) {
                         newRow.setAttribute("class", "bg-secondary text-white")
@@ -499,7 +503,8 @@ submitMaterial.addEventListener("submit", function (e) {
         inp_verifyFIFO.value = ""
         lower_date = "12/12/9999"
     } else {
-
+        let current_hu_quantity = currentSU.getAttribute("hu_quantity")
+        let current_part_number = currentSU.getAttribute("part_number")
         dates[`${lower_date}`] = dates[`${lower_date}`] - 1;
         soundOk()
         inp_verifyFIFO.value = ""
@@ -511,7 +516,7 @@ submitMaterial.addEventListener("submit", function (e) {
         currentSU.childNodes[7].children[0].disabled = true
 
         btnTransferir.disabled = false
-        selected_serials.push(serial)
+        selected_serials.push(JSON.stringify({"serial": serial, "hu_quantity": current_hu_quantity, "part_number": current_part_number}))
         lower_date = "12/12/9999"
     }
 })
