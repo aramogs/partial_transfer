@@ -1756,7 +1756,7 @@ funcion.sapRFC_pallet_request_create = async (array_handling_units, packing_mate
 
         if (result_hu_create.HUKEY) {
             let dataPrint = {
-                "printer": "\\\\tftdelsrv003\\tftdelprn60",
+                "printer": "\\\\tftdelsrv003\\tftdelprn060",
                 "serial_um": parseFloat(result_hu_create.HUKEY),
                 "storage_bin": "SHP",
                 "serial_uc": array_handling_units[0],
