@@ -155,6 +155,15 @@ controller.master_FG_GM_GET = (req, res) => {
     })
 }
 
+controller.master_PALLET_GET = (req, res) => {
+    let user_id = req.res.locals.authData.id.id
+    let user_name = req.res.locals.authData.id.username
+    res.render('master_pallet.ejs', {
+        user_id,
+        user_name
+    })
+}
+
 controller.movimiento_parcial_GET = (req, res) => {
     let user_id = req.res.locals.authData.id.id
     let user_name = req.res.locals.authData.id.username
@@ -2213,6 +2222,72 @@ controller.consultaSemProductionStock_POST = async (req, res) => {
         const cantidad_actual = result.reduce((total, element) => total + parseInt(element.GESME.replace(".000", "")), 0);
 
         res.json({ "qty": cantidad_actual });
+    } catch (err) {
+        res.json(err);
+    }
+};
+
+
+
+controller.get_packing_instruction_POST = async (req, res) => {
+    try {
+        const material = req.body.material;
+        let serial = req.body.serial
+        console.log(serial);
+
+        const result = await funcion.sapRFC_get_packing_instruction(serial)
+
+        res.json(result);
+    } catch (err) {
+        res.json(err);
+    }
+};
+
+controller.get_packing_matreials_POST = async (req, res) => {
+    try {
+        let POBJID = req.body.POBJID
+        let PACKNR = req.body.PACKNR
+
+        const result = await funcion.sapRFC_get_packing_matreials(POBJID, PACKNR)
+
+        res.json(result);
+    } catch (err) {
+        res.json(err);
+    }
+};
+
+controller.pallet_request_create_POST = async (req, res) => {
+    try {
+        let serial = req.body.serial
+        let serials_array = serial.split(",")
+        let packing_materials = req.body.result_packing_materials_formatted
+        let result_packingr_formatted = req.body.result_packingr_formatted
+        let pallet_packing_material = req.body.pallet_packing_material
+        let packing_instruction = req.body.packing_instruction
+        let packing_id = req.body.packing_id
+        const result = await funcion.sapRFC_pallet_request_create(serials_array, packing_materials, result_packingr_formatted, pallet_packing_material, packing_instruction, packing_id)
+
+        res.json(result);
+    } catch (err) {
+        res.json(err);
+    }
+};
+
+controller.pallet_print_POST = async (req, res) => {
+    try {
+        let serial_um = req.body.serial_um
+        let serials_array = serial.split(",")
+
+        let data ={
+            "printer": "\\\\tftdelsrv003\\tftdelprn159",
+            "serial_um": serial_um,
+            "serial_uc": serials_array[0],
+            "storage_bin":"FW0101"
+        }
+
+        const result = await funcion.printLabel_ONT_UM(data, serials_array)
+
+        res.json(result);
     } catch (err) {
         res.json(err);
     }

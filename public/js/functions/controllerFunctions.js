@@ -424,8 +424,9 @@ funcion.materialEXT = (material) => {
 
 
 funcion.sapRFC_transferFG = async (serial, storage_bin) => {
+    let managed_client
     try {
-        const managed_client = await node_RFC.acquire();
+        managed_client = await node_RFC.acquire();
 
         const result = await managed_client.call('L_TO_CREATE_MOVE_SU', {
             I_LENUM: `${funcion.addLeadingZeros(serial, 20)}`,
@@ -436,10 +437,12 @@ funcion.sapRFC_transferFG = async (serial, storage_bin) => {
             I_NLPLA: `${storage_bin.toUpperCase()}`
         });
 
-        managed_client.release();
+
         return result;
     } catch (error) {
         throw error;
+    } finally {
+        if (managed_client) { managed_client.release() }
     }
 };
 
@@ -478,23 +481,24 @@ funcion.sapRFC_consultaMaterial = (material_number, storage_location) => {
                             columns.map((key, i) => [key, row[i]])
                         ))
                         resolve(res)
-                        managed_client.release()
+                        if (managed_client) { managed_client.release() }
                     })
                     .catch(err => {
                         reject(err)
-                        managed_client.release()
+                        if (managed_client) { managed_client.release() }
                     })
             })
             .catch(err => {
                 reject(err)
-                managed_client.release()
+                if (managed_client) { managed_client.release() }
             })
     })
 }
 
 funcion.sapRFC_consultaMaterial_ST = async (material_number, storage_location, storage_type) => {
+    let managed_client
     try {
-        const managed_client = await node_RFC.acquire();
+        managed_client = await node_RFC.acquire();
 
         const options = {
             QUERY_TABLE: 'LQUA',
@@ -507,18 +511,20 @@ funcion.sapRFC_consultaMaterial_ST = async (material_number, storage_location, s
         const columns = result.FIELDS.map(field => field.FIELDNAME);
         const rows = result.DATA.map(data_ => data_.WA.split(","));
         const res = rows.map(row => Object.fromEntries(columns.map((key, i) => [key, row[i]])));
-        managed_client.release();
         return res;
     } catch (error) {
         throw error;
-    };
+    } finally {
+        if (managed_client) { managed_client.release() };
+    }
 }
 
 
 
 funcion.sapRFC_consultaStorageUnit = async (storage_unit) => {
+    let managed_client
     try {
-        const managed_client = await node_RFC.acquire();
+        managed_client = await node_RFC.acquire();
 
         const result = await managed_client.call('RFC_READ_TABLE', {
             QUERY_TABLE: 'LQUA',
@@ -530,27 +536,30 @@ funcion.sapRFC_consultaStorageUnit = async (storage_unit) => {
         const rows = result.DATA.map(data_ => data_.WA.split(","));
         const res = rows.map(row => Object.fromEntries(columns.map((key, i) => [key, row[i]])));
 
-        managed_client.release();
         return res;
     } catch (error) {
         throw error;
+    } finally {
+        if (managed_client) { managed_client.release() };
     }
 };
 
 
 
 funcion.sapRFC_ConsultaMaterialMM03 = async (material_number) => {
+    let managed_client
     try {
-        const managed_client = await node_RFC.acquire();
+        managed_client = await node_RFC.acquire();
 
         const result = await managed_client.call('BAPI_MATERIAL_GET_DETAIL', {
             MATERIAL: `${material_number}`, /* Material no. */
         });
 
-        managed_client.release();
         return result;
     } catch (error) {
         throw error;
+    } finally {
+        if (managed_client) { managed_client.release() };
     }
 };
 
@@ -585,24 +594,25 @@ funcion.sapRFC_consultaStorageBin = (storage_location, storage_type, storage_bin
                             columns.map((key, i) => [key, row[i]])
                         ))
                         resolve(res)
-                        managed_client.release()
+                        if (managed_client) { managed_client.release() }
                     })
                     .catch(err => {
                         reject(err)
-                        managed_client.release()
+                        if (managed_client) { managed_client.release() }
                     })
             })
             .catch(err => {
                 reject(err)
-                managed_client.release()
+                if (managed_client) { managed_client.release() }
             })
     })
 }
 
 
 funcion.sapRFC_partialTransferStorageUnit = async (material_number, transfer_quantity, source_storage_location, source_storage_type, source_storage_unit, destination_storage_type, destination_storage_bin) => {
+    let managed_client
     try {
-        const managed_client = await node_RFC.acquire();
+        managed_client = await node_RFC.acquire();
 
         const result = await managed_client.call('L_TO_CREATE_SINGLE', {
             I_LGNUM: '521',                             /* Warehouse number */
@@ -621,17 +631,20 @@ funcion.sapRFC_partialTransferStorageUnit = async (material_number, transfer_qua
             I_NLPLA: `${destination_storage_bin}`,      /* Destination Storage Bin  */
         });
 
-        managed_client.release();
         return result;
     } catch (error) {
         throw error;
+    } finally {
+        if (managed_client) { managed_client.release() };
     }
 }
 
 
 funcion.sapRFC_transferEXTProd = async (serial, storage_location, storage_type, storage_bin) => {
+    let managed_client
+    let managed_client2
     try {
-        const managed_client = await node_RFC.acquire();
+        managed_client = await node_RFC.acquire();
 
         const result_suCheck = await managed_client.call('RFC_READ_TABLE', {
             QUERY_TABLE: 'LQUA',
@@ -644,14 +657,14 @@ funcion.sapRFC_transferEXTProd = async (serial, storage_location, storage_type, 
         const res = rows.map(row => Object.fromEntries(
             columns.map((key, i) => [key, row[i]])
         ));
-        managed_client.release();
+
         if (res.length === 0) {
             return ({ "key": "SU_DOESNT_EXIST", "abapMsgV1": `${serial}` });
 
         } else if (res[0].LGORT !== storage_location) {
             return ({ "key": "Storage Locations do not match", "abapMsgV1": `${serial}` });
         } else {
-            const managed_client2 = await node_RFC.acquire();
+            managed_client2 = await node_RFC.acquire();
             const result = await managed_client2.call('L_TO_CREATE_MOVE_SU', {
                 I_LENUM: `${funcion.addLeadingZeros(serial, 20)}`,
                 I_BWLVS: '998',
@@ -660,18 +673,22 @@ funcion.sapRFC_transferEXTProd = async (serial, storage_location, storage_type, 
                 I_NLBER: '001',
                 I_NLPLA: storage_bin.toUpperCase()
             });
-            managed_client2.release();
             return result;
         }
     } catch (err) {
         throw err;
+    } finally {
+        if (managed_client) { managed_client.release() }
+        if (managed_client2) { managed_client2.release() }
     }
 }
 
 
 funcion.sapRFC_transferVULProd = async (serial, storage_location, storage_type, storage_bin) => {
+    let managed_client
+    let managed_client2
     try {
-        const managed_client = await node_RFC.acquire();
+        managed_client = await node_RFC.acquire();
 
         const result_suCheck = await managed_client.call('RFC_READ_TABLE', {
             QUERY_TABLE: 'LQUA',
@@ -684,14 +701,14 @@ funcion.sapRFC_transferVULProd = async (serial, storage_location, storage_type, 
         const res = rows.map(row => Object.fromEntries(
             columns.map((key, i) => [key, row[i]])
         ));
-        managed_client.release();
+
         if (res.length === 0) {
             return ({ "key": "SU_DOESNT_EXIST", "abapMsgV1": `${serial}` });
 
         } else if (res[0].LGTYP !== "VUL" || res[0].LGORT !== storage_location) {
             return ({ "key": `Check SU SType: ${res[0].LGTYP}, SLocation: ${res[0].LGORT}`, "abapMsgV1": `${serial}` });
         } else {
-            const managed_client2 = await node_RFC.acquire();
+            managed_client2 = await node_RFC.acquire();
             const result = await managed_client2.call('L_TO_CREATE_MOVE_SU', {
                 I_LENUM: `${funcion.addLeadingZeros(serial, 20)}`,
                 I_BWLVS: '998',
@@ -700,18 +717,21 @@ funcion.sapRFC_transferVULProd = async (serial, storage_location, storage_type, 
                 I_NLBER: '001',
                 I_NLPLA: storage_bin.toUpperCase()
             });
-            managed_client2.release();
             return result;
         }
     } catch (err) {
         throw err;
+    } finally {
+        if (managed_client) { managed_client.release() }
+        if (managed_client2) { managed_client2.release() }
     }
 }
 
 
 funcion.sapRFC_transferProdVul_1 = async (material, qty, storage_location, storage_type, storage_bin) => {
+    let managed_client
     try {
-        const managed_client = await node_RFC.acquire();
+        managed_client = await node_RFC.acquire();
         try {
             const result = await managed_client.call('L_TO_CREATE_SINGLE', {
                 I_LGNUM: '521',
@@ -726,21 +746,24 @@ funcion.sapRFC_transferProdVul_1 = async (material, qty, storage_location, stora
                 I_VLPLA: storage_bin
             });
 
-            managed_client.release();
+
             return result;
         } catch (err) {
-            managed_client.release();
+
             throw err;
         }
     } catch (err) {
         throw err;
+    } finally {
+        if (managed_client) { managed_client.release() };
     }
 };
 
 
 funcion.sapRFC_transferProdVul_2 = async (material, qty, storage_location, storage_type, storage_bin) => {
+    let managed_client
     try {
-        const managed_client = await node_RFC.acquire();
+        managed_client = await node_RFC.acquire();
         try {
             const result = await managed_client.call('L_TO_CREATE_SINGLE', {
                 I_LGNUM: '521',
@@ -755,20 +778,22 @@ funcion.sapRFC_transferProdVul_2 = async (material, qty, storage_location, stora
                 I_NLPLA: storage_bin
             });
 
-            managed_client.release();
             return result;
         } catch (err) {
-            managed_client.release();
+
             throw err;
         }
     } catch (err) {
         throw err;
+    } finally {
+        if (managed_client) { managed_client.release() };
     }
 };
 
 funcion.sapRFC_transferProdSem_1 = async (material, qty, storage_location, storage_type, storage_bin) => {
+    let managed_client
     try {
-        const managed_client = await node_RFC.acquire();
+        managed_client = await node_RFC.acquire();
         try {
             const result = await managed_client.call('L_TO_CREATE_SINGLE', {
                 I_LGNUM: '521',
@@ -782,22 +807,23 @@ funcion.sapRFC_transferProdSem_1 = async (material, qty, storage_location, stora
                 I_VLBER: '001',
                 I_VLPLA: storage_bin
             });
-            
-            managed_client.release();
+
             return result;
         } catch (err) {
-            managed_client.release();
             throw err;
         }
     } catch (err) {
         throw err;
+    } finally {
+        if (managed_client) { managed_client.release() };
     }
 };
 
 
 funcion.sapRFC_transferProdSem_2 = async (material, qty, storage_location, storage_type, storage_bin) => {
+    let managed_client
     try {
-        const managed_client = await node_RFC.acquire();
+        managed_client = await node_RFC.acquire();
         try {
             const result = await managed_client.call('L_TO_CREATE_SINGLE', {
                 I_LGNUM: '521',
@@ -811,21 +837,22 @@ funcion.sapRFC_transferProdSem_2 = async (material, qty, storage_location, stora
                 I_NLBER: '001',
                 I_NLPLA: storage_bin
             });
-            
-            managed_client.release();
+
             return result;
         } catch (err) {
-            managed_client.release();
             throw err;
         }
     } catch (err) {
         throw err;
+    } finally {
+        if (managed_client) { managed_client.release() };
     }
 };
 
 funcion.sapRFC_transferVul = async (serial, storage_bin) => {
+    let managed_client
     try {
-        const managed_client = await node_RFC.acquire();
+        managed_client = await node_RFC.acquire();
 
         const result = await managed_client.call('L_TO_CREATE_MOVE_SU', {
             I_LENUM: `${funcion.addLeadingZeros(serial, 20)}`,
@@ -836,17 +863,19 @@ funcion.sapRFC_transferVul = async (serial, storage_bin) => {
             I_NLPLA: `${storage_bin.toUpperCase()}`
         });
 
-        managed_client.release();
         return result;
     } catch (err) {
         return Promise.reject(err);
+    } finally {
+        if (managed_client) { managed_client.release() };
     }
 };
 
 
-funcion.sapRFC_transferSemProd = async(serial, storage_type, storage_bin) =>{
+funcion.sapRFC_transferSemProd = async (serial, storage_type, storage_bin) => {
+    let managed_client
     try {
-        const managed_client = await node_RFC.acquire();
+        managed_client = await node_RFC.acquire();
 
         const parameters = {
             I_LENUM: `${funcion.addLeadingZeros(serial, 20)}`,
@@ -858,10 +887,11 @@ funcion.sapRFC_transferSemProd = async(serial, storage_type, storage_bin) =>{
         };
 
         const result = await managed_client.call('L_TO_CREATE_MOVE_SU', parameters);
-        managed_client.release();
         return result;
     } catch (err) {
         throw err;
+    } finally {
+        if (managed_client) { managed_client.release() };
     }
 }
 
@@ -884,7 +914,7 @@ funcion.sapRFC_transferSemProd = async(serial, storage_type, storage_bin) =>{
 //         };
 
 //         const result = await managed_client.call('L_TO_CREATE_SINGLE', parameters);
-//         managed_client.release();
+//         if (managed_client) { managed_client.release() };
 //         return result;
 //     } catch (err) {
 //         throw err;
@@ -911,7 +941,7 @@ funcion.sapRFC_transferSemProd = async(serial, storage_type, storage_bin) =>{
 //         };
 
 //         const result = await managed_client.call('L_TO_CREATE_SINGLE', parameters);
-//         managed_client.release();
+//         if (managed_client) { managed_client.release() };
 //         return result;
 //     } catch (err) {
 //         console.error(err); // Log the error
@@ -920,12 +950,13 @@ funcion.sapRFC_transferSemProd = async(serial, storage_type, storage_bin) =>{
 // }
 
 funcion.sapRFC_transferMP = async (storage_unit, storage_type, storage_bin, emp_num, estacion) => {
+    let managed_client
     try {
         const result = await funcion.sapRFC_consultaStorageUnit(funcion.addLeadingZeros(storage_unit, 20));
 
         const storageLocation = await funcion.getStorageLocation(estacion);
         const storage_location = storageLocation[0].storage_location;
-        console.log(storage_location);
+
         if (result.length === 0) {
             return ({ "key": "DEL: Check your entries", "abapMsgV1": `${storage_unit}` });
         }
@@ -942,7 +973,7 @@ funcion.sapRFC_transferMP = async (storage_unit, storage_type, storage_bin, emp_
             return ({ "key": `${error}`, "abapMsgV1": `${storage_unit}` });
         }
 
-        const managed_client = await node_RFC.acquire();
+        managed_client = await node_RFC.acquire();
         const resultLTO = await managed_client.call('L_TO_CREATE_MOVE_SU', {
             I_LENUM: `${funcion.addLeadingZeros(storage_unit, 20)}`,
             I_BWLVS: '998',
@@ -952,15 +983,17 @@ funcion.sapRFC_transferMP = async (storage_unit, storage_type, storage_bin, emp_
             I_NLPLA: `${storage_bin.toUpperCase()}`
         });
 
-        managed_client.release();
         funcion.insertCompleteTransfer(emp_num, storage_type, storage_unit, storage_bin.toUpperCase(), resultLTO.E_TANUM);
         return resultLTO;
     } catch (error) {
         return error;
+    } finally {
+        if (managed_client) { managed_client.release() };
     }
 }
 
 funcion.sapRFC_transferMP_BetweenStorageTypes = async (storage_unit, storage_type, storage_bin, emp_num) => {
+    let managed_client
     try {
         const storageUnitInfo = await funcion.sapRFC_consultaStorageUnit(storage_unit);
 
@@ -968,7 +1001,7 @@ funcion.sapRFC_transferMP_BetweenStorageTypes = async (storage_unit, storage_typ
             throw ({ "key": "DEL: Check your entries", "abapMsgV1": `${serial}` });
         }
 
-        const managed_client = await node_RFC.acquire();
+        managed_client = await node_RFC.acquire();
 
         const result = await managed_client.call('L_TO_CREATE_MOVE_SU', {
             I_LENUM: `${storage_unit}`,
@@ -980,12 +1013,13 @@ funcion.sapRFC_transferMP_BetweenStorageTypes = async (storage_unit, storage_typ
         });
 
         funcion.insertCompleteTransfer(emp_num, storage_type, (storage_unit).replace(/^0+/gm, ""), storage_bin, result.E_TANUM);
-        managed_client.release();
 
         return result;
     } catch (error) {
         funcion.insertCompleteTransfer(emp_num, storage_type, (storage_unit).replace(/^0+/gm, ""), storage_bin, error.message);
         throw error;
+    } finally {
+        if (managed_client) { managed_client.release() };
     }
 };
 
@@ -993,8 +1027,9 @@ funcion.sapRFC_transferMP_BetweenStorageTypes = async (storage_unit, storage_typ
 
 
 funcion.sapRFC_transferMP1_DEL = async (storage_unit, storage_type, storage_bin, emp_num, raw_id) => {
+    let managed_client
     try {
-        const managed_client = await node_RFC.acquire();
+        managed_client = await node_RFC.acquire();
 
         const result = await managed_client.call('L_TO_CREATE_MOVE_SU', {
             I_LENUM: `${funcion.addLeadingZeros(storage_unit, 20)}`,
@@ -1006,19 +1041,22 @@ funcion.sapRFC_transferMP1_DEL = async (storage_unit, storage_type, storage_bin,
         });
 
         funcion.insertRawMovement(raw_id, storage_type, emp_num, storage_unit, result.E_TANUM);
-        managed_client.release();
 
         return result;
     } catch (err) {
         funcion.insertRawMovement(raw_id, storage_type, emp_num, storage_unit, err.message);
         throw err;
+    } finally {
+        if (managed_client) { managed_client.release() };
     }
 };
 
 
 funcion.sapRFC_transferMP1_DELX = async (storage_unit, storage_type, storage_bin, material, cantidad, emp_num, raw_id) => {
+    let managed_client
+    let managed_client2
     try {
-        const managed_client = await node_RFC.acquire();
+        managed_client = await node_RFC.acquire();
 
         const result_transfer199 = await managed_client.call('L_TO_CREATE_SINGLE',
             {
@@ -1032,8 +1070,7 @@ funcion.sapRFC_transferMP1_DELX = async (storage_unit, storage_type, storage_bin
                 I_VLENR: `${funcion.addLeadingZeros(storage_unit, 20)}`
             }
         )
-        managed_client.release();
-        const managed_client2 = await node_RFC.acquire();
+        managed_client2 = await node_RFC.acquire();
         const result_transfer998 = await managed_client2.call('L_TO_CREATE_SINGLE',
             {
                 I_LGNUM: `521`,
@@ -1052,20 +1089,23 @@ funcion.sapRFC_transferMP1_DELX = async (storage_unit, storage_type, storage_bin
                 I_NLENR: `${funcion.addLeadingZeros(storage_unit, 20)}`
             }
         )
-        managed_client2.release();
         funcion.insertRawMovement(raw_id, storage_type, emp_num, storage_unit, result_transfer998.E_TANUM);
 
         return result_transfer998;
     } catch (err) {
         funcion.insertRawMovement(raw_id, storage_type, emp_num, storage_unit, err.message);
         return err;
+    } finally {
+        if (managed_client) { managed_client.release() }
+        if (managed_client2) { managed_client2.release() }
     }
 };
 
 
 funcion.sapRFC_transferMP_Obsoletos = async (storage_unit, storage_type, storage_bin, emp_num, raw_id) => {
+    let managed_client
     try {
-        const managed_client = await node_RFC.acquire();
+        managed_client = await node_RFC.acquire();
 
         const result = await managed_client.call('L_TO_CREATE_MOVE_SU', {
             I_LENUM: `${storage_unit}`,
@@ -1078,11 +1118,12 @@ funcion.sapRFC_transferMP_Obsoletos = async (storage_unit, storage_type, storage
 
         await funcion.insertRawMovement(raw_id, storage_type, emp_num, (storage_unit).replace(/^0+/gm, ""), `${storage_bin}-${result.E_TANUM}`);
 
-        managed_client.release();
         return result;
     } catch (err) {
         await funcion.insertRawMovement(raw_id, storage_type, emp_num, (storage_unit).replace(/^0+/gm, ""), `${storage_bin}-${err.message}`);
         throw err;
+    } finally {
+        if (managed_client) { managed_client.release() };
     }
 };
 
@@ -1102,13 +1143,13 @@ funcion.sapRFC_transferExt = (serial, storage_bin) => {
                     }
                 )
                     .then(result => {
-                        managed_client.release()
+                        if (managed_client) { managed_client.release() }
                         resolve(result)
                     })
                     .catch(err => {
-                        managed_client.release()
+                        if (managed_client) { managed_client.release() }
                         reject(err)
-                    });
+                    })
             })
             .catch(err => {
                 reject(err)
@@ -1131,11 +1172,11 @@ funcion.sapRFC_transferExtRP = (serial, storage_type, storage_bin) => {
                     }
                 )
                     .then(result => {
-                        managed_client.release()
+                        if (managed_client) { managed_client.release() }
                         resolve(result)
                     })
                     .catch(err => {
-                        managed_client.release()
+                        if (managed_client) { managed_client.release() }
                         reject(err)
                     });
             })
@@ -1176,16 +1217,16 @@ funcion.sapRFC_consultaMaterial_EXT = (material_number, storage_location, storag
                             columns.map((key, i) => [key, row[i]])
                         ))
                         resolve(res)
-                        managed_client.release()
+                        if (managed_client) { managed_client.release() }
                     })
                     .catch(err => {
                         reject(err)
-                        managed_client.release()
+                        if (managed_client) { managed_client.release() }
                     })
             })
             .catch(err => {
                 reject(err)
-                managed_client.release()
+                if (managed_client) { managed_client.release() }
             })
     })
 }
@@ -1211,11 +1252,11 @@ funcion.sapRFC_transferEXTPR_1 = (material, cantidad, fromStorageLocation, fromS
                     }
                 )
                     .then(result => {
-                        managed_client.release()
+                        if (managed_client) { managed_client.release() }
                         resolve(result)
                     })
                     .catch(err => {
-                        managed_client.release()
+                        if (managed_client) { managed_client.release() }
                         reject(err)
                     });
             })
@@ -1247,11 +1288,11 @@ funcion.sapRFC_transferEXTPR_2 = (material, cantidad, toStorageLocation) => {
                     }
                 )
                     .then(result => {
-                        managed_client.release()
+                        if (managed_client) { managed_client.release() }
                         resolve(result)
                     })
                     .catch(err => {
-                        managed_client.release()
+                        if (managed_client) { managed_client.release() }
                         reject(err)
                     });
             })
@@ -1262,8 +1303,9 @@ funcion.sapRFC_transferEXTPR_2 = (material, cantidad, toStorageLocation) => {
 }
 
 funcion.sapRFC_SbinOnStypeExists = async (storage_type, storage_bin) => {
+    let managed_client
     try {
-        const managed_client = await node_RFC.acquire();
+        managed_client = await node_RFC.acquire();
 
         const result = await managed_client.call('RFC_READ_TABLE', {
             QUERY_TABLE: 'LAGP',
@@ -1274,11 +1316,12 @@ funcion.sapRFC_SbinOnStypeExists = async (storage_type, storage_bin) => {
         const fields = result.FIELDS.map(field => field.FIELDNAME);
         const rows = result.DATA.map(data_ => data_.WA.split(","));
         const res = rows.map(row => Object.fromEntries(fields.map((key, i) => [key, row[i]])));
-        managed_client.release();
         return res;
     } catch (err) {
         console.error(err);
         return Promise.reject(err);
+    } finally {
+        if (managed_client) { managed_client.release() };
     }
 };
 
@@ -1310,23 +1353,24 @@ funcion.sapRFC_consultaMaterial_VUL = (material_number, storage_location, storag
                             columns.map((key, i) => [key, row[i]])
                         ))
                         resolve(res)
-                        managed_client.release()
+                        if (managed_client) { managed_client.release() }
                     })
                     .catch(err => {
                         reject(err)
-                        managed_client.release()
+                        if (managed_client) { managed_client.release() }
                     })
             })
             .catch(err => {
                 reject(err)
-                managed_client.release()
+                if (managed_client) { managed_client.release() }
             })
     })
 }
 
 funcion.sapRFC_consultaMaterial_SEM = async (material_number, storage_location, storage_type) => {
+    let managed_client
     try {
-        const managed_client = await node_RFC.acquire();
+        managed_client = await node_RFC.acquire();
         const result = await managed_client.call('RFC_READ_TABLE', {
             QUERY_TABLE: 'LQUA',
             DELIMITER: ",",
@@ -1337,10 +1381,11 @@ funcion.sapRFC_consultaMaterial_SEM = async (material_number, storage_location, 
         const rows = result.DATA.map(data_ => data_.WA.split(","));
         const res = rows.map(row => Object.fromEntries(columns.map((key, i) => [key, row[i]])));
 
-        managed_client.release();
         return res;
     } catch (err) {
         throw err;
+    } finally {
+        if (managed_client) { managed_client.release() };
     }
 };
 
@@ -1372,11 +1417,11 @@ funcion.sapRFC_transfer = (serial, storage_type, storage_bin) => {
                     }
                 )
                     .then(result => {
-                        managed_client.release()
+                        if (managed_client) { managed_client.release() }
                         resolve(result)
                     })
                     .catch(err => {
-                        managed_client.release()
+                        if (managed_client) { managed_client.release() }
                         reject(err)
                     });
             })
@@ -1387,8 +1432,10 @@ funcion.sapRFC_transfer = (serial, storage_type, storage_bin) => {
 }
 
 funcion.sapRFC_transferSlocCheck = async (serial, storage_location, storage_type, storage_bin) => {
+    let managed_client
+    let managed_client2
     try {
-        const managed_client = await node_RFC.acquire();
+        managed_client = await node_RFC.acquire();
 
         const result_suCheck = await managed_client.call('RFC_READ_TABLE', {
             QUERY_TABLE: 'LQUA',
@@ -1401,7 +1448,6 @@ funcion.sapRFC_transferSlocCheck = async (serial, storage_location, storage_type
         const res = rows.map(row => Object.fromEntries(
             columns.map((key, i) => [key, row[i]])
         ));
-        managed_client.release();
 
         if (res.length === 0) {
             return ({ "key": "SU_DOESNT_EXIST", "abapMsgV1": `${serial}` });
@@ -1416,28 +1462,32 @@ funcion.sapRFC_transferSlocCheck = async (serial, storage_location, storage_type
                 I_NLBER: '001',
                 I_NLPLA: storage_bin.toUpperCase()
             };
-            const managed_client2 = await node_RFC.acquire();
+            managed_client2 = await node_RFC.acquire();
             const result = await managed_client2.call('L_TO_CREATE_MOVE_SU', inputParameters);
-            managed_client2.release();
             return result;
         }
     } catch (err) {
         throw err;
+    } finally {
+        if (managed_client) { managed_client.release() }
+        if (managed_client2) { managed_client2.release() }
     }
 };
 
 
 funcion.sapRFC_materialDescription = async (material_number) => {
+    let managed_client
     try {
-        const managed_client = await node_RFC.acquire();
+        managed_client = await node_RFC.acquire();
 
         const result = await managed_client.call('BAPI_MATERIAL_GET_DETAIL', {
             MATERIAL: `${material_number}`,
         });
-        managed_client.release();
         return result;
     } catch (err) {
         throw err;
+    } finally {
+        if (managed_client) { managed_client.release() };
     }
 };
 
@@ -1454,17 +1504,19 @@ funcion.insertRawDelivery = async (valores) => {
 }
 
 funcion.backflushFG = async (serial) => {
+    let managed_client
     try {
-        const managed_client = await node_RFC.acquire();
+        managed_client = await node_RFC.acquire();
 
         const result = await managed_client.call('ZWM_HU_MFHU', {
             I_EXIDV: `${funcion.addLeadingZeros(serial, 20)}`,
             I_VERID: '1'
         });
-        managed_client.release();
         return result;
     } catch {
         throw err;
+    } finally {
+        if (managed_client) { managed_client.release() };
     }
 }
 
@@ -1536,6 +1588,207 @@ funcion.mpStdQuant = (no_sap, table) => {
     })
 }
 
+funcion.sapRFC_get_packing_instruction = async (handlingUnit) => {
+    let managed_client = await node_RFC.acquire();
+    try {
+        //1 First step scan HU and get packing instruction to use on table PACKKP and get all master packing instructions
+        const result_hu_history = await managed_client.call('BAPI_HU_GETLIST', {
+            NOTEXT: '',
+            ONLYKEYS: '',
+            HUNUMBERS: [funcion.addLeadingZeros(handlingUnit, 20)],
+        });
+
+        if (result_hu_history.HUHEADER.length > 1) {
+            return ({ "error": "HU is part of a pallet" });
+        }
+
+        let hu_material_number = result_hu_history.HUITEM[0].MATERIAL;
+        // 2 Given the material number get the packing instructions from table PACKKP
+        const result_packing_instructions = await managed_client.call('RFC_READ_TABLE', {
+            QUERY_TABLE: 'PACKKP',
+            DELIMITER: ",",
+            OPTIONS: [{ TEXT: `POBJID LIKE '%${hu_material_number}%' AND POBJID LIKE 'UM%'` }],
+            FIELDS: ["PACKNR", "POBJID"]
+        });
+
+
+
+        // 2.1 At this point the user should select the correct master packing instruction to use
+        const hu_packing_um_instructions = result_packing_instructions.DATA.map(row => {
+            const formattedRow = {};
+            row.WA.split(',').forEach((value, index) => {
+                const fieldName = result_packing_instructions.FIELDS[index].FIELDNAME;
+                formattedRow[fieldName] = value;
+            });
+            return formattedRow;
+        });
+
+        return hu_packing_um_instructions;
+    } catch (err) {
+        throw err;
+    } finally {
+        if (managed_client) { managed_client.release() };
+    }
+
+}
+
+
+funcion.sapRFC_get_packing_matreials = async (POBJID, PACKNR) => {
+    let managed_client = await node_RFC.acquire();
+    try {
+        const result_packnr = await managed_client.call('RFC_READ_TABLE', {
+            QUERY_TABLE: 'PACKKP',
+            DELIMITER: ",",
+            OPTIONS: [{ TEXT: `POBJID EQ '${POBJID}'` }],
+            FIELDS: ["PACKNR", "MAPACO_ITEM"]
+        });
+
+
+        const result_packing_materials = await managed_client.call('RFC_READ_TABLE', {
+            QUERY_TABLE: 'PACKPO',
+            DELIMITER: ",",
+            OPTIONS: [{ TEXT: `PACKNR EQ '${PACKNR}' ` }],
+            FIELDS: ["PACKITEMID", "MATNR", "PAITEMTYPE", "TRGQTY", "SUBPACKNR"]
+        });
+
+        const result_packingr_formatted = result_packnr.DATA.map(row => {
+            const formattedRow = {};
+            row.WA.split(',').forEach((value, index) => {
+                const fieldName = result_packnr.FIELDS[index].FIELDNAME;
+                formattedRow[fieldName] = value.trim();
+            });
+            return formattedRow;
+        });
+
+        const result_packing_materials_formatted = result_packing_materials.DATA.map(row => {
+            const formattedRow = {};
+            row.WA.split(',').forEach((value, index) => {
+                const fieldName = result_packing_materials.FIELDS[index].FIELDNAME;
+                formattedRow[fieldName] = value.trim();
+            });
+            return formattedRow;
+        });
+
+        return { result_packingr_formatted, result_packing_materials_formatted }
+    } catch (err) {
+        throw err;
+    } finally {
+        if (managed_client) { managed_client.release() };
+    }
+
+}
+
+funcion.sapRFC_pallet_request_create = async (array_handling_units, packing_materials, result_packingr_formatted, pallet_packing_material, packing_instruction, packing_id) => {
+    const resultArray = array_handling_units.map(serial => funcion.addLeadingZeros(serial, 20));
+    let managed_client = await node_RFC.acquire();
+    try {
+        const result_hus_history = await managed_client.call('BAPI_HU_GETLIST', {
+            NOTEXT: 'X',
+            ONLYKEYS: '',
+            HUNUMBERS: resultArray,
+        });
+
+        const subpacknrOfTypeI = packing_materials
+            .filter(item => item.PAITEMTYPE === 'I')
+            .map(item => item.SUBPACKNR);
+
+        const mismatchedObjects = result_hus_history.HUHEADER.filter(headerObj =>
+            !subpacknrOfTypeI.includes(headerObj.PACKG_INSTRUCT)
+        );
+        //If there are mismatched objects then we return an error with the HU's of the problem ❌
+        if (mismatchedObjects.length > 0) { return ({ "error": mismatchedObjects }); }
+
+        //4.1 The HU's are sent to the correct storage bin in orther to be packed into the pallet
+        for (let i = 0; i < resultArray.length; i++) {
+            const result_hu_transfer = await managed_client.call('L_TO_CREATE_MOVE_SU', {
+                I_LENUM: resultArray[i],
+                I_BWLVS: '998',
+                I_NLTYP: `923`,
+                I_NLBER: '001',
+                I_NLPLA: `PACK.BIN`
+            });
+        }
+
+        //Creating item proposal with all the handling units
+        const itemsProposal = array_handling_units.map((handlingUnit) => ({
+            HU_ITEM_TYPE: "3",
+            LOWER_LEVEL_EXID: funcion.addLeadingZeros(handlingUnit, 20),
+            MATERIAL: result_hus_history.HUITEM[0].MATERIAL,
+            PACK_QTY: result_hus_history.HUITEM[0].PACK_QTY,
+            PLANT: result_hus_history.HUHEADER[0].PLANT,
+        }));
+
+        packing_materials.forEach((item) => {
+            if (item.PAITEMTYPE === 'P' && item.MATNR !== pallet_packing_material[0]) {
+
+                itemsProposal.push({
+                    HU_ITEM_TYPE: "2",
+                    MATERIAL: item.MATNR,
+                    PACK_QTY: parseFloat(item.TRGQTY),
+                    PLANT: result_hus_history.HUHEADER[0].PLANT,
+                });
+            }
+        });
+
+        //5 If the pallet is correct then we can proceed to create the pallet
+        const result_hu_create = await managed_client.call('BAPI_HU_CREATE', {
+            HEADERPROPOSAL: {
+                PACK_MAT: pallet_packing_material[0],
+                // HU_GRP3: result_hu_history.HUHEADER[0].HU_GRP3,
+                PACKG_INSTRUCT: result_packingr_formatted[0].PACKNR,
+                PLANT: result_hus_history.HUHEADER[0].PLANT,
+                // L_PACKG_STATUS_HU: '2',
+                HU_STATUS_INIT: 'A',
+                EXT_ID_HU_2: 'P'
+            },
+            ITEMSPROPOSAL: itemsProposal
+        });
+
+        const result_commit = await managed_client.call("BAPI_TRANSACTION_COMMIT", { WAIT: "X" });
+
+        const result_um_transfer = await managed_client.call('L_TO_CREATE_MOVE_SU', {
+            I_LENUM: result_hu_create.HUKEY,
+            I_BWLVS: '998',
+            I_NLTYP: `SHP`,
+            I_NLBER: '001',
+            I_NLPLA: `SHP`
+        });
+
+        if (result_hu_create.HUKEY) {
+            let dataPrint = {
+                "printer": "\\\\tftdelsrv003\\tftdelprn60",
+                "serial_um": parseFloat(result_hu_create.HUKEY),
+                "storage_bin": "SHP",
+                "serial_uc": array_handling_units[0],
+            }
+            funcion.printLabel_ONT_UM(dataPrint, "ONT_UM")
+        }
+
+        return result_hu_create;
+    } catch (err) {
+        throw err;
+    } finally {
+        if (managed_client) { managed_client.release() };
+    }
+
+}
+
+
+funcion.printLabel_ONT_UM = async (data, labelType) => {
+    try {
+        const result = await axios({
+            method: 'POST',
+            url: `http://${process.env.BARTENDER_SERVER}:${process.env.BARTENDER_PORT}/Integration/${labelType}/Execute/`,
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            data: JSON.stringify(data)
+        });
+        return result;
+    } catch (err) {
+        throw err;
+    }
+};
 
 //LT01
 // node_RFC.acquire()
@@ -1563,7 +1816,7 @@ funcion.mpStdQuant = (no_sap, table) => {
 //             })
 //             .catch(err => {
 //                 console.log(err);
-//                 managed_client.release()
+//                 if (managed_client) { managed_client.release() }
 //             })
 //     })
 
@@ -1593,7 +1846,7 @@ funcion.mpStdQuant = (no_sap, table) => {
 //             })
 //             .catch(err => {
 //                 console.log(err);
-//                 managed_client.release()
+//                 if (managed_client) { managed_client.release() }
 //             })
 //     })
 
@@ -1616,7 +1869,7 @@ funcion.mpStdQuant = (no_sap, table) => {
 //         })
 //         .catch(err => {
 //             console.log(err);
-//             managed_client.release()
+//             if (managed_client) { managed_client.release() }
 //         })
 // })
 
@@ -1642,7 +1895,7 @@ funcion.mpStdQuant = (no_sap, table) => {
 //             })
 //             .catch(err => {
 //                 console.log(err);
-//                 managed_client.release()
+//                 if (managed_client) { managed_client.release() }
 //             })
 //     })
 
@@ -1676,7 +1929,7 @@ funcion.mpStdQuant = (no_sap, table) => {
 //             .then(result => {
 //                 console.log(result);
 //                 managed_client.call("BAPI_TRANSACTION_COMMIT",{WAIT:"X"})
-//                 managed_client.release()
+//                 if (managed_client) { managed_client.release() }
 
 //                 // managed_client.invoke('BAPI_GOODSMVT_CREATE', structure_scrap, function(err,res){       
 //                 //     managed_client.invoke('BAPI_TRANSACTION_COMMIT',{}, function(err,res){
@@ -1695,12 +1948,12 @@ funcion.mpStdQuant = (no_sap, table) => {
 //             })
 //             .catch(err => {
 //                 console.error(err);
-//                 managed_client.release()
+//                 if (managed_client) { managed_client.release() }
 //             })
 //     })
 //     .catch(err => {
 //         console.error(err);
-//         managed_client.release()
+//         if (managed_client) { managed_client.release() }
 //     })
 
 
@@ -1746,7 +1999,7 @@ funcion.mpStdQuant = (no_sap, table) => {
 // })
 // .catch(err => {
 //     console.error(err);
-//     managed_client.release()
+//     if (managed_client) { managed_client.release() }
 // })
 
 
@@ -1764,7 +2017,7 @@ funcion.mpStdQuant = (no_sap, table) => {
 //             })
 //             .catch(err => {
 //                 console.log(err);
-//                 managed_client.release()
+//                 if (managed_client) { managed_client.release() }
 //             })
 //     })
 
@@ -1773,9 +2026,8 @@ funcion.mpStdQuant = (no_sap, table) => {
 // const sap_cantidad = '2';
 
 // funcion.sapRFC_createHU = async function main() {
+//     let managed_client = await node_RFC.acquire();
 //     try {
-//         const managed_client = await node_RFC.acquire();
-
 //         const result_packing_object = await managed_client.call('RFC_READ_TABLE', {
 //             QUERY_TABLE: 'PACKKP',
 //             DELIMITER: ",",
@@ -1834,7 +2086,7 @@ funcion.mpStdQuant = (no_sap, table) => {
 //                 HUKEY: [result_backflush.I_EXIDV],
 //                 MESSAGEKEY: [result_backflush.E_RETURN.MESSAGE],
 //                 RETURN: [result_backflush.E_RETURN]
-            
+
 //         });
 //         console.log("⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐\n", result_hu_create);
 //         console.log("✋✋✋✋✋✋✋✋✋✋✋✋✋✋✋✋✋✋✋✋✋✋✋\n", result_hu_change_header);
@@ -1846,22 +2098,239 @@ funcion.mpStdQuant = (no_sap, table) => {
 //             MESSAGEKEY: result_hu_get_list_msg.MESSAGEKEY,
 //             MESSAGEPROTOCOL:[],
 //             RETURN: result_hu_get_list_msg.RETURN
-        
+
 //     });
 
-//         managed_client.release();
 
-        
 //         console.log("✒️✒️✒️✒️✒️✒️✒️✒️✒️✒️✒️✒️✒️✒️✒️✒️✒️✒️✒️", result_hu_process_msg);
 
 //     } catch (err) {
 //         console.error(err);
+//     } finally {
+//         if (managed_client) { managed_client.release() };
 //     }
 // }
 
 // funcion.sapRFC_createHU()
 
+const test_hu_number = '00000000000187631125';
 
+
+funcion.sapRFC_createHU = async function main() {
+    let managed_client = await node_RFC.acquire();
+    try {
+        //1 First step scan HU and get packing instruction to use on table PACKKP and get all master packing instructions
+        const result_hu_history = await managed_client.call('BAPI_HU_GETLIST', {
+            NOTEXT: '',
+            ONLYKEYS: '',
+            HUNUMBERS: [test_hu_number],
+        });
+
+
+        let hu_material_number = result_hu_history.HUITEM[0].MATERIAL;
+        // 2 Given the material number get the packing instructions from table PACKKP
+        const result_packing_instructions = await managed_client.call('RFC_READ_TABLE', {
+            QUERY_TABLE: 'PACKKP',
+            DELIMITER: ",",
+            OPTIONS: [{ TEXT: `POBJID LIKE '%${hu_material_number}%' AND POBJID LIKE 'UM%'` }],
+            FIELDS: ["PACKNR", "POBJID"]
+        });
+
+
+
+        // 2.1 At this point the user should select the correct master packing instruction to use
+        const hu_packing_um_instructions = result_packing_instructions.DATA.map(row => {
+            const formattedRow = {};
+            row.WA.split(',').forEach((value, index) => {
+                const fieldName = result_packing_instructions.FIELDS[index].FIELDNAME;
+                formattedRow[fieldName] = value;
+            });
+            return formattedRow;
+        });
+
+
+        // 2.2 Once the user selected the correct packing instruction, get the packing materials for that packing instruction from table PACKPO
+        // Note Just using dummy selection for now basically whatever is in poistion 0 of the array
+        const result_packnr = await managed_client.call('RFC_READ_TABLE', {
+            QUERY_TABLE: 'PACKKP',
+            DELIMITER: ",",
+            OPTIONS: [{ TEXT: `POBJID EQ '${hu_packing_um_instructions[0].POBJID}'` }],
+            FIELDS: ["PACKNR", "MAPACO_ITEM"]
+        });
+
+
+        const result_packing_materials = await managed_client.call('RFC_READ_TABLE', {
+            QUERY_TABLE: 'PACKPO',
+            DELIMITER: ",",
+            OPTIONS: [{ TEXT: `PACKNR EQ '${result_packnr.DATA[0].WA.split(',')[0]}' ` }],
+            FIELDS: ["PACKITEMID", "MATNR", "PAITEMTYPE", "TRGQTY", "SUBPACKNR"]
+        });
+
+        //2.3 At this point this information is sent to the user device so the device stores it, this has all the packing materials used in next steps
+        const result_packing_materials_formatted = result_packing_materials.DATA.map(row => {
+            const formattedRow = {};
+            row.WA.split(',').forEach((value, index) => {
+                const fieldName = result_packing_materials.FIELDS[index].FIELDNAME;
+                formattedRow[fieldName] = value.trim();
+            });
+            return formattedRow;
+        });
+
+        //3 At this point the screen will prompt the user to scan all the HU's limiting it to the result_packing_materials_formatted array where the PAITEMTYPE is I
+        //Note at this point we pretend to receive an array of HU's or could get one by one needs testing for speed
+        let array_handling_units = [
+            '00000000000187611800',
+            '00000000000187506265',
+            '00000000000187506158',
+            '00000000000187506099',
+            '00000000000187506078',
+            '00000000000187505980',
+            '00000000000187611542',
+            '00000000000187611429',
+            '00000000000187611357',
+            '00000000000187611318',
+            '00000000000187611174',
+            '00000000000187611079',
+            '00000000000187611045',
+            '00000000000187610998',
+            '00000000000187610933',
+            '00000000000187610882',
+            '00000000000187610790',
+            '00000000000187610432',
+            '00000000000187610417',
+            '00000000000187610284',
+            '00000000000187610216',
+        ]
+
+        const subpacknrquantity = result_packing_materials_formatted
+            .filter(item => item.PAITEMTYPE === 'I')
+            .map(item => item.TRGQTY);
+
+        const pallet_packing_material = result_packing_materials_formatted
+            .filter(item => item.PACKITEMID === result_packnr.DATA[0].WA.split(',')[1])
+            .map(item => item.MATNR);
+
+
+        if (array_handling_units.length > parseFloat(subpacknrquantity[0])) {
+            console.error('❌❌❌❌❌❌❌❌❌❌❌❌❌❌', 'The number of handling units is greater than the quantity of the subpacking instruction');
+        } else {
+            console.log('✔️✔️✔️✔️✔️✔️✔️✔️✔️✔️✔️✔️✔️✔️', 'The number of handling units is less or equal than the quantity of the subpacking instruction');
+        }
+
+        //3.1 With an array of HU's we check if the provided handling units and their packing instruction matches th subpacking instruction of the master packing instruction
+        //This way we know the materials are the same and correspond to the pallet
+        const result_hus_history = await managed_client.call('BAPI_HU_GETLIST', {
+            NOTEXT: 'X',
+            ONLYKEYS: '',
+            HUNUMBERS: array_handling_units,
+        });
+
+        //Getting the master sub packing instruction
+        const subpacknrOfTypeI = result_packing_materials_formatted
+            .filter(item => item.PAITEMTYPE === 'I')
+            .map(item => item.SUBPACKNR);
+
+        //Filtering the handling units that do not match the subpacking instruction
+        //Variable mismatchedObjects contains the handling units that do not match the subpacking instruction
+        //If the variable is not empty then the user should be notified that the pallet is not correct
+        //4 At this point the user should be notified if the pallet is correct or not
+        const mismatchedObjects = result_hus_history.HUHEADER.filter(headerObj =>
+            !subpacknrOfTypeI.includes(headerObj.PACKG_INSTRUCT)
+        );
+
+        //4.1 The HU's are sent to the correct storage bin in orther to be packed into the pallet
+        for (let i = 0; i < array_handling_units.length; i++) {
+            const result_hu_transfer = await managed_client.call('L_TO_CREATE_MOVE_SU', {
+                I_LENUM: array_handling_units[i],
+                I_BWLVS: '998',
+                I_NLTYP: `923`,
+                I_NLBER: '001',
+                I_NLPLA: `PACK.BIN`
+            });
+        }
+
+        //Creating item proposal with all the handling units
+        const itemsProposal = array_handling_units.map((handlingUnit) => ({
+            HU_ITEM_TYPE: "3",
+            LOWER_LEVEL_EXID: handlingUnit,
+            MATERIAL: hu_material_number,
+            PACK_QTY: result_hu_history.HUITEM[0].PACK_QTY,
+            PLANT: result_hu_history.HUHEADER[0].PLANT,
+        }));
+        // Adding the separate object for HU_ITEM_TYPE: "2"
+        itemsProposal.push({
+            HU_ITEM_TYPE: "2",
+            MATERIAL: result_packing_materials.DATA[2].WA.split(',')[1],
+            PACK_QTY: parseFloat(result_packing_materials.DATA[2].WA.split(',')[3]),
+            PLANT: result_hu_history.HUHEADER[0].PLANT,
+        });
+
+
+        //5 If the pallet is correct then we can proceed to create the pallet
+        const result_hu_create = await managed_client.call('BAPI_HU_CREATE', {
+            HEADERPROPOSAL: {
+                PACK_MAT: pallet_packing_material[0],
+                // HU_GRP3: result_hu_history.HUHEADER[0].HU_GRP3,
+                PACKG_INSTRUCT: hu_packing_um_instructions[0].PACKNR,
+                PLANT: result_hu_history.HUHEADER[0].PLANT,
+                // L_PACKG_STATUS_HU: '2',
+                HU_STATUS_INIT: 'A',
+                EXT_ID_HU_2: 'P'
+            },
+            ITEMSPROPOSAL: itemsProposal
+        });
+
+        const result_commit = await managed_client.call("BAPI_TRANSACTION_COMMIT", { WAIT: "X" });
+
+        //6 Need to transfer all hu's to storage bin 
+
+
+        // //####################This code might be deleted######################
+        // // const result_hu_transfer1 = await managed_client.call('L_TO_CREATE_MOVE_SU', {
+        // //     I_LENUM: result_hu_create.HUHEADER.HU_EXID,
+        // //     I_BWLVS: '998',
+        // //     I_NLTYP: `923`,
+        // //     I_NLBER: '001',
+        // //     I_NLPLA: `PACK.BIN`
+        // // });
+
+        // //7 At this point the pallet is created and we can proceed to pack the handling units into the pallet
+        // // const result_hu_pack = await managed_client.call('BAPI_HU_PACK', {
+        // //     HUKEY: result_hu_create.HUHEADER.HU_EXID,
+        // //     ITEMPROPOSAL:{
+        // //         HU_ITEM_TYPE: "3",
+        // //         LOWER_LEVEL_EXID: array_handling_units[1],
+        // //     }
+
+        // // });
+        // //####################This code might be deleted######################
+        // // const result_hu_repack = await managed_client.call('BAPI_HU_REPACK', {
+        // //     HUKEY: result_hu_create.HUHEADER.HU_EXID,
+        // //     REPACK: [{
+        // //         SOURCE_HU: array_handling_units[1],
+        // //         FLAG_PACKHU: 'x',
+        // //         PACK_QTY: '1',
+        // //     }]
+
+        // // });
+
+        // // const result_commit2 = await managed_client.call("BAPI_TRANSACTION_COMMIT", { WAIT: "X" });
+
+        // console.log('✏️✏️✏️✏️✏️✏️✏️✏️✏️✏️✏️✏️✏️✏️✏️✏️✏️✏️✏️', parseFloat(subpacknrquantity[0]));
+        // console.log('⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐', mismatchedObjects);
+        // console.log("✒️✒️✒️✒️✒️✒️✒️✒️✒️✒️✒️✒️✒️✒️✒️✒️✒️✒️✒️", result_packing_materials_formatted);
+        // console.log("⭕⭕⭕⭕⭕⭕⭕⭕⭕⭕⭕⭕⭕⭕⭕⭕⭕⭕⭕", result_hus_history);
+        console.log("⛽⛽⛽⛽⛽⛽⛽⛽⛽⛽⛽⛽⛽⛽⛽⛽⛽⛽⛽⛽⛽⛽⛽⛽", result_hu_create);
+        // console.log("✈️✈️✈️✈️✈️✈️✈️✈️✈️✈️✈️✈️✈️✈️✈️✈️✈️✈️✈️", result_hu_repack);
+
+    } catch (err) {
+        console.error(err);
+    } finally {
+        if (managed_client) { managed_client.release() };
+    }
+}
+
+// funcion.sapRFC_createHU()
 
 
 

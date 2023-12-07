@@ -77,6 +77,12 @@ router.get('/master_fg_gm',middleware.verifyToken, routesController.master_FG_GM
 router.post('/master_request_gm',middleware.verifyToken, middleware.macFromIP, routesController.master_request_GM_POST);
 router.post('/master_request_gm_create',middleware.verifyToken, middleware.macFromIP, routesController.master_request_GM_CREATE_POST);
 
+// ##############Master Pallet##################
+router.get('/master_pallet',middleware.verifyToken, routesController.master_PALLET_GET);
+router.post('/get_packing_instruction',middleware.verifyToken, middleware.macFromIP, routesController.get_packing_instruction_POST);
+router.post('/get_packing_matreials',middleware.verifyToken, middleware.macFromIP, routesController.get_packing_matreials_POST);
+router.post('/pallet_request_create',middleware.verifyToken, middleware.macFromIP, routesController.pallet_request_create_POST);
+router.post('/pallet_print',middleware.verifyToken, middleware.macFromIP, routesController.pallet_print_POST);
 // ##############Extrusion##################
 // router.get('/consultaEXT',middleware.verifyToken, routesController.consultaEXT_GET);
 router.get('/transferEXT',middleware.verifyToken, routesController.transferEXT_GET);
