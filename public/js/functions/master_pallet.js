@@ -34,6 +34,8 @@ let packing_id = ""
 let result_packing_materials_formatted
 let result_packingr_formatted
 let pallet_packing_material
+let hu_packing_instruction
+
 // let spanBin = document.getElementById("spanBin")
 
 
@@ -96,8 +98,6 @@ function listAdd(e) {
             alerta_prefijo.classList.remove("animate__flipInX", "animate__animated")
             alerta_prefijo.classList.add("animate__flipOutX", "animate__animated")
         }, 2000);
-
-
     } else if (serialsArray.indexOf((serial_num.value).substring(1)) === -1 && serialsArray.indexOf(`0${(serial_num.value).substring(1)}`) === -1) {
         soundOk()
         if ((serial_num.value).substring(1).length < 10) {
@@ -106,86 +106,98 @@ function listAdd(e) {
             serialsArray.push((serial_num.value).substring(1))
         }
 
-        alerta_prefijo.classList.remove("animate__flipInX", "animate__animated")
-        alerta_prefijo.classList.add("animate__flipOutX", "animate__animated")
+        if (serialsArray.length > 1 && serialsArray.length > parseInt(ejs_packing_quantity.innerText)) {
+            soundWrong()
+            serialsArray.pop()
+            alerta_prefijo.classList.remove("animate__flipOutX", "animate__animated")
+            alerta_prefijo.classList.add("animate__flipInX", "animate__animated")
+            serial_num.value = ""
+        } else {
 
-        let serial = `<small style="display:inline; "><span class="badge badge-light text-dark"> ${(serial_num.value).substring(1)} </span></small> `
-        let append = document.createElement("span")
-        append.innerHTML = serial
-        currentST.appendChild(append)
-        serial_num.value = ""
+            alerta_prefijo.classList.remove("animate__flipInX", "animate__animated")
+            alerta_prefijo.classList.add("animate__flipOutX", "animate__animated")
 
-        btn_t.disabled = false
-        btn_t.classList.remove("btn-secondary")
-        btn_t.classList.add("btn-warning")
+            let serial = `<small style="display:inline; "><span class="badge badge-light text-dark"> ${(serial_num.value).substring(1)} </span></small> `
+            let append = document.createElement("span")
+            append.innerHTML = serial
+            currentST.appendChild(append)
+            serial_num.value = ""
 
-        if (serialsArray.length === 1) {
-            $('#modalSpinner').modal({ backdrop: 'static', keyboard: false })
+            btn_t.disabled = false
+            btn_t.classList.remove("btn-secondary")
+            btn_t.classList.add("btn-warning")
 
-            let data = { "serial": `${serialsArray}` };
-            axios({
-                method: 'post',
-                url: "/get_packing_instruction",
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                data: JSON.stringify(data)
-            })
-                .then((result) => {
-                    console.log("🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀\n", result);
-                    response = result.data
+            if (serialsArray.length === 1) {
+                $('#modalSpinner').modal({ backdrop: 'static', keyboard: false })
 
-                    if (response.error || response.message) {
-                        tabla_consulta.innerHTML = ""
-                        tabla_consulta_container.hidden = false
-                        errorTextField.innerHTML = ""
-                        errorText.hidden = true
-
-
-                        let newRow = tabla_consulta.insertRow(tabla_consulta.rows.length);
-
-                        let row = `
-                                    <tr class="bg-danger">
-                                           <td>${serialsArray[0]}</td>
-                                           <td>${response.error ? response.error : response.message}</td>
-                                       </tr>
-                                       `
-                        newRow.classList.add("bg-danger", "text-white")
-
-                        cantidadErrores.innerHTML = ""
-                        cantidadErrores.innerHTML = "1"
-
-                        setTimeout(() => { soundWrong(), $('#modalSpinner').modal('hide') }, 500);
-                        $('#modalError').modal({ backdrop: 'static', keyboard: false })
-
-                        return newRow.innerHTML = row;
-
-
-
-
-
-                    } else {
-                        setTimeout(() => { soundOk(), $('#modalSpinner').modal('hide') }, 500);
-                        $('#modalSelectPacking').modal({ backdrop: 'static', keyboard: false })
-                        response.forEach(element => {
-
-                            let newButton = document.createElement("button");
-                            newButton.setAttribute("type", "submit");
-                            newButton.setAttribute("class", "btn btn-primary m-1 selected_packing");
-                            newButton.textContent = element.POBJID;
-                            newButton.setAttribute("data-PACKNR", element.PACKNR);
-
-                            // Append the new button to the existing element
-                            submit_PackingInstruction.appendChild(newButton);
-                        })
-                        let selected_packing = document.querySelectorAll(".selected_packing")
-                        selected_packing.forEach(element => {
-                            element.addEventListener("click", selectPacking)
-                        });
-                    }
+                let data = { "serial": `${serialsArray}` };
+                axios({
+                    method: 'post',
+                    url: "/get_packing_instruction",
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    data: JSON.stringify(data)
                 })
+                    .then((result) => {
+                        // console.log("🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀\n", result);
+                        response = result.data
 
+                        if (response.error || response.message) {
+                            tabla_consulta.innerHTML = ""
+                            tabla_consulta_container.hidden = false
+                            errorTextField.innerHTML = ""
+                            errorText.hidden = true
+
+
+                            let newRow = tabla_consulta.insertRow(tabla_consulta.rows.length);
+
+                            let row = `
+                                        <tr class="bg-danger">
+                                               <td>${serialsArray[0]}</td>
+                                               <td>${response.error ? response.error : response.message}</td>
+                                           </tr>
+                                           `
+                            newRow.classList.add("bg-danger", "text-white")
+
+                            cantidadErrores.innerHTML = ""
+                            cantidadErrores.innerHTML = "1"
+
+                            setTimeout(() => { soundWrong(), $('#modalSpinner').modal('hide') }, 500);
+                            $('#modalError').modal({ backdrop: 'static', keyboard: false })
+
+                            return newRow.innerHTML = row;
+
+
+
+
+
+                        } else {
+                            setTimeout(() => { soundOk(), $('#modalSpinner').modal('hide') }, 500);
+                            $('#modalSelectPacking').modal({ backdrop: 'static', keyboard: false })
+
+                            response.forEach(element => {
+
+                                let newButton = document.createElement("button");
+                                newButton.setAttribute("type", "submit");
+                                newButton.setAttribute("class", "btn btn-primary m-1 selected_packing");
+                                newButton.textContent = element.POBJID;
+                                newButton.setAttribute("data-PACKNR", element.PACKNR);
+                                hu_packing_instruction = element.hu_packing_instruction
+
+                                // Append the new button to the existing element
+                                submit_PackingInstruction.appendChild(newButton);
+                            })
+                            let selected_packing = document.querySelectorAll(".selected_packing")
+                            selected_packing.forEach(element => {
+                                element.addEventListener("click", selectPacking)
+                            });
+                        }
+                    })
+
+            }
         }
+
     } else {
         soundWrong()
         alerta_prefijo.classList.remove("animate__flipOutX", "animate__animated")
@@ -207,7 +219,7 @@ function selectPacking(e) {
     packing_instruction = e.target.innerText
     packing_id = e.target.getAttribute("data-PACKNR")
     ejs_selected_packing.innerHTML = packing_instruction
-    let data = { "POBJID": `${packing_instruction}`, "PACKNR": `${packing_id}` };
+    let data = { "POBJID": `${packing_instruction}`, "PACKNR": `${packing_id}`, "hu_packing_instruction": `${hu_packing_instruction}` };
     axios({
         method: 'post',
         url: "/get_packing_matreials",
@@ -220,13 +232,43 @@ function selectPacking(e) {
 
             result_packing_materials_formatted = result.data.result_packing_materials_formatted
             result_packingr_formatted = result.data.result_packingr_formatted
-            console.log("⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐\n", result_packing_materials_formatted);
-            console.log("👾👾👾👾👾👾👾👾👾👾👾👾👾👾👾👾👾👾👾\n", result_packingr_formatted);
+            // console.log("⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐\n", result_packing_materials_formatted);
+            // console.log("👾👾👾👾👾👾👾👾👾👾👾👾👾👾👾👾👾👾👾\n", result_packingr_formatted);
 
-            const subpacknrquantity = result_packing_materials_formatted
+            let subpacknrquantity = result_packing_materials_formatted
                 .filter(item => item.PAITEMTYPE === 'I')
                 .map(item => item.TRGQTY);
             ejs_packing_quantity.innerHTML = parseFloat(subpacknrquantity)
+
+
+            const filteredItems = result_packing_materials_formatted.filter(item => item.PAITEMTYPE === "I" && item.SUBPACKNR !== hu_packing_instruction);
+
+            if (filteredItems.length > 0) {
+                tabla_consulta.innerHTML = ""
+                tabla_consulta_container.hidden = false
+                errorTextField.innerHTML = ""
+                errorText.hidden = true
+
+
+                let newRow = tabla_consulta.insertRow(tabla_consulta.rows.length);
+
+                let row = `
+                                <tr class="bg-danger">
+                                    <td>${serialsArray[0]}</td>
+                                    <td>Check Packing Instruction</td>
+                                </tr>
+                                `
+                newRow.classList.add("bg-danger", "text-white")
+
+
+                cantidadErrores.innerHTML = ""
+                cantidadErrores.innerHTML = "1"
+
+                setTimeout(() => { soundWrong(), $('#modalSpinner').modal('hide') }, 500);
+                $('#modalError').modal({ backdrop: 'static', keyboard: false })
+                return newRow.innerHTML = row;
+            }
+
 
             pallet_packing_material = result_packing_materials_formatted
                 .filter(item => item.PACKITEMID === result_packingr_formatted[0].MAPACO_ITEM)
@@ -292,10 +334,6 @@ function verifyHandlingUnits(e) {
     e.preventDefault()
     $('#myModal').modal('hide')
     $('#modalSpinner').modal({ backdrop: 'static', keyboard: false })
-
-    // TODO verificar que la cantidad de seriales no sea mayor a la cantidad del packing instruction
-
-
     let data = { "serial": `${serialsArray}`, result_packing_materials_formatted, result_packingr_formatted, pallet_packing_material, packing_instruction, packing_id };
     axios({
         method: 'post',
@@ -307,7 +345,7 @@ function verifyHandlingUnits(e) {
     })
         .then((result) => {
             let response = result.data
-            console.log("✊✊✊✊✊✊✊✊✊✊✊✊✊✊✊✊✊✊✊✊✊✊", response);
+            // console.log("✊✊✊✊✊✊✊✊✊✊✊✊✊✊✊✊✊✊✊✊✊✊", response);
             if (response.error) {
                 tabla_consulta.innerHTML = ""
                 tabla_consulta_container.hidden = false
@@ -326,14 +364,28 @@ function verifyHandlingUnits(e) {
                         newRow.classList.add("bg-danger", "text-white")
                         return newRow.innerHTML = row;
                     }
-
-
                 })
                 cantidadErrores.innerHTML = ""
                 cantidadErrores.innerHTML = response.error.length
 
                 setTimeout(() => { soundWrong(), $('#modalSpinner').modal('hide') }, 500);
                 $('#modalError').modal({ backdrop: 'static', keyboard: false })
+            } else if (response.message) {
+                tabla_consulta.innerHTML = ""
+                tabla_consulta_container.hidden = false
+                errorTextField.innerHTML = ""
+                errorText.hidden = true
+                let newRow = tabla_consulta.insertRow(tabla_consulta.rows.length);
+                let row = `
+                        <tr class="bg-danger">
+                            <td>${response.message}</td>
+                            <td>Cehck HU</td>
+                        </tr>
+                        `
+                newRow.classList.add("bg-danger", "text-white")
+                setTimeout(() => { soundWrong(), $('#modalSpinner').modal('hide') }, 500);
+                $('#modalError').modal({ backdrop: 'static', keyboard: false })
+                return newRow.innerHTML = row;
             } else {
                 soundOk()
                 tabla_consulta.innerHTML = ""
@@ -346,7 +398,7 @@ function verifyHandlingUnits(e) {
                 let row = `
                             <tr>
                                 <td>${parseFloat(response.HUKEY)}</td>
-                                <td>${response.HUHEADER.PACK_MAT_NAME}</td>
+                                <td>${response.HUHEADER.PACK_MAT_NAME ? response.HUHEADER.PACK_MAT_NAME : "Pallet Created"}</td>
                             </tr>
                             `
                 setTimeout(() => { soundOk(), $('#modalSpinner').modal('hide') }, 500);

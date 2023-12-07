@@ -2233,7 +2233,6 @@ controller.get_packing_instruction_POST = async (req, res) => {
     try {
         const material = req.body.material;
         let serial = req.body.serial
-        console.log(serial);
 
         const result = await funcion.sapRFC_get_packing_instruction(serial)
 
@@ -2247,8 +2246,8 @@ controller.get_packing_matreials_POST = async (req, res) => {
     try {
         let POBJID = req.body.POBJID
         let PACKNR = req.body.PACKNR
-
-        const result = await funcion.sapRFC_get_packing_matreials(POBJID, PACKNR)
+        let hu_packing_instruction = req.body.hu_packing_instruction
+        const result = await funcion.sapRFC_get_packing_matreials(POBJID, PACKNR, hu_packing_instruction)
 
         res.json(result);
     } catch (err) {

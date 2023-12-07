@@ -1603,6 +1603,7 @@ funcion.sapRFC_get_packing_instruction = async (handlingUnit) => {
         }
 
         let hu_material_number = result_hu_history.HUITEM[0].MATERIAL;
+        let hu_packing_instruction = result_hu_history.HUHEADER[0].PACKG_INSTRUCT
         // 2 Given the material number get the packing instructions from table PACKKP
         const result_packing_instructions = await managed_client.call('RFC_READ_TABLE', {
             QUERY_TABLE: 'PACKKP',
@@ -1620,6 +1621,7 @@ funcion.sapRFC_get_packing_instruction = async (handlingUnit) => {
                 const fieldName = result_packing_instructions.FIELDS[index].FIELDNAME;
                 formattedRow[fieldName] = value;
             });
+            formattedRow["hu_packing_instruction"] = hu_packing_instruction;
             return formattedRow;
         });
 
@@ -1633,7 +1635,7 @@ funcion.sapRFC_get_packing_instruction = async (handlingUnit) => {
 }
 
 
-funcion.sapRFC_get_packing_matreials = async (POBJID, PACKNR) => {
+funcion.sapRFC_get_packing_matreials = async (POBJID, PACKNR, hu_packing_instruction) => {
     let managed_client = await node_RFC.acquire();
     try {
         const result_packnr = await managed_client.call('RFC_READ_TABLE', {
