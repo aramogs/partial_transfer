@@ -934,6 +934,7 @@ controller.postCycleSUEXT_POST = async (req, res) => {
 }
 
 controller.handlingEXT_POST = async (req, res) => {
+    console.log(req.body);
 
     let station = req.body.station
     let plan_id = req.body.plan_id
@@ -941,6 +942,7 @@ controller.handlingEXT_POST = async (req, res) => {
     let process = req.body.process
     let material = req.body.material
     let cantidad = req.body.cantidad
+    let capacidad = req.body.capcacidad
     let numero_etiquetas = req.body.numero_etiquetas
     let line = req.body.line
     let impresoType = req.body.impresoType

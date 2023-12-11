@@ -1668,7 +1668,7 @@ funcion.sapRFC_HUEXT = async (storage_location, material, cantidad) => {
 
         return result_hu_create
     } catch (err) {
-        throw err;
+        return err;
     } finally {
         if (managed_client) { managed_client.release() };
     }
