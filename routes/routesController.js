@@ -978,8 +978,8 @@ controller.handlingEXT_POST = async (req, res) => {
         let printedLabel = await funcion.printLabel_EXT(data, "EXT")
 
         if (printedLabel.status === 200) {
-           funcion.update_plan_ext(plan_id)
-           funcion.update_print_ext(parseInt(resultHU.HUKEY), plan_id, material, operator_id, cantidad, impresoType)
+          let result_update_plan_ext = await funcion.update_plan_ext(plan_id)
+          let result_update_print_ext =  await funcion.update_print_ext(parseInt(resultHU.HUKEY), plan_id, material, operator_id, cantidad, impresoType)
         }else{
             return res.json({ "key": `Testr` }) 
         }
