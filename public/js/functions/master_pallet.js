@@ -80,6 +80,7 @@ function cleanInput() {
     ejs_selected_packing.innerText = ""
     ejs_packing_quantity.innerText = ""
     submit_PackingInstruction.innerHTML = ""
+    cantidadErrores.innerHTML = ""
 }
 
 

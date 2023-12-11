@@ -94,6 +94,7 @@ router.post('/transferEXTPR', routesController.transferEXTPR_POST);
 router.post('/auditoriaEXT', routesController.auditoriaEXT_POST);
 router.post("/getBinStatusReportEXT", routesController.getBinStatusReportEXT_POST);
 router.post("/postCycleSUEXT", routesController.postCycleSUEXT_POST);
+router.post("/handlingEXT", routesController.handlingEXT_POST);
 // ##############Vulcanized##################
 // router.get('/consultaVUL',middleware.verifyToken, routesController.consultaVUL_GET);
 // router.get('/transferVUL',middleware.verifyToken, middleware.macFromIP, routesController.transferVUL_GET);

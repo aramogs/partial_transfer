@@ -421,6 +421,33 @@ funcion.materialEXT = (material) => {
     })
 }
 
+funcion.update_plan_ext = async (plan_id) => {
+    try {
+        const result = await dbEX(`
+            UPDATE
+                production_plan
+            SET
+                status = "Impreso"
+            WHERE
+                plan_id = '${plan_id}'
+        `);
+        return result;
+    } catch (error) {
+        throw error;
+    }
+};
+
+funcion.update_print_ext = async (serial_num, plan_id, material, emp_num, cantidad, impresoType) => {
+    try {
+        const result = await dbEX(`
+            INSERT INTO extrusion_labels (serial, plan_id, numero_parte, emp_num, cantidad, status) 
+                VALUES(${serial_num},'${plan_id}', '${material}', ${emp_num}, ${cantidad}, '${impresoType}')
+        `);
+        return result;
+    } catch (error) {
+        throw error;
+    }
+};
 
 
 funcion.sapRFC_transferFG = async (serial, storage_bin) => {
@@ -1588,6 +1615,65 @@ funcion.mpStdQuant = (no_sap, table) => {
     })
 }
 
+
+funcion.sapRFC_HUEXT = async (storage_location, material, cantidad) => {
+    let managed_client = await node_RFC.acquire();
+    try {
+
+        const result_packing_object = await managed_client.call('RFC_READ_TABLE', {
+            QUERY_TABLE: 'PACKKP',
+            DELIMITER: ",",
+            OPTIONS: [{ TEXT: `POBJID EQ 'UC${material}'` }],
+            FIELDS: ['PACKNR']
+        });
+
+        const result_packing_material = await managed_client.call('RFC_READ_TABLE', {
+            QUERY_TABLE: 'PACKPO',
+            DELIMITER: ",",
+            OPTIONS: [{ TEXT: `PACKNR EQ '${result_packing_object.DATA[0].WA}' AND PAITEMTYPE EQ 'P'` }],
+            FIELDS: ['MATNR']
+        });
+
+        const result_hu_create = await managed_client.call('BAPI_HU_CREATE', {
+            HEADERPROPOSAL: {
+                PACK_MAT: result_packing_material.DATA[0].WA,
+                HU_GRP3: 'UC11',
+                PACKG_INSTRUCT: result_packing_object.DATA[0].WA,
+                PLANT: '5210',
+                L_PACKG_STATUS_HU: '2',
+                HU_STATUS_INIT: 'A',
+                STGE_LOC: storage_location
+            },
+            ITEMSPROPOSAL: [{
+                HU_ITEM_TYPE: '1',
+                MATERIAL: material,
+                PACK_QTY: cantidad,
+                PLANT: '5210',
+            }],
+        });
+
+        const result_commit = await managed_client.call("BAPI_TRANSACTION_COMMIT", { WAIT: "X" });
+
+        const result_hu_change_header = await managed_client.call('BAPI_HU_CHANGE_HEADER', {
+            HUKEY: result_hu_create.HUKEY,
+            HUCHANGED: {
+                CLIENT: '200',
+                PACK_MAT_OBJECT: '07',
+                WAREHOUSE_NUMBER: '521',
+                HU_STOR_LOC: 'A'
+            },
+        });
+
+        const result_commit2 = await managed_client.call("BAPI_TRANSACTION_COMMIT", { WAIT: "X" });
+
+        return result_hu_create
+    } catch (err) {
+        throw err;
+    } finally {
+        if (managed_client) { managed_client.release() };
+    }
+}
+
 funcion.sapRFC_get_packing_instruction = async (handlingUnit) => {
     let managed_client = await node_RFC.acquire();
     try {
@@ -1635,7 +1721,7 @@ funcion.sapRFC_get_packing_instruction = async (handlingUnit) => {
 }
 
 
-funcion.sapRFC_get_packing_matreials = async (POBJID, PACKNR, hu_packing_instruction) => {
+funcion.sapRFC_get_packing_matreials = async (POBJID, PACKNR) => {
     let managed_client = await node_RFC.acquire();
     try {
         const result_packnr = await managed_client.call('RFC_READ_TABLE', {
@@ -1775,6 +1861,22 @@ funcion.sapRFC_pallet_request_create = async (array_handling_units, packing_mate
 
 }
 
+
+funcion.printLabel_EXT = async (data, labelType) => {
+    try {
+        const result = await axios({
+            method: 'POST',
+            url: `http://${process.env.BARTENDER_SERVER}:${process.env.BARTENDER_PORT}/Integration/${labelType}/Execute/`,
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            data: JSON.stringify(data)
+        });
+        return result;
+    } catch (err) {
+        throw err;
+    }
+};
 
 funcion.printLabel_ONT_UM = async (data, labelType) => {
     try {
