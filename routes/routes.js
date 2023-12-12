@@ -109,6 +109,7 @@ router.post('/consultaVulProduccionStock', routesController.consultaVulProductio
 router.post('/auditoriaVUL', routesController.auditoriaVUL_POST);
 router.post("/getBinStatusReportVUL", routesController.getBinStatusReportVUL_POST);
 router.post("/postCycleSUVUL", routesController.postCycleSUVUL_POST);
+router.post("/handlingVUL", routesController.handlingVUL_POST);
 // ##############Sub Assembly##################
 router.post('/transferSemProd', routesController.transferSemProd_POST);
 router.post('/transferProdSem', routesController.transferProdSem_POST);

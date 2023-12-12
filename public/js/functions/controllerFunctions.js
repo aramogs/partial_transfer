@@ -421,6 +421,21 @@ funcion.materialEXT = (material) => {
     })
 }
 
+funcion.materialVUL = (material) => {
+    return new Promise((resolve, reject) => {
+        dbBartender(`
+        SELECT
+            *
+        FROM
+            vulc
+        WHERE
+            no_sap = '${material}'
+        `)
+            .then((result) => { resolve(result) })
+            .catch((error) => { reject(error) })
+    })
+}
+
 funcion.update_plan_ext = async (plan_id) => {
     try {
         const result = await dbEX(`
@@ -1674,6 +1689,66 @@ funcion.sapRFC_HUEXT = async (storage_location, material, cantidad) => {
     }
 }
 
+
+funcion.sapRFC_HUVUL = async (storage_location, material, cantidad) => {
+    let managed_client = await node_RFC.acquire();
+    try {
+
+        const result_packing_object = await managed_client.call('RFC_READ_TABLE', {
+            QUERY_TABLE: 'PACKKP',
+            DELIMITER: ",",
+            OPTIONS: [{ TEXT: `POBJID EQ 'UC${material}'` }],
+            FIELDS: ['PACKNR']
+        });
+
+        const result_packing_material = await managed_client.call('RFC_READ_TABLE', {
+            QUERY_TABLE: 'PACKPO',
+            DELIMITER: ",",
+            OPTIONS: [{ TEXT: `PACKNR EQ '${result_packing_object.DATA[0].WA}' AND PAITEMTYPE EQ 'P'` }],
+            FIELDS: ['MATNR']
+        });
+
+        const result_hu_create = await managed_client.call('BAPI_HU_CREATE', {
+            HEADERPROPOSAL: {
+                PACK_MAT: result_packing_material.DATA[0].WA,
+                HU_GRP3: 'UC11',
+                PACKG_INSTRUCT: result_packing_object.DATA[0].WA,
+                PLANT: '5210',
+                L_PACKG_STATUS_HU: '2',
+                HU_STATUS_INIT: 'A',
+                STGE_LOC: storage_location
+            },
+            ITEMSPROPOSAL: [{
+                HU_ITEM_TYPE: '1',
+                MATERIAL: material,
+                PACK_QTY: cantidad,
+                PLANT: '5210',
+            }],
+        });
+
+        const result_commit = await managed_client.call("BAPI_TRANSACTION_COMMIT", { WAIT: "X" });
+
+        const result_hu_change_header = await managed_client.call('BAPI_HU_CHANGE_HEADER', {
+            HUKEY: result_hu_create.HUKEY,
+            HUCHANGED: {
+                CLIENT: '200',
+                PACK_MAT_OBJECT: '07',
+                WAREHOUSE_NUMBER: '521',
+                HU_STOR_LOC: 'A'
+            },
+        });
+
+        const result_commit2 = await managed_client.call("BAPI_TRANSACTION_COMMIT", { WAIT: "X" });
+
+        return result_hu_create
+    } catch (err) {
+        return err;
+    } finally {
+        if (managed_client) { managed_client.release() };
+    }
+}
+
+
 funcion.sapRFC_get_packing_instruction = async (handlingUnit) => {
     let managed_client = await node_RFC.acquire();
     try {
@@ -1809,12 +1884,20 @@ funcion.sapRFC_pallet_request_create = async (array_handling_units, packing_mate
         packing_materials.forEach((item) => {
             if (item.PAITEMTYPE === 'P' && item.MATNR !== pallet_packing_material[0]) {
 
-                itemsProposal.push({
-                    HU_ITEM_TYPE: "2",
-                    MATERIAL: item.MATNR,
-                    PACK_QTY: parseFloat(item.TRGQTY),
-                    PLANT: result_hus_history.HUHEADER[0].PLANT,
-                });
+                const exists = itemsProposal.some(
+                    (proposalItem) =>
+                        proposalItem.HU_ITEM_TYPE === '2' && // Check if HU_ITEM_TYPE is '2'
+                        proposalItem.MATERIAL === item.MATNR // Check if MATERIAL matches
+                );
+                if (!exists){
+                    itemsProposal.push({
+                        HU_ITEM_TYPE: "2",
+                        MATERIAL: item.MATNR,
+                        PACK_QTY: parseFloat(item.TRGQTY),
+                        PLANT: result_hus_history.HUHEADER[0].PLANT,
+                    });
+                }
+
             }
         });
 
@@ -1863,6 +1946,22 @@ funcion.sapRFC_pallet_request_create = async (array_handling_units, packing_mate
 
 
 funcion.printLabel_EXT = async (data, labelType) => {
+    try {
+        const result = await axios({
+            method: 'POST',
+            url: `http://${process.env.BARTENDER_SERVER}:${process.env.BARTENDER_PORT}/Integration/${labelType}/Execute/`,
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            data: JSON.stringify(data)
+        });
+        return result;
+    } catch (err) {
+        throw err;
+    }
+};
+
+funcion.printLabel_VUL = async (data, labelType) => {
     try {
         const result = await axios({
             method: 'POST',

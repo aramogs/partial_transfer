@@ -935,63 +935,67 @@ controller.postCycleSUEXT_POST = async (req, res) => {
 
 controller.handlingEXT_POST = async (req, res) => {
     console.log(req.body);
+    try {
+        let station = req.body.station
+        let plan_id = req.body.plan_id
+        let serial_num = req.body.serial_num
+        let process = req.body.process
+        let material = req.body.material
+        let cantidad = req.body.cantidad
+        let capacidad = req.body.capcacidad
+        let numero_etiquetas = req.body.numero_etiquetas
+        let line = req.body.line
+        let impresoType = req.body.impresoType
+        let operator_name = req.body.operator_name
+        let operator_id = req.body.operator_id
+        let processedResults = [];
 
-    let station = req.body.station
-    let plan_id = req.body.plan_id
-    let serial_num = req.body.serial_num
-    let process = req.body.process
-    let material = req.body.material
-    let cantidad = req.body.cantidad
-    let capacidad = req.body.capcacidad
-    let numero_etiquetas = req.body.numero_etiquetas
-    let line = req.body.line
-    let impresoType = req.body.impresoType
-    let operator_name = req.body.operator_name
-    let operator_id = req.body.operator_id
-    let processedResults = [];
-
-    const resultSL = await funcion.getStorageLocation(station);
-    if (resultSL.length === 0) { return res.json({ "key": `Storage Location not set for device "${station}"` }) }
-    const storageLocation = resultSL[0].storage_location;
+        const resultSL = await funcion.getStorageLocation(station);
+        if (resultSL.length === 0) { return res.json({ "key": `Storage Location not set for device "${station}"` }) }
+        const storageLocation = resultSL[0].storage_location;
 
 
-    for (let i = 0; i < numero_etiquetas; i++) {
-        const resultHU = await funcion.sapRFC_HUEXT(storageLocation, material, cantidad)
+        for (let i = 0; i < numero_etiquetas; i++) {
+            const resultHU = await funcion.sapRFC_HUEXT(storageLocation, material, cantidad)
 
-    
-        const labelData = await funcion.getPrinter(station);
-        const materialResult = await funcion.materialEXT(material);
 
-        const data = {
-            printer: labelData[0].impre,
-            no_sap: materialResult[0].no_sap,
-            description: materialResult[0].description,
-            cust_part: materialResult[0].cust_part,
-            platform: materialResult[0].platform,
-            rack: materialResult[0].rack,
-            family: materialResult[0].family,
-            length: materialResult[0].length,
-            line: line,
-            emp_num: operator_name,
-            quant: cantidad,
-            serial: parseInt(resultHU.HUKEY)
-        };
+            const labelData = await funcion.getPrinter(station);
+            const materialResult = await funcion.materialEXT(material);
 
-        let printedLabel = await funcion.printLabel_EXT(data, "EXT")
+            const data = {
+                printer: labelData[0].impre,
+                no_sap: materialResult[0].no_sap,
+                description: materialResult[0].description,
+                cust_part: materialResult[0].cust_part,
+                platform: materialResult[0].platform,
+                rack: materialResult[0].rack,
+                family: materialResult[0].family,
+                length: materialResult[0].length,
+                line: line,
+                emp_num: operator_name,
+                quant: cantidad,
+                serial: parseInt(resultHU.HUKEY)
+            };
 
-        if (printedLabel.status === 200) {
-          let result_update_plan_ext = await funcion.update_plan_ext(plan_id)
-          let result_update_print_ext =  await funcion.update_print_ext(parseInt(resultHU.HUKEY), plan_id, material, operator_id, cantidad, impresoType)
-        }else{
-            return res.json({ "key": `Testr` }) 
+            let printedLabel = await funcion.printLabel_EXT(data, "EXT")
+
+            if (printedLabel.status === 200) {
+                let result_update_plan_ext = await funcion.update_plan_ext(plan_id)
+                let result_update_print_ext = await funcion.update_print_ext(parseInt(resultHU.HUKEY), plan_id, material, operator_id, cantidad, impresoType)
+            } else {
+                return res.json({ "key": `Testr` })
+            }
+
+            processedResults.push(resultHU);
+
+
         }
 
-        processedResults.push(resultHU);
+        res.json(processedResults)
 
-
+    } catch (err) {
+        res.json(err)
     }
-
-    res.json(processedResults)
 }
 
 controller.postCycleSUVUL_POST = async (req, res) => {
@@ -1088,6 +1092,60 @@ controller.postCycleSUVUL_POST = async (req, res) => {
             res.json(response_list)
         })
         .catch(err => { })
+}
+
+
+controller.handlingVUL_POST = async (req, res) => {
+
+    try {
+        let station = req.body.station
+        let material = req.body.material
+        let cantidad = req.body.cantidad
+        let subline = req.body.subline
+
+
+
+        const resultSL = await funcion.getStorageLocation(station);
+        if (resultSL.length === 0) { return res.json({ "key": `Storage Location not set for device "${station}"` }) }
+        const storageLocation = resultSL[0].storage_location;
+
+
+
+        const resultHU = await funcion.sapRFC_HUVUL(storageLocation, material.substring(1), cantidad)
+
+
+        const labelData = await funcion.getPrinter(station);
+        const materialResult = await funcion.materialVUL(material);
+        const data = {
+            printer: labelData[0].impre,
+            no_sap: materialResult[0].no_sap,
+            assembly: materialResult[0].assembly,
+            cust_part: materialResult[0].cust_part,
+            // platform: materialResult[0].platform,
+            rack: materialResult[0].rack,
+            rack_return: materialResult[0].rack_return,
+            // family: materialResult[0].family,
+            // length: materialResult[0].length,
+            line: subline,
+            std_pack: `${parseInt(materialResult[0].std_pack)}`,
+            real_quant: `${parseInt(cantidad)}`,
+            serial_num: `${parseInt(resultHU.HUKEY)}`,
+            client: materialResult[0].client,
+            platform:"VULC"
+        };
+        let printedLabel = await funcion.printLabel_EXT(data, "VULC")
+        if (printedLabel.status === 200) {
+            console.log("Printed correctly");
+        }
+
+        processedResults.push(resultHU);
+
+
+
+
+    } catch (err) {
+        res.json(err)
+    }
 }
 
 controller.cargaListado_GET = (req, res) => {
