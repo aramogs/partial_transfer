@@ -1097,27 +1097,36 @@ controller.postCycleSUVUL_POST = async (req, res) => {
 
 controller.handlingVUL_POST = async (req, res) => {
 
+    console.log(req.body);
     try {
         let station = req.body.station
         let material = req.body.material
-        let cantidad = req.body.cantidad
+        let cantidad = req.body.qty
         let subline = req.body.subline
-
+        let P_material
+        let _material
 
 
         const resultSL = await funcion.getStorageLocation(station);
         if (resultSL.length === 0) { return res.json({ "key": `Storage Location not set for device "${station}"` }) }
         const storageLocation = resultSL[0].storage_location;
 
+        if (material.charAt(0) !== 'P') {
+            P_material = 'P' + material;
+            _material = material
+        } else {
+            P_material = material
+            _material = material.substring(1)
+        }
 
-
-        const resultHU = await funcion.sapRFC_HUVUL(storageLocation, material.substring(1), cantidad)
-
-
-        const labelData = await funcion.getPrinter(station);
-        const materialResult = await funcion.materialVUL(material);
+        const resultHU = await funcion.sapRFC_HUVUL(storageLocation, _material, cantidad)
+        if (!resultHU.HUKEY) { return res.json({ "key": `Handling unit not created ` }) }
+        const result_printer = await funcion.getPrinter(station);
+        if (result_printer.length === 0) { return res.json({ "key": `Printer not set for device ${station}` }) }
+        const materialResult = await funcion.materialVUL(P_material);
+        if (materialResult.length === 0) { return res.json({ "key": `Part number not set in database ${_material}` }) }
         const data = {
-            printer: labelData[0].impre,
+            printer: result_printer[0].impre,
             no_sap: materialResult[0].no_sap,
             assembly: materialResult[0].assembly,
             cust_part: materialResult[0].cust_part,
@@ -1131,18 +1140,54 @@ controller.handlingVUL_POST = async (req, res) => {
             real_quant: `${parseInt(cantidad)}`,
             serial_num: `${parseInt(resultHU.HUKEY)}`,
             client: materialResult[0].client,
-            platform:"VULC"
+            platform: "VULC"
         };
         let printedLabel = await funcion.printLabel_EXT(data, "VULC")
-        if (printedLabel.status === 200) {
-            console.log("Printed correctly");
+        if (printedLabel.status !== 200) { return res.json({ "key": `Label print error check Bartender Server` }) }
+
+
+        res.json(resultHU)
+
+    } catch (err) {
+        return res.json(err)
+    }
+}
+
+controller.postVUL_POST = async (req, res) => {
+    console.log(req.body);
+    try {
+
+        let station = req.body.station
+        let serial_num = req.body.serial_num
+        let material = req.body.material
+        let cantidad = req.body.cantidad
+        let P_material
+        let _material
+
+
+        if (material.charAt(0) !== 'P') {
+            P_material = 'P' + material;
+            _material = material
+        } else {
+            P_material = material
+            _material = material.substring(1)
         }
 
-        processedResults.push(resultHU);
+        const resultSL = await funcion.getStorageLocation(station);
+        if (resultSL.length === 0) { return res.json({ "key": `Storage Location not set for device "${station}"` }) }
+        const storage_location = resultSL[0].storage_location;
+
+        let resultBackflush = await funcion.backflushFG(serial_num);
+        if (resultBackflush.E_RETURN.TYPE !== "S") { 
+            if (!resultBackflush.E_RETURN.MESSAGE.toLowerCase().includes('already posted')) {
+                return res.json({ "key": `${resultBackflush.E_RETURN.MESSAGE}` }) 
+            }
+        }
+        let resultTBNUM = await funcion.sapRFC_TBNUM(_material, cantidad)
+        let resultTransfer = await funcion.sapRFC_transferVul_TR(serial_num, cantidad, "VUL", "TEMPB_VUL", resultTBNUM[0].TBNUM);
 
 
-
-
+        res.json(resultTransfer);
     } catch (err) {
         res.json(err)
     }
@@ -2352,7 +2397,6 @@ controller.consultaSemProductionStock_POST = async (req, res) => {
 
 controller.get_packing_instruction_POST = async (req, res) => {
     try {
-        const material = req.body.material;
         let serial = req.body.serial
 
         const result = await funcion.sapRFC_get_packing_instruction(serial)

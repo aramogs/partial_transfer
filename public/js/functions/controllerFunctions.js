@@ -1,4 +1,5 @@
 const funcion = {};
+const moment = require('moment');
 
 const db = require('../../db/conn_empleados');
 const dbC = require('../../db/conn_cycle');
@@ -771,6 +772,7 @@ funcion.sapRFC_transferVULProd = async (serial, storage_location, storage_type, 
 
 
 funcion.sapRFC_transferProdVul_1 = async (material, qty, storage_location, storage_type, storage_bin) => {
+    
     let managed_client
     try {
         managed_client = await node_RFC.acquire();
@@ -891,6 +893,33 @@ funcion.sapRFC_transferProdSem_2 = async (material, qty, storage_location, stora
     }
 };
 
+funcion.sapRFC_TBNUM = async (material, cantidad) => {
+    let managed_client
+    try {
+        managed_client = await node_RFC.acquire();
+        const yesterday = moment().subtract(1, 'days').format('YYYYMMDD');
+        const result = await managed_client.call('RFC_READ_TABLE', {
+            QUERY_TABLE: 'LTBP',
+            DELIMITER: ",",
+            OPTIONS: [
+                { TEXT: `LGNUM EQ '521' AND MATNR EQ '${material}' AND MENGE EQ '${cantidad}'` },
+                { TEXT: `AND ELIKZ NE 'X' AND WDATU GE '${yesterday}'`},
+            ]
+        });
+        const fields = result.FIELDS.map(field => field.FIELDNAME);
+        const rows = result.DATA.map(data_ => data_.WA.split(","));
+        const res = rows.map(row => Object.fromEntries(fields.map((key, i) => [key, row[i]])));
+        // Sort by TBNUM field in descending order
+        res.sort((a, b) => (parseInt(b.TBNUM) - parseInt(a.TBNUM)));
+        return res;
+    } catch (err) {
+        return err;
+    } finally {
+        if (managed_client) { managed_client.release() };
+    }
+};
+
+
 funcion.sapRFC_transferVul = async (serial, storage_bin) => {
     let managed_client
     try {
@@ -908,6 +937,39 @@ funcion.sapRFC_transferVul = async (serial, storage_bin) => {
         return result;
     } catch (err) {
         return Promise.reject(err);
+    } finally {
+        if (managed_client) { managed_client.release() };
+    }
+};
+
+funcion.sapRFC_transferVul_TR = async (serial_num, quantity, storage_type, storage_bin, tbnum) => {
+
+    let managed_client
+    try {
+        managed_client = await node_RFC.acquire();
+        try {
+            const result = await managed_client.call('L_TO_CREATE_TR', {
+                I_LGNUM: '521',
+                I_TBNUM: `${tbnum}`,
+                IT_TRITE:
+                        [{
+                            TBPOS:"001",
+                            ANFME:`${quantity}`,
+                            ALTME:"ST",
+                            NLTYP:`${storage_type}`,
+                            NLBER:"001",
+                            NLPLA:`${storage_bin}`,
+                            NLENR:`${funcion.addLeadingZeros(serial_num, 20)}`,
+                            LETYP:"001"
+                        }]            
+            });
+
+            return result;
+        } catch (err) {
+            throw err;
+        }
+    } catch (err) {
+        throw err;
     } finally {
         if (managed_client) { managed_client.release() };
     }
@@ -1691,9 +1753,10 @@ funcion.sapRFC_HUEXT = async (storage_location, material, cantidad) => {
 
 
 funcion.sapRFC_HUVUL = async (storage_location, material, cantidad) => {
-    let managed_client = await node_RFC.acquire();
+    let managed_client
     try {
-
+        managed_client = await node_RFC.acquire();
+        
         const result_packing_object = await managed_client.call('RFC_READ_TABLE', {
             QUERY_TABLE: 'PACKKP',
             DELIMITER: ",",
@@ -1742,7 +1805,7 @@ funcion.sapRFC_HUVUL = async (storage_location, material, cantidad) => {
 
         return result_hu_create
     } catch (err) {
-        return err;
+        throw err;
     } finally {
         if (managed_client) { managed_client.release() };
     }
@@ -1810,7 +1873,7 @@ funcion.sapRFC_get_packing_matreials = async (POBJID, PACKNR) => {
         const result_packing_materials = await managed_client.call('RFC_READ_TABLE', {
             QUERY_TABLE: 'PACKPO',
             DELIMITER: ",",
-            OPTIONS: [{ TEXT: `PACKNR EQ '${PACKNR}' ` }],
+            OPTIONS: [{ TEXT: `PACKNR EQ '${PACKNR}' AND INDDEL NE 'X'` }],
             FIELDS: ["PACKITEMID", "MATNR", "PAITEMTYPE", "TRGQTY", "SUBPACKNR"]
         });
 
@@ -1899,7 +1962,7 @@ funcion.sapRFC_pallet_request_create = async (array_handling_units, packing_mate
                 }
 
             }
-        });
+        });        
 
         //5 If the pallet is correct then we can proceed to create the pallet
         const result_hu_create = await managed_client.call('BAPI_HU_CREATE', {
