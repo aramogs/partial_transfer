@@ -1121,7 +1121,7 @@ controller.handlingVUL_POST = async (req, res) => {
 
         const resultHU = await funcion.sapRFC_HUVUL(storageLocation, _material, cantidad)
         if (!resultHU.HUKEY) { return res.json({ "key": `Handling unit not created ` }) }
-m
+
         const result_printVul = await funcion.printLabel_VUL(station, P_material, _material, cantidad, subline, resultHU.HUKEY)
         if (result_printVul.status !== 200) { return res.json({ "key": `Label print error check Bartender Server` }) }
 
