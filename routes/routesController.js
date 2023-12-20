@@ -1121,30 +1121,9 @@ controller.handlingVUL_POST = async (req, res) => {
 
         const resultHU = await funcion.sapRFC_HUVUL(storageLocation, _material, cantidad)
         if (!resultHU.HUKEY) { return res.json({ "key": `Handling unit not created ` }) }
-        const result_printer = await funcion.getPrinter(station);
-        if (result_printer.length === 0) { return res.json({ "key": `Printer not set for device ${station}` }) }
-        const materialResult = await funcion.materialVUL(P_material);
-        if (materialResult.length === 0) { return res.json({ "key": `Part number not set in database ${_material}` }) }
-        const data = {
-            printer: result_printer[0].impre,
-            no_sap: materialResult[0].no_sap,
-            assembly: materialResult[0].assembly,
-            cust_part: materialResult[0].cust_part,
-            // platform: materialResult[0].platform,
-            rack: materialResult[0].rack,
-            rack_return: materialResult[0].rack_return,
-            // family: materialResult[0].family,
-            // length: materialResult[0].length,
-            line: subline,
-            std_pack: `${parseInt(materialResult[0].std_pack)}`,
-            real_quant: `${parseInt(cantidad)}`,
-            serial_num: `${parseInt(resultHU.HUKEY)}`,
-            client: materialResult[0].client,
-            platform: "VULC"
-        };
-        let printedLabel = await funcion.printLabel_EXT(data, "VULC")
-        if (printedLabel.status !== 200) { return res.json({ "key": `Label print error check Bartender Server` }) }
 
+        const result_printVul = await funcion.printLabel_VUL(station, P_material, _material, subline, cantidad, resultHU.HUKEY)
+        if (result_printVul.status !== 200) { return res.json({ "key": `Label print error check Bartender Server` }) }
 
         res.json(resultHU)
 
@@ -1152,6 +1131,8 @@ controller.handlingVUL_POST = async (req, res) => {
         return res.json(err)
     }
 }
+
+
 
 controller.postVUL_POST = async (req, res) => {
     console.log(req.body);
@@ -1178,9 +1159,9 @@ controller.postVUL_POST = async (req, res) => {
         const storage_location = resultSL[0].storage_location;
 
         let resultBackflush = await funcion.backflushFG(serial_num);
-        if (resultBackflush.E_RETURN.TYPE !== "S") { 
+        if (resultBackflush.E_RETURN.TYPE !== "S") {
             if (!resultBackflush.E_RETURN.MESSAGE.toLowerCase().includes('already posted')) {
-                return res.json({ "key": `${resultBackflush.E_RETURN.MESSAGE}` }) 
+                return res.json({ "key": `${resultBackflush.E_RETURN.MESSAGE}` })
             }
         }
         let resultTBNUM = await funcion.sapRFC_TBNUM(_material, cantidad)
@@ -1190,6 +1171,39 @@ controller.postVUL_POST = async (req, res) => {
         res.json(resultTransfer);
     } catch (err) {
         res.json(err)
+    }
+}
+
+controller.reprintLabelVUL_POST = async (req, res) => {
+
+    try {
+        let station = req.body.station
+        let material = req.body.material
+        let cantidad = req.body.cantidad
+        let subline = req.body.subline
+        let serial_num = req.body.serial_num
+        let P_material
+        let _material
+
+        const resultSL = await funcion.getStorageLocation(station);
+        if (resultSL.length === 0) { return res.json({ "key": `Storage Location not set for device "${station}"` }) }
+        const storageLocation = resultSL[0].storage_location;
+
+        if (material.charAt(0) !== 'P') {
+            P_material = 'P' + material;
+            _material = material
+        } else {
+            P_material = material
+            _material = material.substring(1)
+        }
+
+        const result_printVul = await funcion.printLabel_VUL(station, P_material, _material, subline, cantidad, serial_num)
+        if (result_printVul.status !== 200) { return res.json({ "key": `Label print error check Bartender Server` }) }
+
+        res.json(result_printVul)
+
+    } catch (err) {
+        return res.json(err)
     }
 }
 

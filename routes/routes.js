@@ -111,6 +111,7 @@ router.post("/getBinStatusReportVUL", routesController.getBinStatusReportVUL_POS
 router.post("/postCycleSUVUL", routesController.postCycleSUVUL_POST);
 router.post("/handlingVUL", routesController.handlingVUL_POST);
 router.post("/postVUL", routesController.postVUL_POST);
+router.post('/reprintLabelVUL',routesController.reprintLabelVUL_POST);
 // ##############Sub Assembly##################
 router.post('/transferSemProd', routesController.transferSemProd_POST);
 router.post('/transferProdSem', routesController.transferProdSem_POST);

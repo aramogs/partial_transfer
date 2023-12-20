@@ -9,9 +9,46 @@ const dbBartender = require('../../db/conn_b10_bartender');
 const dbBartenderExt = require('../../db/conn_b10_bartender_ext');
 const dbB10 = require('../../db/conn_b10');
 //Require Node-RFC
-const node_RFC = require('../../sap/Connection');
+let node_RFC = require('../../sap/Connection');
 //Require Axios
 const axios = require('axios');
+// Helper function to delay execution
+
+
+const retry = require('retry');
+
+async function ensureSapConnection() {
+    const retry_operation = retry.operation({
+        retries: 360,
+        minTimeout: 10000,
+    });
+
+    return new Promise((resolve, reject) => {
+        retry_operation.attempt(async function (currentAttempt) {
+            try {
+                // Try to acquire a connection from the pool to check if it's working
+                const client = await node_RFC.acquire();
+                // Release the connection back to the pool
+                client.release();
+                // If the connection is acquired successfully, resolve the Promise with the pool
+                resolve(node_RFC);
+            } catch (error) {
+                console.error(`Attempt ${currentAttempt}: Error acquiring connection from SAP pool:`, error);
+                // If there's an error, destroy the existing pool and create a new one
+                node_RFC = null;
+                node_RFC = require('../../sap/Connection');
+                // If the operation should be retried, retry it
+                if (retry_operation.retry(error)) {
+                    return;
+                }
+                // If the operation should not be retried, reject the Promise with the error
+                reject(retry_operation.mainError());
+            }
+        });
+    });
+}
+
+
 
 
 funcion.addLeadingZeros = (num, totalLength) => {
@@ -19,199 +56,182 @@ funcion.addLeadingZeros = (num, totalLength) => {
 }
 
 
-funcion.getUsers = (user) => {
-    return new Promise((resolve, reject) => {
-        db(`
-        SELECT 
-            emp_name
-        FROM
-            empleados
-        WHERE
-            emp_num = ${user}
-        AND 
-            emp_area = "TO"
-        `)
-            .then((result) => { resolve(result) })
-            .catch((error) => { reject(error) })
-    })
+funcion.getUsers = async (user) => {
+    try {
+        const result = await db(`
+            SELECT 
+                emp_name
+            FROM
+                empleados
+            WHERE
+                emp_num = ${user}
+            AND 
+                emp_area = "TO"
+        `);
+        return result;
+    } catch (error) {
+        throw error;
+    }
 }
 
 
-funcion.dBinsert_cycle_Listed_storage_units = (storage_type, storage_bin, storage_units, emp_num) => {
-    return new Promise((resolve, reject) => {
-        let valores_finales = []
-        let arreglo_arreglos = []
+funcion.dBinsert_cycle_Listed_storage_units = async (storage_type, storage_bin, storage_units, emp_num) => {
+    try {
+        let valores_finales = [];
+        let arreglo_arreglos = [];
 
         for (let i = 0; i < storage_units.length; i++) {
-            valores_finales = []
+            valores_finales = [];
 
-            valores_finales.push(`${storage_type}`)
-            valores_finales.push(`${storage_bin}`)
-            valores_finales.push(`${storage_units[i]}`)
-            valores_finales.push(`${emp_num}`)
-            valores_finales.push(`OK`)
-            arreglo_arreglos.push(valores_finales)
+            valores_finales.push(`${storage_type}`);
+            valores_finales.push(`${storage_bin}`);
+            valores_finales.push(`${storage_units[i]}`);
+            valores_finales.push(`${emp_num}`);
+            valores_finales.push(`OK`);
+            arreglo_arreglos.push(valores_finales);
         }
 
         let sql = `INSERT INTO cycle_count (storage_type, storage_bin, storage_unit, emp_num, status) VALUES ?`;
 
-        dbC(sql, [arreglo_arreglos])
-            .then((result) => {
-                resolve(result.affectedRows)
-            })
-            .catch((error) => { reject(error) })
-
-    })
-
+        const result = await dbC(sql, [arreglo_arreglos]);
+        return result.affectedRows;
+    } catch (error) {
+        throw error;
+    }
 }
 
-funcion.dBinsert_cycle_result = (storage_type, storage_bin, storage_unit, emp_num, status, sap_result) => {
-    return new Promise((resolve, reject) => {
-
-
-
-        dbC(`INSERT INTO cycle_count (storage_type, storage_bin, storage_unit, emp_num, status, sap_result) 
-                VALUES ("${storage_type}", "${storage_bin}", "${storage_unit}", "${emp_num}", "${status}", "${sap_result}")`)
-            .then((result) => { resolve(result) })
-            .catch((error) => { reject(error) })
-
-    })
-
+funcion.dBinsert_cycle_result = async (storage_type, storage_bin, storage_unit, emp_num, status, sap_result) => {
+    try {
+        await dbC(`INSERT INTO cycle_count (storage_type, storage_bin, storage_unit, emp_num, status, sap_result) 
+                VALUES ("${storage_type}", "${storage_bin}", "${storage_unit}", "${emp_num}", "${status}", "${sap_result}")`);
+        return;
+    } catch (error) {
+        throw error;
+    }
 }
 
-funcion.dBinsertListed_OKBIN = (storage_type, storage_bin, storage_units, emp_num) => {
-    return new Promise((resolve, reject) => {
-
-
+funcion.dBinsertListed_OKBIN = async (storage_type, storage_bin, storage_units, emp_num) => {
+    try {
         let sql = `INSERT INTO cycle_count (storage_type, storage_bin, storage_unit, emp_num, status) VALUES ?`;
 
-        dbC(sql, [[storage_type, storage_bin, "", emp_num, ""]])
-            .then((result) => {
-                resolve(result.affectedRows)
-            })
-            .catch((error) => { reject(error) })
-
-    })
-
+        const result = await dbC(sql, [[storage_type, storage_bin, "", emp_num, ""]]);
+        return result.affectedRows;
+    } catch (error) {
+        throw error;
+    }
 }
 
-funcion.getListado = (fecha) => {
-    return new Promise((resolve, reject) => {
-        dbC(`
+funcion.getListado = async (fecha) =>{
+    try {
+        const result = await dbC(`
         SELECT DISTINCT
             turno
         FROM
             raw_delivery
         WHERE
             fecha = '${fecha}'
-        `)
-            .then((result) => { resolve(result) })
-            .catch((error) => {
-                console.error(error);
-                reject(error)
-            })
-    })
+        `);
+        return result;
+    } catch (error) {
+        throw error;
+    }
 }
 
-funcion.getTurnos = () => {
-    return new Promise((resolve, reject) => {
-        dbA(`
+funcion.getTurnos = async () => {
+    try {
+        const result = await dbA(`
         SELECT 
             turno_descripcion
         FROM
             turnos
-        `)
-            .then((result) => { resolve(result) })
-            .catch((error) => { reject(error) })
-    })
+        `);
+        return result;
+    } catch (error) {
+        throw error;
+    }
 }
 
 
-funcion.getProgramacion = (fecha) => {
-    return new Promise((resolve, reject) => {
-        dbC(`
+funcion.getProgramacion = async (fecha) => {
+    try {
+        const result = await dbC(`
         SELECT DISTINCT
             turno
         FROM
             raw_delivery
         WHERE
             fecha = '${fecha}'
-        `)
-            .then((result) => { resolve(result) })
-            .catch((error) => {
-                console.error(error);
-                reject(error)
-            })
-    })
+        `);
+        return result;
+    } catch (error) {
+        console.error(error);
+        throw error;
+    }
 }
 
-funcion.getNumerosSAP = () => {
-    return new Promise((resolve, reject) => {
-        dbEX(`
+funcion.getNumerosSAP = async () => {
+    try {
+        const result = await dbEX(`
         SELECT no_sap FROM extr;
-        `)
-            .then((result) => { resolve(result) })
-            .catch((error) => { reject(error) })
-    })
+        `);
+        return result;
+    } catch (error) {
+        throw error;
+    }
 }
 
-funcion.insertListadoExcel = (tabla, titulos, valores, sup_num, fecha, turno) => {
-    return new Promise((resolve, reject) => {
-        let valor
-        let valores_finales = []
-        let arreglo_arreglos = []
-
+funcion.insertListadoExcel = async (tabla, titulos, valores, sup_num, fecha, turno) =>{
+    try {
+        let valor;
+        let valores_finales = [];
+        let arreglo_arreglos = [];
 
         for (let i = 0; i < valores.length; i++) {
-            valores_finales = []
+            valores_finales = [];
             for (let y = 0; y < titulos.length; y++) {
-
-                if (typeof (valores[i][y]) === "string") {
-                    valor = `${valores[i][y]}`
-                } else if (typeof (valores[i][y])) {
-                    valor = valores[i][y]
+                if (typeof valores[i][y] === "string") {
+                    valor = `${valores[i][y]}`;
+                } else if (typeof valores[i][y]) {
+                    valor = valores[i][y];
                 }
-                valores_finales.push(valor)
-
+                valores_finales.push(valor);
             }
-            valores_finales.push(`${sup_num}`)
-            valores_finales.push(`${fecha}`)
-            valores_finales.push(`${turno}`)
+            valores_finales.push(`${sup_num}`);
+            valores_finales.push(`${fecha}`);
+            valores_finales.push(`${turno}`);
 
-            arreglo_arreglos.push(valores_finales)
+            arreglo_arreglos.push(valores_finales);
         }
 
         let sql = `INSERT INTO ${tabla} (${titulos.join()},sup_name,fecha,turno) VALUES ?`;
 
-        dbC(sql, [arreglo_arreglos])
-            .then((result) => {
-                resolve(result.affectedRows)
-
-            })
-            .catch((error) => { console.error(error); reject(error) })
-
-    })
-
+        const result = await dbC(sql, [arreglo_arreglos]);
+        return result.affectedRows;
+    } catch (error) {
+        console.error(error);
+        throw error;
+    }
 }
 
-funcion.getListadoFecha = (fecha) => {
-    return new Promise((resolve, reject) => {
-        dbC(`
+funcion.getListadoFecha = async (fecha) => {
+    try {
+        const result = await dbC(`
         SELECT 
             *
         FROM
             raw_delivery
         WHERE
            fecha like "${fecha}%"
-        `)
-            .then((result) => { resolve(result) })
-            .catch((error) => { reject(error) })
-    })
+        `);
+        return result;
+    } catch (error) {
+        throw error;
+    }
 }
 
-funcion.getInfoIdListado = (id) => {
-    return new Promise((resolve, reject) => {
-        dbC(`
+funcion.getInfoIdListado = async (id) => {
+    try {
+        const result = await dbC(`
         SELECT 
             *
         FROM
@@ -219,44 +239,44 @@ funcion.getInfoIdListado = (id) => {
             
         WHERE
             id = ${id}
-        `)
-            .then((result) => { resolve(result) })
-            .catch((error) => { reject(error) })
-    })
+        `);
+        return result;
+    } catch (error) {
+        throw error;
+    }
 }
 
-funcion.cancelarIdListado = (idplan, motivo) => {
-
-    return new Promise((resolve, reject) => {
-        dbC(`
-        UPDATE 
-            raw_delivery
-        SET
-            status = 'Cancelado', 
-            motivo_cancel ='${motivo}'
-
-        WHERE
-            id= ${idplan}
-        
-        `)
-            .then((result) => { resolve(result) })
-            .catch((error) => { reject(error) })
-    })
+funcion.cancelarIdListado = async (idplan, motivo) =>  {
+    try {
+        const result = await dbC(`
+            UPDATE 
+                raw_delivery
+            SET
+                status = 'Cancelado', 
+                motivo_cancel = '${motivo}'
+            WHERE
+                id = ${idplan}
+        `);
+        return result;
+    } catch (error) {
+        throw error;
+    }
 }
 
-funcion.editarIdListado = (idListado, contenedores) => {
-    return new Promise((resolve, reject) => {
-        dbC(`
-        UPDATE 
-            raw_delivery
-        SET
-            contenedores = ${contenedores}
-        WHERE
-            id= ${idListado}
-            `)
-            .then((result) => { resolve(result) })
-            .catch((error) => { reject(error) })
-    })
+funcion.editarIdListado = async (idListado, contenedores) => {
+    try {
+        const result = await dbC(`
+            UPDATE 
+                raw_delivery
+            SET
+                contenedores = ${contenedores}
+            WHERE
+                id = ${idListado}
+        `);
+        return result;
+    } catch (error) {
+        throw error;
+    }
 }
 
 funcion.getListadoPendiente = async (fecha) => {
@@ -276,21 +296,22 @@ funcion.getListadoPendiente = async (fecha) => {
 };
 
 
-funcion.getListadoProcesado = (fecha) => {
-    return new Promise((resolve, reject) => {
-        dbC(`
-        SELECT 
-            *
-        FROM
-            raw_delivery
-        WHERE
-           status = "Procesado"
-        AND
-            DATE(fecha) = CURDATE()
-        `)
-            .then((result) => { resolve(result) })
-            .catch((error) => { reject(error) })
-    })
+funcion.getListadoProcesado = async (fecha) => {
+    try {
+        const result = await dbC(`
+            SELECT 
+                *
+            FROM
+                raw_delivery
+            WHERE
+                status = "Procesado"
+            AND
+                DATE(fecha) = CURDATE()
+        `);
+        return result;
+    } catch (error) {
+        throw error;
+    }
 }
 
 funcion.getRawMovements = async (raw_id) => {
@@ -320,121 +341,132 @@ funcion.getRawMovements = async (raw_id) => {
 
 
 
-funcion.updateProcesado = (raw_id) => {
-    return new Promise((resolve, reject) => {
-        dbC(`
-        UPDATE 
-            raw_delivery
-        SET
-            status = "Procesado"
-        WHERE
-            id= ${raw_id}
-            `)
-            .then((result) => { resolve(result) })
-            .catch((error) => { reject(error) })
-    })
+funcion.updateProcesado = async (raw_id) => {
+    try {
+        const result = await dbC(`
+            UPDATE 
+                raw_delivery
+            SET
+                status = "Procesado"
+            WHERE
+                id= ${raw_id}
+        `);
+        return result;
+    } catch (error) {
+        throw error;
+    }
 }
 
 
-funcion.getPrinter = (station) => {
-    return new Promise((resolve, reject) => {
-        dbB10(`
-        SELECT impre
-        FROM b10.station_conf
-        WHERE no_estacion = '${station}'
-            `)
-            .then((result) => { resolve(result) })
-            .catch((error) => { reject(error) })
-    })
+funcion.getPrinter = async (station) => {
+    try {
+        const result = await dbB10(`
+            SELECT impre
+            FROM b10.station_conf
+            WHERE no_estacion = '${station}'
+        `);
+        return result;
+    } catch (error) {
+        throw error;
+    }
 }
 
-funcion.insertPartialTransfer = (emp_num, part_num, no_serie, linea, transfer_order) => {
-    return new Promise((resolve, reject) => {
-        dbC(`INSERT INTO partial_transfer (emp_num, part_num, no_serie, linea, transfer_order) 
-                VALUES (${emp_num}, "${part_num}", ${no_serie}, "${linea}", ${transfer_order})`)
-            .then((result) => { resolve(result) })
-            .catch((error) => { reject(error) })
-    })
+funcion.insertPartialTransfer = async (emp_num, part_num, no_serie, linea, transfer_order) => {
+    try {
+        const result = await dbC(`
+            INSERT INTO partial_transfer (emp_num, part_num, no_serie, linea, transfer_order) 
+            VALUES (${emp_num}, "${part_num}", ${no_serie}, "${linea}", ${transfer_order})
+        `);
+        return result;
+    } catch (error) {
+        throw error;
+    }
 }
 
-funcion.insertCompleteTransfer = (emp_num, area, no_serie, storage_bin, result) => {
-    return new Promise((resolve, reject) => {
-        dbC(`INSERT INTO complete_transfer (emp_num, area, no_serie, storage_bin, result) 
-                VALUES (${emp_num}, "${area}", ${no_serie}, "${storage_bin}", "${result}")`)
-            .then((result) => { resolve(result) })
-            .catch((error) => { reject(error) })
-    })
+funcion.insertCompleteTransfer = async (emp_num, area, no_serie, storage_bin, result) => {
+    try {
+        const result = await dbC(`
+            INSERT INTO complete_transfer (emp_num, area, no_serie, storage_bin, result) 
+            VALUES (${emp_num}, "${area}", ${no_serie}, "${storage_bin}", "${result}")
+        `);
+        return result;
+    } catch (error) {
+        throw error;
+    }
 }
 
-funcion.insertRawMovement = (raw_id, storage_type, emp_num, no_serie, sap_result) => {
-    return new Promise((resolve, reject) => {
-        dbC(`INSERT INTO raw_movement (raw_id, storage_type, emp_num, no_serie, sap_result) 
-                VALUES (${raw_id}, "${storage_type}", "${emp_num}", ${no_serie}, "${sap_result}")`)
-            .then((result) => { resolve(result) })
-            .catch((error) => { reject(error) })
-    })
+funcion.insertRawMovement = async (raw_id, storage_type, emp_num, no_serie, sap_result) => {
+    try {
+        const result = await dbC(`INSERT INTO raw_movement (raw_id, storage_type, emp_num, no_serie, sap_result) 
+                VALUES (${raw_id}, "${storage_type}", "${emp_num}", ${no_serie}, "${sap_result}")`);
+        return result;
+    } catch (error) {
+        throw error;
+    }
 }
 
-funcion.printLabelTRA = (data, labelType) => {
-    return new Promise((resolve, reject) => {
-
-        axios({
+funcion.printLabelTRA = async (data, labelType) => {
+    try {
+        const result = await axios({
             method: 'POST',
             url: `http://${process.env.BARTENDER_SERVER}:${process.env.BARTENDER_PORT}/Integration/${labelType}/Execute/`,
             headers: {
                 'Content-Type': 'application/json',
             },
             data: JSON.stringify(data)
-        })
-            .then((result) => { resolve(result) })
-            .catch((err) => { reject(err) })
-
-    })
+        });
+        return result;
+    } catch (error) {
+        throw error;
+    }
 }
 
-funcion.sapFromMandrel = (mandrel, table) => {
-    return new Promise((resolve, reject) => {
-        dbBartender(`
-        SELECT
-            no_sap
-        FROM
-            ${table}
-        WHERE
-            cust_part = "${mandrel}"
-        `)
-            .then((result) => { resolve(result) })
-            .catch((error) => { reject(error) })
-    })
+funcion.sapFromMandrel = async (mandrel, table) => {
+    try {
+        const result = await dbBartender(`
+            SELECT
+                no_sap
+            FROM
+                ${table}
+            WHERE
+                cust_part = "${mandrel}"
+        `);
+        return result;
+    } catch (error) {
+        throw error;
+    }
 }
 
-funcion.materialEXT = (material) => {
-    return new Promise((resolve, reject) => {
-        dbBartenderExt(`
-        SELECT
-            *
-        FROM
-            extr
-        WHERE
-            no_sap = '${material}'
-        `)
-            .then((result) => { resolve(result) })
-            .catch((error) => { reject(error) })
-    })
+funcion.materialEXT = async (material) => {
+    try {
+        const result = await dbBartenderExt(`
+            SELECT
+                *
+            FROM
+                extr
+            WHERE
+                no_sap = '${material}'
+        `);
+        return result;
+    } catch (error) {
+        throw error;
+    }
 }
 
-funcion.materialVUL = (material) => {
-    return new Promise((resolve, reject) => {
-        dbBartender(`
-        SELECT
-            *
-        FROM
-            vulc
-        WHERE
-            no_sap = '${material}'
-        `)
-            .then((result) => { resolve(result) })
-            .catch((error) => { reject(error) })
-    })
+funcion.materialVUL = async (material) => {
+    try {
+        const result = await dbBartender(`
+            SELECT
+                *
+            FROM
+                vulc
+            WHERE
+                no_sap = '${material}'
+        `);
+        return result;
+    } catch (error) {
+        throw error;
+    }
 }
 
 funcion.update_plan_ext = async (plan_id) => {
@@ -467,9 +499,11 @@ funcion.update_print_ext = async (serial_num, plan_id, material, emp_num, cantid
 
 
 funcion.sapRFC_transferFG = async (serial, storage_bin) => {
+    let managed_client_con
     let managed_client
     try {
-        managed_client = await node_RFC.acquire();
+        managed_client_con = await ensureSapConnection();
+        managed_client = await managed_client_con.acquire()
 
         const result = await managed_client.call('L_TO_CREATE_MOVE_SU', {
             I_LENUM: `${funcion.addLeadingZeros(serial, 20)}`,
@@ -494,54 +528,50 @@ funcion.sapRFC_transferFG = async (serial, storage_bin) => {
 
 
 
-funcion.sapRFC_consultaMaterial = (material_number, storage_location) => {
-    return new Promise((resolve, reject) => {
-        node_RFC.acquire()
-            .then(managed_client => {
-                managed_client.call('RFC_READ_TABLE',
-                    {
-                        QUERY_TABLE: 'LQUA',
-                        DELIMITER: ",",
-                        OPTIONS: [{ TEXT: `MATNR EQ '${material_number}'   AND LGORT EQ '${storage_location}'` }]
-                    }
-                )
-                    .then(result => {
-                        let columns = []
-                        let rows = []
-                        let fields = result.FIELDS
+funcion.sapRFC_consultaMaterial = async (material_number, storage_location) => {
+    let managed_client_con
+    let managed_client
+    try {
+        managed_client_con = await ensureSapConnection();
+        managed_client = await managed_client_con.acquire()
+        const result = await managed_client.call('RFC_READ_TABLE', {
+            QUERY_TABLE: 'LQUA',
+            DELIMITER: ",",
+            OPTIONS: [{ TEXT: `MATNR EQ '${material_number}'   AND LGORT EQ '${storage_location}'` }]
+        });
 
-                        fields.forEach(field => {
-                            columns.push(field.FIELDNAME)
-                        });
+        let columns = [];
+        let rows = [];
+        let fields = result.FIELDS;
 
-                        let data = result.DATA
+        fields.forEach(field => {
+            columns.push(field.FIELDNAME);
+        });
 
-                        data.forEach(data_ => {
-                            rows.push(data_.WA.split(","))
-                        });
+        let data = result.DATA;
 
-                        let res = rows.map(row => Object.fromEntries(
-                            columns.map((key, i) => [key, row[i]])
-                        ))
-                        resolve(res)
-                        if (managed_client) { managed_client.release() }
-                    })
-                    .catch(err => {
-                        reject(err)
-                        if (managed_client) { managed_client.release() }
-                    })
-            })
-            .catch(err => {
-                reject(err)
-                if (managed_client) { managed_client.release() }
-            })
-    })
+        data.forEach(data_ => {
+            rows.push(data_.WA.split(","));
+        });
+
+        let res = rows.map(row => Object.fromEntries(
+            columns.map((key, i) => [key, row[i]])
+        ));
+
+        return res;
+    } catch (error) {
+        throw error;
+    } finally {
+        if (managed_client) { managed_client.release(); }
+    }
 }
 
 funcion.sapRFC_consultaMaterial_ST = async (material_number, storage_location, storage_type) => {
+    let managed_client_con
     let managed_client
     try {
-        managed_client = await node_RFC.acquire();
+        managed_client_con = await ensureSapConnection();
+        managed_client = await managed_client_con.acquire()
 
         const options = {
             QUERY_TABLE: 'LQUA',
@@ -565,9 +595,11 @@ funcion.sapRFC_consultaMaterial_ST = async (material_number, storage_location, s
 
 
 funcion.sapRFC_consultaStorageUnit = async (storage_unit) => {
+    let managed_client_con
     let managed_client
     try {
-        managed_client = await node_RFC.acquire();
+        managed_client_con = await ensureSapConnection();
+        managed_client = await managed_client_con.acquire()
 
         const result = await managed_client.call('RFC_READ_TABLE', {
             QUERY_TABLE: 'LQUA',
@@ -590,9 +622,11 @@ funcion.sapRFC_consultaStorageUnit = async (storage_unit) => {
 
 
 funcion.sapRFC_ConsultaMaterialMM03 = async (material_number) => {
+    let managed_client_con
     let managed_client
     try {
-        managed_client = await node_RFC.acquire();
+        managed_client_con = await ensureSapConnection();
+        managed_client = await managed_client_con.acquire()
 
         const result = await managed_client.call('BAPI_MATERIAL_GET_DETAIL', {
             MATERIAL: `${material_number}`, /* Material no. */
@@ -607,55 +641,57 @@ funcion.sapRFC_ConsultaMaterialMM03 = async (material_number) => {
 };
 
 
-funcion.sapRFC_consultaStorageBin = (storage_location, storage_type, storage_bin) => {
-    return new Promise((resolve, reject) => {
-        node_RFC.acquire()
-            .then(managed_client => {
-                managed_client.call('RFC_READ_TABLE',
-                    {
-                        QUERY_TABLE: 'LQUA',
-                        DELIMITER: ",",
-                        OPTIONS: [{ TEXT: `LGORT EQ '${storage_location}' AND LGTYP EQ '${storage_type}' AND LGPLA EQ '${storage_bin.toUpperCase()}'` }]
-                    }
-                )
-                    .then(result => {
-                        let columns = []
-                        let rows = []
-                        let fields = result.FIELDS
+funcion.sapRFC_consultaStorageBin = async (storage_location, storage_type, storage_bin) => {
+    let managed_client_con
+    let managed_client
+    try {
+        managed_client_con = await ensureSapConnection();
+        managed_client = await managed_client_con.acquire()
 
-                        fields.forEach(field => {
-                            columns.push(field.FIELDNAME)
-                        });
+        try {
+            const result = await managed_client.call('RFC_READ_TABLE', {
+                QUERY_TABLE: 'LQUA',
+                DELIMITER: ",",
+                OPTIONS: [{ TEXT: `LGORT EQ '${storage_location}' AND LGTYP EQ '${storage_type}' AND LGPLA EQ '${storage_bin.toUpperCase()}'` }]
+            });
 
-                        let data = result.DATA
+            let columns = [];
+            let rows = [];
+            let fields = result.FIELDS;
 
-                        data.forEach(data_ => {
-                            rows.push(data_.WA.split(","))
-                        });
+            fields.forEach(field => {
+                columns.push(field.FIELDNAME);
+            });
 
-                        let res = rows.map(row => Object.fromEntries(
-                            columns.map((key, i) => [key, row[i]])
-                        ))
-                        resolve(res)
-                        if (managed_client) { managed_client.release() }
-                    })
-                    .catch(err => {
-                        reject(err)
-                        if (managed_client) { managed_client.release() }
-                    })
-            })
-            .catch(err => {
-                reject(err)
-                if (managed_client) { managed_client.release() }
-            })
-    })
-}
+            let data = result.DATA;
+
+            data.forEach(data_ => {
+                rows.push(data_.WA.split(","));
+            });
+
+            let res = rows.map(row => Object.fromEntries(
+                columns.map((key, i) => [key, row[i]])
+            ));
+
+            return res;
+        } catch (err) {
+            throw err;
+        }
+    } catch (err) {
+        throw err;
+    } finally {
+        if (managed_client) { managed_client.release() };
+    }
+};
+
 
 
 funcion.sapRFC_partialTransferStorageUnit = async (material_number, transfer_quantity, source_storage_location, source_storage_type, source_storage_unit, destination_storage_type, destination_storage_bin) => {
+    let managed_client_con
     let managed_client
     try {
-        managed_client = await node_RFC.acquire();
+        managed_client_con = await ensureSapConnection();
+        managed_client = await managed_client_con.acquire()
 
         const result = await managed_client.call('L_TO_CREATE_SINGLE', {
             I_LGNUM: '521',                             /* Warehouse number */
@@ -684,10 +720,14 @@ funcion.sapRFC_partialTransferStorageUnit = async (material_number, transfer_qua
 
 
 funcion.sapRFC_transferEXTProd = async (serial, storage_location, storage_type, storage_bin) => {
+    let managed_client_con
+    let managed_client_con2
     let managed_client
     let managed_client2
     try {
-        managed_client = await node_RFC.acquire();
+        managed_client_con = await ensureSapConnection();
+        managed_client_con2 = await ensureSapConnection();
+        managed_client = await managed_client_con.acquire()
 
         const result_suCheck = await managed_client.call('RFC_READ_TABLE', {
             QUERY_TABLE: 'LQUA',
@@ -707,7 +747,7 @@ funcion.sapRFC_transferEXTProd = async (serial, storage_location, storage_type, 
         } else if (res[0].LGORT !== storage_location) {
             return ({ "key": "Storage Locations do not match", "abapMsgV1": `${serial}` });
         } else {
-            managed_client2 = await node_RFC.acquire();
+            managed_client2 = await managed_client_con2.acquire()
             const result = await managed_client2.call('L_TO_CREATE_MOVE_SU', {
                 I_LENUM: `${funcion.addLeadingZeros(serial, 20)}`,
                 I_BWLVS: '998',
@@ -728,10 +768,13 @@ funcion.sapRFC_transferEXTProd = async (serial, storage_location, storage_type, 
 
 
 funcion.sapRFC_transferVULProd = async (serial, storage_location, storage_type, storage_bin) => {
+    let managed_client_con
+    let managed_client_con2
     let managed_client
     let managed_client2
     try {
-        managed_client = await node_RFC.acquire();
+        managed_client_con = await ensureSapConnection();
+        managed_client = await managed_client_con.acquire()
 
         const result_suCheck = await managed_client.call('RFC_READ_TABLE', {
             QUERY_TABLE: 'LQUA',
@@ -751,7 +794,7 @@ funcion.sapRFC_transferVULProd = async (serial, storage_location, storage_type, 
         } else if (res[0].LGTYP !== "VUL" || res[0].LGORT !== storage_location) {
             return ({ "key": `Check SU SType: ${res[0].LGTYP}, SLocation: ${res[0].LGORT}`, "abapMsgV1": `${serial}` });
         } else {
-            managed_client2 = await node_RFC.acquire();
+            managed_client2 = await managed_client_con2.acquire()
             const result = await managed_client2.call('L_TO_CREATE_MOVE_SU', {
                 I_LENUM: `${funcion.addLeadingZeros(serial, 20)}`,
                 I_BWLVS: '998',
@@ -772,10 +815,12 @@ funcion.sapRFC_transferVULProd = async (serial, storage_location, storage_type, 
 
 
 funcion.sapRFC_transferProdVul_1 = async (material, qty, storage_location, storage_type, storage_bin) => {
-    
+
+    let managed_client_con
     let managed_client
     try {
-        managed_client = await node_RFC.acquire();
+        managed_client_con = await ensureSapConnection();
+        managed_client = await managed_client_con.acquire()
         try {
             const result = await managed_client.call('L_TO_CREATE_SINGLE', {
                 I_LGNUM: '521',
@@ -805,9 +850,11 @@ funcion.sapRFC_transferProdVul_1 = async (material, qty, storage_location, stora
 
 
 funcion.sapRFC_transferProdVul_2 = async (material, qty, storage_location, storage_type, storage_bin) => {
+    let managed_client_con
     let managed_client
     try {
-        managed_client = await node_RFC.acquire();
+        managed_client_con = await ensureSapConnection();
+        managed_client = await managed_client_con.acquire()
         try {
             const result = await managed_client.call('L_TO_CREATE_SINGLE', {
                 I_LGNUM: '521',
@@ -835,9 +882,11 @@ funcion.sapRFC_transferProdVul_2 = async (material, qty, storage_location, stora
 };
 
 funcion.sapRFC_transferProdSem_1 = async (material, qty, storage_location, storage_type, storage_bin) => {
+    let managed_client_con
     let managed_client
     try {
-        managed_client = await node_RFC.acquire();
+        managed_client_con = await ensureSapConnection();
+        managed_client = await managed_client_con.acquire()
         try {
             const result = await managed_client.call('L_TO_CREATE_SINGLE', {
                 I_LGNUM: '521',
@@ -865,9 +914,11 @@ funcion.sapRFC_transferProdSem_1 = async (material, qty, storage_location, stora
 
 
 funcion.sapRFC_transferProdSem_2 = async (material, qty, storage_location, storage_type, storage_bin) => {
+    let managed_client_con
     let managed_client
     try {
-        managed_client = await node_RFC.acquire();
+        managed_client_con = await ensureSapConnection();
+        managed_client = await managed_client_con.acquire()
         try {
             const result = await managed_client.call('L_TO_CREATE_SINGLE', {
                 I_LGNUM: '521',
@@ -894,13 +945,16 @@ funcion.sapRFC_transferProdSem_2 = async (material, qty, storage_location, stora
 };
 
 funcion.sapRFC_TBNUM = async (material, cantidad) => {
+    let managed_client_con
     let managed_client
     try {
-        managed_client = await node_RFC.acquire();
+        managed_client_con = await ensureSapConnection();
+        managed_client = await managed_client_con.acquire()
         const yesterday = moment().subtract(1, 'days').format('YYYYMMDD');
         const result = await managed_client.call('RFC_READ_TABLE', {
             QUERY_TABLE: 'LTBP',
             DELIMITER: ",",
+            ROWCOUNT: 2,
             OPTIONS: [
                 { TEXT: `LGNUM EQ '521' AND MATNR EQ '${material}' AND MENGE EQ '${cantidad}'` },
                 { TEXT: `AND ELIKZ NE 'X' AND WDATU GE '${yesterday}'`},
@@ -921,9 +975,11 @@ funcion.sapRFC_TBNUM = async (material, cantidad) => {
 
 
 funcion.sapRFC_transferVul = async (serial, storage_bin) => {
+    let managed_client_con
     let managed_client
     try {
-        managed_client = await node_RFC.acquire();
+        managed_client_con = await ensureSapConnection();
+        managed_client = await managed_client_con.acquire()
 
         const result = await managed_client.call('L_TO_CREATE_MOVE_SU', {
             I_LENUM: `${funcion.addLeadingZeros(serial, 20)}`,
@@ -936,7 +992,7 @@ funcion.sapRFC_transferVul = async (serial, storage_bin) => {
 
         return result;
     } catch (err) {
-        return Promise.reject(err);
+        throw err;
     } finally {
         if (managed_client) { managed_client.release() };
     }
@@ -944,24 +1000,26 @@ funcion.sapRFC_transferVul = async (serial, storage_bin) => {
 
 funcion.sapRFC_transferVul_TR = async (serial_num, quantity, storage_type, storage_bin, tbnum) => {
 
+    let managed_client_con
     let managed_client
     try {
-        managed_client = await node_RFC.acquire();
+        managed_client_con = await ensureSapConnection();
+        managed_client = await managed_client_con.acquire()
         try {
             const result = await managed_client.call('L_TO_CREATE_TR', {
                 I_LGNUM: '521',
                 I_TBNUM: `${tbnum}`,
                 IT_TRITE:
-                        [{
-                            TBPOS:"001",
-                            ANFME:`${quantity}`,
-                            ALTME:"ST",
-                            NLTYP:`${storage_type}`,
-                            NLBER:"001",
-                            NLPLA:`${storage_bin}`,
-                            NLENR:`${funcion.addLeadingZeros(serial_num, 20)}`,
-                            LETYP:"001"
-                        }]            
+                    [{
+                        TBPOS: "001",
+                        ANFME: `${quantity}`,
+                        ALTME: "ST",
+                        NLTYP: `${storage_type}`,
+                        NLBER: "001",
+                        NLPLA: `${storage_bin}`,
+                        NLENR: `${funcion.addLeadingZeros(serial_num, 20)}`,
+                        LETYP: "001"
+                    }]
             });
 
             return result;
@@ -977,9 +1035,11 @@ funcion.sapRFC_transferVul_TR = async (serial_num, quantity, storage_type, stora
 
 
 funcion.sapRFC_transferSemProd = async (serial, storage_type, storage_bin) => {
+    let managed_client_con
     let managed_client
     try {
-        managed_client = await node_RFC.acquire();
+        managed_client_con = await ensureSapConnection();
+        managed_client = await managed_client_con.acquire()
 
         const parameters = {
             I_LENUM: `${funcion.addLeadingZeros(serial, 20)}`,
@@ -1054,6 +1114,7 @@ funcion.sapRFC_transferSemProd = async (serial, storage_type, storage_bin) => {
 // }
 
 funcion.sapRFC_transferMP = async (storage_unit, storage_type, storage_bin, emp_num, estacion) => {
+    let managed_client_con
     let managed_client
     try {
         const result = await funcion.sapRFC_consultaStorageUnit(funcion.addLeadingZeros(storage_unit, 20));
@@ -1077,7 +1138,8 @@ funcion.sapRFC_transferMP = async (storage_unit, storage_type, storage_bin, emp_
             return ({ "key": `${error}`, "abapMsgV1": `${storage_unit}` });
         }
 
-        managed_client = await node_RFC.acquire();
+        managed_client_con = await ensureSapConnection();
+        managed_client = await managed_client_con.acquire()
         const resultLTO = await managed_client.call('L_TO_CREATE_MOVE_SU', {
             I_LENUM: `${funcion.addLeadingZeros(storage_unit, 20)}`,
             I_BWLVS: '998',
@@ -1097,6 +1159,7 @@ funcion.sapRFC_transferMP = async (storage_unit, storage_type, storage_bin, emp_
 }
 
 funcion.sapRFC_transferMP_BetweenStorageTypes = async (storage_unit, storage_type, storage_bin, emp_num) => {
+    let managed_client_con
     let managed_client
     try {
         const storageUnitInfo = await funcion.sapRFC_consultaStorageUnit(storage_unit);
@@ -1105,7 +1168,8 @@ funcion.sapRFC_transferMP_BetweenStorageTypes = async (storage_unit, storage_typ
             throw ({ "key": "DEL: Check your entries", "abapMsgV1": `${serial}` });
         }
 
-        managed_client = await node_RFC.acquire();
+        managed_client_con = await ensureSapConnection();
+        managed_client = await managed_client_con.acquire()
 
         const result = await managed_client.call('L_TO_CREATE_MOVE_SU', {
             I_LENUM: `${storage_unit}`,
@@ -1131,9 +1195,11 @@ funcion.sapRFC_transferMP_BetweenStorageTypes = async (storage_unit, storage_typ
 
 
 funcion.sapRFC_transferMP1_DEL = async (storage_unit, storage_type, storage_bin, emp_num, raw_id) => {
+    let managed_client_con
     let managed_client
     try {
-        managed_client = await node_RFC.acquire();
+        managed_client_con = await ensureSapConnection();
+        managed_client = await managed_client_con.acquire()
 
         const result = await managed_client.call('L_TO_CREATE_MOVE_SU', {
             I_LENUM: `${funcion.addLeadingZeros(storage_unit, 20)}`,
@@ -1157,10 +1223,13 @@ funcion.sapRFC_transferMP1_DEL = async (storage_unit, storage_type, storage_bin,
 
 
 funcion.sapRFC_transferMP1_DELX = async (storage_unit, storage_type, storage_bin, material, cantidad, emp_num, raw_id) => {
+    let managed_client_con
+    let managed_client_con2
     let managed_client
     let managed_client2
     try {
-        managed_client = await node_RFC.acquire();
+        managed_client_con = await ensureSapConnection();
+        managed_client = await managed_client_con.acquire()
 
         const result_transfer199 = await managed_client.call('L_TO_CREATE_SINGLE',
             {
@@ -1174,7 +1243,7 @@ funcion.sapRFC_transferMP1_DELX = async (storage_unit, storage_type, storage_bin
                 I_VLENR: `${funcion.addLeadingZeros(storage_unit, 20)}`
             }
         )
-        managed_client2 = await node_RFC.acquire();
+        managed_client2 = await managed_client_con2.acquire()
         const result_transfer998 = await managed_client2.call('L_TO_CREATE_SINGLE',
             {
                 I_LGNUM: `521`,
@@ -1207,9 +1276,11 @@ funcion.sapRFC_transferMP1_DELX = async (storage_unit, storage_type, storage_bin
 
 
 funcion.sapRFC_transferMP_Obsoletos = async (storage_unit, storage_type, storage_bin, emp_num, raw_id) => {
+    let managed_client_con
     let managed_client
     try {
-        managed_client = await node_RFC.acquire();
+        managed_client_con = await ensureSapConnection();
+        managed_client = await managed_client_con.acquire()
 
         const result = await managed_client.call('L_TO_CREATE_MOVE_SU', {
             I_LENUM: `${storage_unit}`,
@@ -1232,184 +1303,148 @@ funcion.sapRFC_transferMP_Obsoletos = async (storage_unit, storage_type, storage
 };
 
 
-funcion.sapRFC_transferExt = (serial, storage_bin) => {
-    return new Promise((resolve, reject) => {
-        node_RFC.acquire()
-            .then(managed_client => {
-                managed_client.call('L_TO_CREATE_MOVE_SU',
-                    {
-                        I_LENUM: `${funcion.addLeadingZeros(serial, 20)}`,
-                        I_BWLVS: `998`,
-                        I_LETYP: `IP`,
-                        I_NLTYP: `EXT`,
-                        I_NLBER: `001`,
-                        I_NLPLA: `${storage_bin.toUpperCase()}`
-                    }
-                )
-                    .then(result => {
-                        if (managed_client) { managed_client.release() }
-                        resolve(result)
-                    })
-                    .catch(err => {
-                        if (managed_client) { managed_client.release() }
-                        reject(err)
-                    })
-            })
-            .catch(err => {
-                reject(err)
-            });
-    })
+funcion.sapRFC_transferExt = async (serial, storage_bin) => {
+    let managed_client_con
+    let managed_client
+    try {
+        managed_client_con = await ensureSapConnection();
+        managed_client = await managed_client_con.acquire()
+        const result = await managed_client.call('L_TO_CREATE_MOVE_SU', {
+            I_LENUM: `${funcion.addLeadingZeros(serial, 20)}`,
+            I_BWLVS: `998`,
+            I_LETYP: `IP`,
+            I_NLTYP: `EXT`,
+            I_NLBER: `001`,
+            I_NLPLA: `${storage_bin.toUpperCase()}`
+        });
+        return result;
+    } catch (err) {
+        throw err;
+    } finally {
+        if (managed_client) { managed_client.release() };
+    }
 }
 
-funcion.sapRFC_transferExtRP = (serial, storage_type, storage_bin) => {
-    return new Promise((resolve, reject) => {
-        node_RFC.acquire()
-            .then(managed_client => {
-                managed_client.call('L_TO_CREATE_MOVE_SU',
-                    {
-                        I_LENUM: `${funcion.addLeadingZeros(serial, 20)}`,
-                        I_BWLVS: `998`,
-                        I_LETYP: `IP`,
-                        I_NLTYP: `${storage_type.toUpperCase()}`,
-                        I_NLBER: `001`,
-                        I_NLPLA: `${storage_bin.toUpperCase()}`
-                    }
-                )
-                    .then(result => {
-                        if (managed_client) { managed_client.release() }
-                        resolve(result)
-                    })
-                    .catch(err => {
-                        if (managed_client) { managed_client.release() }
-                        reject(err)
-                    });
-            })
-            .catch(err => {
-                reject(err)
-            });
-    })
+funcion.sapRFC_transferExtRP = async (serial, storage_type, storage_bin) => {
+    let managed_client_con
+    let managed_client
+    try {
+        managed_client_con = await ensureSapConnection();
+        managed_client = await managed_client_con.acquire()
+        const result = await managed_client.call('L_TO_CREATE_MOVE_SU', {
+            I_LENUM: `${funcion.addLeadingZeros(serial, 20)}`,
+            I_BWLVS: `998`,
+            I_LETYP: `IP`,
+            I_NLTYP: `${storage_type.toUpperCase()}`,
+            I_NLBER: `001`,
+            I_NLPLA: `${storage_bin.toUpperCase()}`
+        });
+        return result;
+    } catch (err) {
+        throw err;
+    } finally {
+        if (managed_client) { managed_client.release() };
+    }
 }
 
-funcion.sapRFC_consultaMaterial_EXT = (material_number, storage_location, storage_type, storage_bin) => {
-    return new Promise((resolve, reject) => {
-        node_RFC.acquire()
-            .then(managed_client => {
-                managed_client.call('RFC_READ_TABLE',
-                    {
-                        QUERY_TABLE: 'LQUA',
-                        DELIMITER: ",",
-                        OPTIONS: [{ TEXT: `MATNR EQ '${material_number.toUpperCase()}' AND LGTYP EQ '${storage_type}' AND LGPLA EQ '${storage_bin}'` }]
-                        // FIELDS: ["MATNR", "LGORT", "LGTYP", "LGPLA"]
-                    }
-                )
-                    .then(result => {
-                        let columns = []
-                        let rows = []
-                        let fields = result.FIELDS
+funcion.sapRFC_consultaMaterial_EXT = async (material_number, storage_location, storage_type, storage_bin) => {
+    let managed_client_con
+    let managed_client
+    try {
+        managed_client_con = await ensureSapConnection();
+        managed_client = await managed_client_con.acquire()
+        const result = await managed_client.call('RFC_READ_TABLE', {
+            QUERY_TABLE: 'LQUA',
+            DELIMITER: ",",
+            OPTIONS: [{ TEXT: `MATNR EQ '${material_number.toUpperCase()}' AND LGTYP EQ '${storage_type}' AND LGPLA EQ '${storage_bin}'` }]
+            // FIELDS: ["MATNR", "LGORT", "LGTYP", "LGPLA"]
+        });
 
-                        fields.forEach(field => {
-                            columns.push(field.FIELDNAME)
-                        });
+        let columns = [];
+        let rows = [];
+        let fields = result.FIELDS;
 
-                        let data = result.DATA
+        fields.forEach(field => {
+            columns.push(field.FIELDNAME);
+        });
 
-                        data.forEach(data_ => {
-                            rows.push(data_.WA.split(","))
-                        });
+        let data = result.DATA;
 
-                        let res = rows.map(row => Object.fromEntries(
-                            columns.map((key, i) => [key, row[i]])
-                        ))
-                        resolve(res)
-                        if (managed_client) { managed_client.release() }
-                    })
-                    .catch(err => {
-                        reject(err)
-                        if (managed_client) { managed_client.release() }
-                    })
-            })
-            .catch(err => {
-                reject(err)
-                if (managed_client) { managed_client.release() }
-            })
-    })
+        data.forEach(data_ => {
+            rows.push(data_.WA.split(","));
+        });
+
+        let res = rows.map(row => Object.fromEntries(
+            columns.map((key, i) => [key, row[i]])
+        ));
+
+        return res;
+    } catch (err) {
+        throw err;
+    } finally {
+        if (managed_client) { managed_client.release() };
+    }
 }
 
-funcion.sapRFC_transferEXTPR_1 = (material, cantidad, fromStorageLocation, fromStorageType, fromStorageBin) => {
-    return new Promise((resolve, reject) => {
+funcion.sapRFC_transferEXTPR_1 = async (material, cantidad, fromStorageLocation, fromStorageType, fromStorageBin) => {
+    let managed_client_con
+    let managed_client
+    try {
+        managed_client_con = await ensureSapConnection();
+        managed_client = await managed_client_con.acquire()
+        const result = await managed_client.call('L_TO_CREATE_SINGLE', {
+            I_LGNUM: `521`,
+            I_BWLVS: `100`,
+            I_MATNR: `${material}`,
+            I_WERKS: `5210`,
+            I_ANFME: `${cantidad}`,
+            I_LGORT: `${fromStorageLocation.toUpperCase()}`,
+            I_LETYP: `IP`,
+            I_VLTYP: `${fromStorageType.toUpperCase()}`,
+            I_VLBER: `001`,
+            I_VLPLA: `${fromStorageBin.toUpperCase()}`
+        });
 
-        node_RFC.acquire()
-            .then(managed_client => {
-                managed_client.call('L_TO_CREATE_SINGLE',
-                    {
-                        I_LGNUM: `521`,
-                        I_BWLVS: `100`,
-                        I_MATNR: `${material}`,
-                        I_WERKS: `5210`,
-                        I_ANFME: `${cantidad}`,
-                        I_LGORT: `${fromStorageLocation.toUpperCase()}`,
-                        I_LETYP: `IP`,
-                        I_VLTYP: `${fromStorageType.toUpperCase()}`,
-                        I_VLBER: `001`,
-                        I_VLPLA: `${fromStorageBin.toUpperCase()}`
-
-                    }
-                )
-                    .then(result => {
-                        if (managed_client) { managed_client.release() }
-                        resolve(result)
-                    })
-                    .catch(err => {
-                        if (managed_client) { managed_client.release() }
-                        reject(err)
-                    });
-            })
-            .catch(err => {
-                reject(err)
-            });
-    })
+        return result;
+    } catch (err) {
+        throw err;
+    } finally {
+        if (managed_client) { managed_client.release() };
+    }
 }
 
-funcion.sapRFC_transferEXTPR_2 = (material, cantidad, toStorageLocation) => {
-    return new Promise((resolve, reject) => {
-
-        node_RFC.acquire()
-            .then(managed_client => {
-                managed_client.call('L_TO_CREATE_SINGLE',
-                    {
-                        I_LGNUM: `521`,
-                        I_BWLVS: `199`,
-                        I_MATNR: `${material}`,
-                        I_WERKS: `5210`,
-                        I_ANFME: `${cantidad}`,
-                        I_LGORT: `${toStorageLocation.toUpperCase()}`,
-                        I_LETYP: `IP`,
-                        I_NLTYP: `EXT`,
-                        I_NLBER: `001`,
-                        I_NLPLA: `TEMPR_EXT`
-
-
-                    }
-                )
-                    .then(result => {
-                        if (managed_client) { managed_client.release() }
-                        resolve(result)
-                    })
-                    .catch(err => {
-                        if (managed_client) { managed_client.release() }
-                        reject(err)
-                    });
-            })
-            .catch(err => {
-                reject(err)
-            });
-    })
+funcion.sapRFC_transferEXTPR_2 = async (material, cantidad, toStorageLocation) => {
+    let managed_client_con
+    let managed_client
+    try {
+        managed_client_con = await ensureSapConnection();
+        managed_client = await managed_client_con.acquire()
+        const result = await managed_client.call('L_TO_CREATE_SINGLE', {
+            I_LGNUM: `521`,
+            I_BWLVS: `199`,
+            I_MATNR: `${material}`,
+            I_WERKS: `5210`,
+            I_ANFME: `${cantidad}`,
+            I_LGORT: `${toStorageLocation.toUpperCase()}`,
+            I_LETYP: `IP`,
+            I_NLTYP: `EXT`,
+            I_NLBER: `001`,
+            I_NLPLA: `TEMPR_EXT`
+        });
+        return result;
+    } catch (err) {
+        throw err;
+    } finally {
+        if (managed_client) { managed_client.release() };
+    }
 }
 
 funcion.sapRFC_SbinOnStypeExists = async (storage_type, storage_bin) => {
+    let managed_client_con
     let managed_client
     try {
-        managed_client = await node_RFC.acquire();
+        managed_client_con = await ensureSapConnection();
+        managed_client = await managed_client_con.acquire()
 
         const result = await managed_client.call('RFC_READ_TABLE', {
             QUERY_TABLE: 'LAGP',
@@ -1422,59 +1457,54 @@ funcion.sapRFC_SbinOnStypeExists = async (storage_type, storage_bin) => {
         const res = rows.map(row => Object.fromEntries(fields.map((key, i) => [key, row[i]])));
         return res;
     } catch (err) {
-        console.error(err);
-        return Promise.reject(err);
+        throw err;
     } finally {
         if (managed_client) { managed_client.release() };
     }
 };
 
 
-funcion.sapRFC_consultaMaterial_VUL = (material_number, storage_location, storage_type, storage_bin) => {
-    return new Promise((resolve, reject) => {
-        node_RFC.acquire()
-            .then(managed_client => {
-                managed_client.call('RFC_READ_TABLE',
-                    {
-                        QUERY_TABLE: 'LQUA',
-                        DELIMITER: ",",
-                        OPTIONS: [{ TEXT: `MATNR EQ ${material_number.toUpperCase()} AND LGTYP EQ '${storage_type}' AND LGPLA EQ '${storage_bin}'` }]
-                        // FIELDS: ["MATNR", "LGORT", "LGTYP", "LGPLA"]
-                    }
-                )
-                    .then(result => {
-                        let columns = []
-                        let rows = []
-                        let fields = result.FIELDS
-                        fields.forEach(field => {
-                            columns.push(field.FIELDNAME)
-                        });
-                        let data = result.DATA
-                        data.forEach(data_ => {
-                            rows.push(data_.WA.split(","))
-                        });
-                        let res = rows.map(row => Object.fromEntries(
-                            columns.map((key, i) => [key, row[i]])
-                        ))
-                        resolve(res)
-                        if (managed_client) { managed_client.release() }
-                    })
-                    .catch(err => {
-                        reject(err)
-                        if (managed_client) { managed_client.release() }
-                    })
-            })
-            .catch(err => {
-                reject(err)
-                if (managed_client) { managed_client.release() }
-            })
-    })
+funcion.sapRFC_consultaMaterial_VUL = async (material_number, storage_location, storage_type, storage_bin) => {
+    let managed_client_con
+    let managed_client
+    try {
+        managed_client_con = await ensureSapConnection();
+        managed_client = await managed_client_con.acquire()
+        const result = await managed_client.call('RFC_READ_TABLE', {
+            QUERY_TABLE: 'LQUA',
+            DELIMITER: ",",
+            OPTIONS: [{ TEXT: `MATNR EQ ${material_number.toUpperCase()} AND LGTYP EQ '${storage_type}' AND LGPLA EQ '${storage_bin}'` }]
+            // FIELDS: ["MATNR", "LGORT", "LGTYP", "LGPLA"]
+        });
+
+        let columns = [];
+        let rows = [];
+        let fields = result.FIELDS;
+        fields.forEach(field => {
+            columns.push(field.FIELDNAME);
+        });
+        let data = result.DATA;
+        data.forEach(data_ => {
+            rows.push(data_.WA.split(","));
+        });
+        let res = rows.map(row => Object.fromEntries(
+            columns.map((key, i) => [key, row[i]])
+        ));
+
+        return res;
+    } catch (err) {
+        throw err;
+    } finally {
+        if (managed_client) { managed_client.release(); }
+    }
 }
 
 funcion.sapRFC_consultaMaterial_SEM = async (material_number, storage_location, storage_type) => {
+    let managed_client_con
     let managed_client
     try {
-        managed_client = await node_RFC.acquire();
+        managed_client_con = await ensureSapConnection();
+        managed_client = await managed_client_con.acquire()
         const result = await managed_client.call('RFC_READ_TABLE', {
             QUERY_TABLE: 'LQUA',
             DELIMITER: ",",
@@ -1494,52 +1524,50 @@ funcion.sapRFC_consultaMaterial_SEM = async (material_number, storage_location, 
 };
 
 
-funcion.getStorageLocation = (station) => {
-    return new Promise((resolve, reject) => {
-        dbB10(`
-        SELECT storage_location
-        FROM b10.station_conf
-        WHERE no_estacion = '${station}'
-            `)
-            .then((result) => { resolve(result) })
-            .catch((error) => { reject(error) })
-    })
+funcion.getStorageLocation = async (station) => {
+    try {
+        const result = await dbB10(`
+            SELECT storage_location
+            FROM b10.station_conf
+            WHERE no_estacion = '${station}'
+        `);
+        return result;
+    } catch (error) {
+        throw error;
+    }
 }
 
-funcion.sapRFC_transfer = (serial, storage_type, storage_bin) => {
-    return new Promise((resolve, reject) => {
-        node_RFC.acquire()
-            .then(managed_client => {
+funcion.sapRFC_transfer = async (serial, storage_type, storage_bin) => {
+    let managed_client_con
+    let managed_client
+    try {
+        managed_client_con = await ensureSapConnection();
+        managed_client = await managed_client_con.acquire()
 
-                managed_client.call('L_TO_CREATE_MOVE_SU',
-                    {
-                        I_LENUM: `${funcion.addLeadingZeros(serial, 20)}`,
-                        I_BWLVS: `998`,
-                        I_NLTYP: `${storage_type}`,
-                        I_NLBER: `001`,
-                        I_NLPLA: `${storage_bin.toUpperCase()}`
-                    }
-                )
-                    .then(result => {
-                        if (managed_client) { managed_client.release() }
-                        resolve(result)
-                    })
-                    .catch(err => {
-                        if (managed_client) { managed_client.release() }
-                        reject(err)
-                    });
-            })
-            .catch(err => {
-                reject(err)
-            });
-    })
-}
+        const result = await managed_client.call('L_TO_CREATE_MOVE_SU', {
+            I_LENUM: `${funcion.addLeadingZeros(serial, 20)}`,
+            I_BWLVS: `998`,
+            I_NLTYP: `${storage_type}`,
+            I_NLBER: `001`,
+            I_NLPLA: `${storage_bin.toUpperCase()}`
+        });
+
+        return result;
+    } catch (err) {
+        throw err;
+    } finally {
+        if (managed_client) { managed_client.release() };
+    }
+};
 
 funcion.sapRFC_transferSlocCheck = async (serial, storage_location, storage_type, storage_bin) => {
+    let managed_client_con
+    let managed_client_con2
     let managed_client
     let managed_client2
     try {
-        managed_client = await node_RFC.acquire();
+        managed_client_con = await ensureSapConnection();
+        managed_client = await managed_client_con.acquire()
 
         const result_suCheck = await managed_client.call('RFC_READ_TABLE', {
             QUERY_TABLE: 'LQUA',
@@ -1566,7 +1594,7 @@ funcion.sapRFC_transferSlocCheck = async (serial, storage_location, storage_type
                 I_NLBER: '001',
                 I_NLPLA: storage_bin.toUpperCase()
             };
-            managed_client2 = await node_RFC.acquire();
+            managed_client2 = await managed_client_con2.acquire()
             const result = await managed_client2.call('L_TO_CREATE_MOVE_SU', inputParameters);
             return result;
         }
@@ -1580,9 +1608,11 @@ funcion.sapRFC_transferSlocCheck = async (serial, storage_location, storage_type
 
 
 funcion.sapRFC_materialDescription = async (material_number) => {
+    let managed_client_con
     let managed_client
     try {
-        managed_client = await node_RFC.acquire();
+        managed_client_con = await ensureSapConnection();
+        managed_client = await managed_client_con.acquire()
 
         const result = await managed_client.call('BAPI_MATERIAL_GET_DETAIL', {
             MATERIAL: `${material_number}`,
@@ -1608,9 +1638,11 @@ funcion.insertRawDelivery = async (valores) => {
 }
 
 funcion.backflushFG = async (serial) => {
+    let managed_client_con
     let managed_client
     try {
-        managed_client = await node_RFC.acquire();
+        managed_client_con = await ensureSapConnection();
+        managed_client = await managed_client_con.acquire()
 
         const result = await managed_client.call('ZWM_HU_MFHU', {
             I_EXIDV: `${funcion.addLeadingZeros(serial, 20)}`,
@@ -1677,26 +1709,29 @@ funcion.update_sem_current_employee = async (part_number) => {
     }
 };
 
-funcion.mpStdQuant = (no_sap, table) => {
-    return new Promise((resolve, reject) => {
-        dbBartender(`
-        SELECT
-            std_pack
-        FROM
-            ${table}
-        WHERE
-            no_sap = "${no_sap}"
-        `)
-            .then((result) => { resolve(result) })
-            .catch((error) => { reject(error) })
-    })
+funcion.mpStdQuant = async (no_sap, table) => {
+    try {
+        const result = await dbBartender(`
+            SELECT
+                std_pack
+            FROM
+                ${table}
+            WHERE
+                no_sap = "${no_sap}"
+        `);
+        return result;
+    } catch (error) {
+        throw error;
+    }
 }
 
 
 funcion.sapRFC_HUEXT = async (storage_location, material, cantidad) => {
-    let managed_client = await node_RFC.acquire();
+    let managed_client_con
+    let managed_client
     try {
-
+        managed_client_con = await ensureSapConnection();
+        managed_client = await managed_client_con.acquire()
         const result_packing_object = await managed_client.call('RFC_READ_TABLE', {
             QUERY_TABLE: 'PACKKP',
             DELIMITER: ",",
@@ -1753,10 +1788,11 @@ funcion.sapRFC_HUEXT = async (storage_location, material, cantidad) => {
 
 
 funcion.sapRFC_HUVUL = async (storage_location, material, cantidad) => {
+    let managed_client_con
     let managed_client
     try {
-        managed_client = await node_RFC.acquire();
-        
+        managed_client_con = await ensureSapConnection();
+        managed_client = await managed_client_con.acquire()
         const result_packing_object = await managed_client.call('RFC_READ_TABLE', {
             QUERY_TABLE: 'PACKKP',
             DELIMITER: ",",
@@ -1813,8 +1849,11 @@ funcion.sapRFC_HUVUL = async (storage_location, material, cantidad) => {
 
 
 funcion.sapRFC_get_packing_instruction = async (handlingUnit) => {
-    let managed_client = await node_RFC.acquire();
+    let managed_client_con
+    let managed_client
     try {
+        managed_client_con = await ensureSapConnection();
+        managed_client = await managed_client_con.acquire()
         //1 First step scan HU and get packing instruction to use on table PACKKP and get all master packing instructions
         const result_hu_history = await managed_client.call('BAPI_HU_GETLIST', {
             NOTEXT: '',
@@ -1860,8 +1899,11 @@ funcion.sapRFC_get_packing_instruction = async (handlingUnit) => {
 
 
 funcion.sapRFC_get_packing_matreials = async (POBJID, PACKNR) => {
-    let managed_client = await node_RFC.acquire();
+    let managed_client_con
+    let managed_client
     try {
+        managed_client_con = await ensureSapConnection();
+        managed_client = await managed_client_con.acquire()
         const result_packnr = await managed_client.call('RFC_READ_TABLE', {
             QUERY_TABLE: 'PACKKP',
             DELIMITER: ",",
@@ -1905,9 +1947,12 @@ funcion.sapRFC_get_packing_matreials = async (POBJID, PACKNR) => {
 }
 
 funcion.sapRFC_pallet_request_create = async (array_handling_units, packing_materials, result_packingr_formatted, pallet_packing_material, packing_instruction, packing_id) => {
-    const resultArray = array_handling_units.map(serial => funcion.addLeadingZeros(serial, 20));
-    let managed_client = await node_RFC.acquire();
+    let managed_client_con
+    let managed_client
     try {
+        const resultArray = array_handling_units.map(serial => funcion.addLeadingZeros(serial, 20));
+        managed_client_con = await ensureSapConnection();
+        managed_client = await managed_client_con.acquire()
         const result_hus_history = await managed_client.call('BAPI_HU_GETLIST', {
             NOTEXT: 'X',
             ONLYKEYS: '',
@@ -1952,7 +1997,7 @@ funcion.sapRFC_pallet_request_create = async (array_handling_units, packing_mate
                         proposalItem.HU_ITEM_TYPE === '2' && // Check if HU_ITEM_TYPE is '2'
                         proposalItem.MATERIAL === item.MATNR // Check if MATERIAL matches
                 );
-                if (!exists){
+                if (!exists) {
                     itemsProposal.push({
                         HU_ITEM_TYPE: "2",
                         MATERIAL: item.MATNR,
@@ -1962,7 +2007,7 @@ funcion.sapRFC_pallet_request_create = async (array_handling_units, packing_mate
                 }
 
             }
-        });        
+        });
 
         //5 If the pallet is correct then we can proceed to create the pallet
         const result_hu_create = await managed_client.call('BAPI_HU_CREATE', {
@@ -2024,9 +2069,34 @@ funcion.printLabel_EXT = async (data, labelType) => {
     }
 };
 
-funcion.printLabel_VUL = async (data, labelType) => {
+funcion.printLabel_VUL = async (station, P_material, _material, cantidad, subline, serial_num) => {
+    const labelType = "VULC"
     try {
-        const result = await axios({
+        const result_printer = await funcion.getPrinter(station);
+        if (result_printer.length === 0) { return res.json({ "key": `Printer not set for device ${station}` }) }
+        const materialResult = await funcion.materialVUL(P_material);
+        if (materialResult.length === 0) { return res.json({ "key": `Part number not set in database ${_material}` }) }
+        const data = {
+            printer: result_printer[0].impre,
+            no_sap: materialResult[0].no_sap,
+            assembly: materialResult[0].assembly,
+            cust_part: materialResult[0].cust_part,
+            // platform: materialResult[0].platform,
+            rack: materialResult[0].rack,
+            rack_return: materialResult[0].rack_return,
+            // family: materialResult[0].family,
+            // length: materialResult[0].length,
+            line: subline,
+            std_pack: `${parseInt(materialResult[0].std_pack)}`,
+            real_quant: `${parseInt(cantidad)}`,
+            serial_num: `${parseInt(serial_num)}`,
+            client: materialResult[0].client,
+            platform: "VULC"
+        };
+        // let printedLabel = await funcion.printLabel_VUL(data, "VULC")
+        // if (printedLabel.status !== 200) { return res.json({ "key": `Label print error check Bartender Server` }) }
+
+        const printedLabel = await axios({
             method: 'POST',
             url: `http://${process.env.BARTENDER_SERVER}:${process.env.BARTENDER_PORT}/Integration/${labelType}/Execute/`,
             headers: {
@@ -2034,7 +2104,7 @@ funcion.printLabel_VUL = async (data, labelType) => {
             },
             data: JSON.stringify(data)
         });
-        return result;
+        return printedLabel;
     } catch (err) {
         throw err;
     }
@@ -2383,8 +2453,11 @@ const test_hu_number = '00000000000187631125';
 
 
 funcion.sapRFC_createHU = async function main() {
-    let managed_client = await node_RFC.acquire();
+    let managed_client_con
+    let managed_client
     try {
+        managed_client_con = await ensureSapConnection();
+        managed_client = await managed_client_con.acquire()
         //1 First step scan HU and get packing instruction to use on table PACKKP and get all master packing instructions
         const result_hu_history = await managed_client.call('BAPI_HU_GETLIST', {
             NOTEXT: '',
