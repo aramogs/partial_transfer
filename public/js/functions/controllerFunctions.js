@@ -747,6 +747,7 @@ funcion.sapRFC_transferEXTProd = async (serial, storage_location, storage_type, 
         } else if (res[0].LGORT !== storage_location) {
             return ({ "key": "Storage Locations do not match", "abapMsgV1": `${serial}` });
         } else {
+            managed_client_con2 = await ensureSapConnection();
             managed_client2 = await managed_client_con2.acquire()
             const result = await managed_client2.call('L_TO_CREATE_MOVE_SU', {
                 I_LENUM: `${funcion.addLeadingZeros(serial, 20)}`,
@@ -794,6 +795,7 @@ funcion.sapRFC_transferVULProd = async (serial, storage_location, storage_type, 
         } else if (res[0].LGTYP !== "VUL" || res[0].LGORT !== storage_location) {
             return ({ "key": `Check SU SType: ${res[0].LGTYP}, SLocation: ${res[0].LGORT}`, "abapMsgV1": `${serial}` });
         } else {
+            managed_client_con2 = await ensureSapConnection();
             managed_client2 = await managed_client_con2.acquire()
             const result = await managed_client2.call('L_TO_CREATE_MOVE_SU', {
                 I_LENUM: `${funcion.addLeadingZeros(serial, 20)}`,
@@ -1243,6 +1245,7 @@ funcion.sapRFC_transferMP1_DELX = async (storage_unit, storage_type, storage_bin
                 I_VLENR: `${funcion.addLeadingZeros(storage_unit, 20)}`
             }
         )
+        managed_client_con2 = await ensureSapConnection();
         managed_client2 = await managed_client_con2.acquire()
         const result_transfer998 = await managed_client2.call('L_TO_CREATE_SINGLE',
             {
@@ -1594,6 +1597,7 @@ funcion.sapRFC_transferSlocCheck = async (serial, storage_location, storage_type
                 I_NLBER: '001',
                 I_NLPLA: storage_bin.toUpperCase()
             };
+            managed_client_con2 = await ensureSapConnection();
             managed_client2 = await managed_client_con2.acquire()
             const result = await managed_client2.call('L_TO_CREATE_MOVE_SU', inputParameters);
             return result;
