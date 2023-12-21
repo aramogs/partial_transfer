@@ -383,11 +383,11 @@ funcion.insertPartialTransfer = async (emp_num, part_num, no_serie, linea, trans
 
 funcion.insertCompleteTransfer = async (emp_num, area, no_serie, storage_bin, result) => {
     try {
-        const result = await dbC(`
+        const resultInsert = await dbC(`
             INSERT INTO complete_transfer (emp_num, area, no_serie, storage_bin, result) 
             VALUES (${emp_num}, "${area}", ${no_serie}, "${storage_bin}", "${result}")
         `);
-        return result;
+        return resultInsert;
     } catch (error) {
         throw error;
     }
