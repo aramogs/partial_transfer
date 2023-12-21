@@ -1112,10 +1112,12 @@ funcion.sapRFC_transferSemProd = async (serial, storage_type, storage_bin) => {
 // }
 
 funcion.sapRFC_transferMP = async (storage_unit, storage_type, storage_bin, emp_num, estacion) => {
-    let managed_client_con
-    let managed_client
+    let managed_client_con;
+    let managed_client;
+    let result; // Initialize the 'result' variable
+
     try {
-        const result = await funcion.sapRFC_consultaStorageUnit(funcion.addLeadingZeros(storage_unit, 20));
+        result = await funcion.sapRFC_consultaStorageUnit(funcion.addLeadingZeros(storage_unit, 20));
 
         const storageLocation = await funcion.getStorageLocation(estacion);
         const storage_location = storageLocation[0].storage_location;
