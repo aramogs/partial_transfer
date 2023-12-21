@@ -1,4 +1,6 @@
 const funcion = {};
+const moment = require('moment');
+
 const db = require('../../db/conn_empleados');
 const dbC = require('../../db/conn_cycle');
 const dbEX = require('../../db/conn_extr');
@@ -7,8 +9,7 @@ const dbBartender = require('../../db/conn_b10_bartender');
 const dbBartenderExt = require('../../db/conn_b10_bartender_ext');
 const dbB10 = require('../../db/conn_b10');
 //Require Node-RFC
-const createSapRfcPool = require('../../sap/Connection');
-let node_RFC = createSapRfcPool();
+let node_RFC = require('../../sap/Connection');
 //Require Axios
 const axios = require('axios');
 // Helper function to delay execution
@@ -34,7 +35,8 @@ async function ensureSapConnection() {
             } catch (error) {
                 console.error(`Attempt ${currentAttempt}: Error acquiring connection from SAP pool:`, error);
                 // If there's an error, destroy the existing pool and create a new one
-                node_RFC = createSapRfcPool();
+                node_RFC = null;
+                node_RFC = require('../../sap/Connection');
                 // If the operation should be retried, retry it
                 if (retry_operation.retry(error)) {
                     return;
@@ -944,18 +946,20 @@ funcion.sapRFC_transferProdSem_2 = async (material, qty, storage_location, stora
     }
 };
 
-funcion.sapRFC_TBNUM = async (material, quanitty) => {
+funcion.sapRFC_TBNUM = async (material, cantidad) => {
     let managed_client_con
     let managed_client
     try {
         managed_client_con = await ensureSapConnection();
         managed_client = await managed_client_con.acquire()
+        const yesterday = moment().subtract(1, 'days').format('YYYYMMDD');
         const result = await managed_client.call('RFC_READ_TABLE', {
             QUERY_TABLE: 'LTBP',
             DELIMITER: ",",
+            // ROWCOUNT: 2,
             OPTIONS: [
-                { TEXT: `LGNUM EQ '521' AND MATNR EQ '${material}' AND MENGE EQ '${quanitty}'` },
-                { TEXT: `AND ELIKZ EQ '' `},
+                { TEXT: `LGNUM EQ '521' AND MATNR EQ '${material}' AND MENGE EQ '${cantidad}'` },
+                { TEXT: `AND ELIKZ EQ ''`},
             ]
         });
         const fields = result.FIELDS.map(field => field.FIELDNAME);
@@ -1112,12 +1116,10 @@ funcion.sapRFC_transferSemProd = async (serial, storage_type, storage_bin) => {
 // }
 
 funcion.sapRFC_transferMP = async (storage_unit, storage_type, storage_bin, emp_num, estacion) => {
-    let managed_client_con;
-    let managed_client;
-    let result; // Initialize the 'result' variable
-
+    let managed_client_con
+    let managed_client
     try {
-        result = await funcion.sapRFC_consultaStorageUnit(funcion.addLeadingZeros(storage_unit, 20));
+        const result = await funcion.sapRFC_consultaStorageUnit(funcion.addLeadingZeros(storage_unit, 20));
 
         const storageLocation = await funcion.getStorageLocation(estacion);
         const storage_location = storageLocation[0].storage_location;
