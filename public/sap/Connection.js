@@ -9,12 +9,10 @@ const abapSystem = {
     lang:  process.env.RFC_LANG,
 };
 
-function createSapRfcPool() {
-    return new Pool({
-        connectionParameters: abapSystem,
-        clientOptions: {},
-        poolOptions: { low: 0, high: 15 },
-    });
-}
+const SAP_RFC_Pool = new Pool({
+    connectionParameters: abapSystem,
+    clientOptions: {},
+    poolOptions: { low: 0, high: 15 },
+});
 
-module.exports = createSapRfcPool;
+module.exports = SAP_RFC_Pool;

@@ -7,8 +7,7 @@ const dbBartender = require('../../db/conn_b10_bartender');
 const dbBartenderExt = require('../../db/conn_b10_bartender_ext');
 const dbB10 = require('../../db/conn_b10');
 //Require Node-RFC
-const createSapRfcPool = require('../../sap/Connection');
-let node_RFC = createSapRfcPool();
+let node_RFC = require('../../sap/Connection');
 //Require Axios
 const axios = require('axios');
 // Helper function to delay execution
@@ -34,7 +33,8 @@ async function ensureSapConnection() {
             } catch (error) {
                 console.error(`Attempt ${currentAttempt}: Error acquiring connection from SAP pool:`, error);
                 // If there's an error, destroy the existing pool and create a new one
-                node_RFC = createSapRfcPool();
+                node_RFC = null;
+                node_RFC = require('../../sap/Connection');
                 // If the operation should be retried, retry it
                 if (retry_operation.retry(error)) {
                     return;
