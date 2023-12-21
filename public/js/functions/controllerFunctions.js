@@ -1,6 +1,4 @@
 const funcion = {};
-const moment = require('moment');
-
 const db = require('../../db/conn_empleados');
 const dbC = require('../../db/conn_cycle');
 const dbEX = require('../../db/conn_extr');
@@ -9,8 +7,7 @@ const dbBartender = require('../../db/conn_b10_bartender');
 const dbBartenderExt = require('../../db/conn_b10_bartender_ext');
 const dbB10 = require('../../db/conn_b10');
 //Require Node-RFC
-const createSapRfcPool = require('../../sap/Connection');
-let node_RFC = createSapRfcPool();
+let node_RFC = require('../../sap/Connection');
 //Require Axios
 const axios = require('axios');
 // Helper function to delay execution
@@ -953,7 +950,7 @@ funcion.sapRFC_TBNUM = async (material, cantidad) => {
     try {
         managed_client_con = await ensureSapConnection();
         managed_client = await managed_client_con.acquire()
-        const yesterday = moment().subtract(1, 'days').format('YYYYMMDD');
+        // const yesterday = moment().subtract(1, 'days').format('YYYYMMDD');
         const result = await managed_client.call('RFC_READ_TABLE', {
             QUERY_TABLE: 'LTBP',
             DELIMITER: ",",
