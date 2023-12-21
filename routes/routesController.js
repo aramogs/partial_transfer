@@ -1167,7 +1167,6 @@ controller.postVUL_POST = async (req, res) => {
         let resultTBNUM = await funcion.sapRFC_TBNUM(_material, cantidad)
         let resultTransfer = await funcion.sapRFC_transferVul_TR(serial_num, cantidad, "VUL", "TEMPB_VUL", resultTBNUM[0].TBNUM);
 
-
         res.json(resultTransfer);
     } catch (err) {
         res.json(err)

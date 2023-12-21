@@ -1,6 +1,4 @@
 const funcion = {};
-const moment = require('moment');
-
 const db = require('../../db/conn_empleados');
 const dbC = require('../../db/conn_cycle');
 const dbEX = require('../../db/conn_extr');
@@ -9,7 +7,8 @@ const dbBartender = require('../../db/conn_b10_bartender');
 const dbBartenderExt = require('../../db/conn_b10_bartender_ext');
 const dbB10 = require('../../db/conn_b10');
 //Require Node-RFC
-let node_RFC = require('../../sap/Connection');
+const createSapRfcPool = require('../../sap/Connection');
+let node_RFC = createSapRfcPool();
 //Require Axios
 const axios = require('axios');
 // Helper function to delay execution
@@ -35,8 +34,7 @@ async function ensureSapConnection() {
             } catch (error) {
                 console.error(`Attempt ${currentAttempt}: Error acquiring connection from SAP pool:`, error);
                 // If there's an error, destroy the existing pool and create a new one
-                node_RFC = null;
-                node_RFC = require('../../sap/Connection');
+                node_RFC = createSapRfcPool();
                 // If the operation should be retried, retry it
                 if (retry_operation.retry(error)) {
                     return;
@@ -946,20 +944,18 @@ funcion.sapRFC_transferProdSem_2 = async (material, qty, storage_location, stora
     }
 };
 
-funcion.sapRFC_TBNUM = async (material, cantidad) => {
+funcion.sapRFC_TBNUM = async (material, quanitty) => {
     let managed_client_con
     let managed_client
     try {
         managed_client_con = await ensureSapConnection();
         managed_client = await managed_client_con.acquire()
-        const yesterday = moment().subtract(1, 'days').format('YYYYMMDD');
         const result = await managed_client.call('RFC_READ_TABLE', {
             QUERY_TABLE: 'LTBP',
             DELIMITER: ",",
-            ROWCOUNT: 2,
             OPTIONS: [
-                { TEXT: `LGNUM EQ '521' AND MATNR EQ '${material}' AND MENGE EQ '${cantidad}'` },
-                { TEXT: `AND ELIKZ NE 'X' AND WDATU GE '${yesterday}'`},
+                { TEXT: `LGNUM EQ '521' AND MATNR EQ '${material}' AND MENGE EQ '${quanitty}'` },
+                { TEXT: `AND ELIKZ EQ '' `},
             ]
         });
         const fields = result.FIELDS.map(field => field.FIELDNAME);
