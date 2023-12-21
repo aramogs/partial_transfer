@@ -1,5 +1,4 @@
 const funcion = {};
-const moment = require('moment');
 const db = require('../../db/conn_empleados');
 const dbC = require('../../db/conn_cycle');
 const dbEX = require('../../db/conn_extr');
@@ -951,14 +950,12 @@ funcion.sapRFC_TBNUM = async (material, quanitty) => {
     try {
         managed_client_con = await ensureSapConnection();
         managed_client = await managed_client_con.acquire()
-        const yesterday = moment().subtract(1, 'days').format('YYYYMMDD');
         const result = await managed_client.call('RFC_READ_TABLE', {
             QUERY_TABLE: 'LTBP',
             DELIMITER: ",",
-            ROWCOUNT: 2,
             OPTIONS: [
                 { TEXT: `LGNUM EQ '521' AND MATNR EQ '${material}' AND MENGE EQ '${quanitty}'` },
-                { TEXT: `AND ELIKZ EQ '' AND WDATU GE '${yesterday}'`},
+                { TEXT: `AND ELIKZ EQ '' `},
             ]
         });
         const fields = result.FIELDS.map(field => field.FIELDNAME);
