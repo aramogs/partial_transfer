@@ -9,7 +9,8 @@ const dbBartender = require('../../db/conn_b10_bartender');
 const dbBartenderExt = require('../../db/conn_b10_bartender_ext');
 const dbB10 = require('../../db/conn_b10');
 //Require Node-RFC
-let node_RFC = require('../../sap/Connection');
+const createSapRfcPool = require('../../sap/Connection');
+let node_RFC = createSapRfcPool();
 //Require Axios
 const axios = require('axios');
 // Helper function to delay execution
