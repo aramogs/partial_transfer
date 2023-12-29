@@ -1206,6 +1206,117 @@ controller.reprintLabelVUL_POST = async (req, res) => {
     }
 }
 
+
+controller.handlingSEM_POST = async (req, res) => {
+
+    console.log(req.body);
+    try {
+        let station = req.body.station
+        let material = req.body.material
+        let cantidad = req.body.qty
+        let subline = req.body.subline
+        let P_material
+        let _material
+
+
+        const resultSL = await funcion.getStorageLocation(station);
+        if (resultSL.length === 0) { return res.json({ "key": `Storage Location not set for device "${station}"` }) }
+        const storageLocation = resultSL[0].storage_location;
+
+        if (material.charAt(0) !== 'P') {
+            P_material = 'P' + material;
+            _material = material
+        } else {
+            P_material = material
+            _material = material.substring(1)
+        }
+
+        const resultHU = await funcion.sapRFC_HUSEM(storageLocation, _material, cantidad)
+        if (!resultHU.HUKEY) { return res.json({ "key": `Handling unit not created ` }) }
+
+        const result_printSEM = await funcion.printLabel_SEM(station, P_material, _material, cantidad, subline, resultHU.HUKEY)
+        if (result_printSEM.status !== 200) { return res.json({ "key": `Label print error check Bartender Server` }) }
+
+        res.json(resultHU)
+
+    } catch (err) {
+        return res.json(err)
+    }
+}
+
+
+controller.postSEM_POST = async (req, res) => {
+    console.log(req.body);
+    try {
+
+        let station = req.body.station
+        let serial_num = req.body.serial_num
+        let material = req.body.material
+        let cantidad = req.body.cantidad
+        let P_material
+        let _material
+
+
+        if (material.charAt(0) !== 'P') {
+            P_material = 'P' + material;
+            _material = material
+        } else {
+            P_material = material
+            _material = material.substring(1)
+        }
+
+        const resultSL = await funcion.getStorageLocation(station);
+        if (resultSL.length === 0) { return res.json({ "key": `Storage Location not set for device "${station}"` }) }
+        const storage_location = resultSL[0].storage_location;
+
+        let resultBackflush = await funcion.backflushFG(serial_num);
+        if (resultBackflush.E_RETURN.TYPE !== "S") {
+            if (!resultBackflush.E_RETURN.MESSAGE.toLowerCase().includes('already posted')) {
+                return res.json({ "key": `${resultBackflush.E_RETURN.MESSAGE}` })
+            }
+        }
+        let resultTBNUM = await funcion.sapRFC_TBNUM(_material, cantidad)
+        let resultTransfer = await funcion.sapRFC_transferSEM_TR(serial_num, cantidad, "SEM", "TEMPB_SEM", resultTBNUM[0].TBNUM);
+
+        res.json(resultTransfer);
+    } catch (err) {
+        res.json(err)
+    }
+}
+
+controller.reprintLabelSEM_POST = async (req, res) => {
+
+    try {
+        let station = req.body.station
+        let material = req.body.material
+        let cantidad = req.body.cantidad
+        let subline = req.body.subline
+        let serial_num = req.body.serial_num
+        let P_material
+        let _material
+
+        const resultSL = await funcion.getStorageLocation(station);
+        if (resultSL.length === 0) { return res.json({ "key": `Storage Location not set for device "${station}"` }) }
+        const storageLocation = resultSL[0].storage_location;
+
+        if (material.charAt(0) !== 'P') {
+            P_material = 'P' + material;
+            _material = material
+        } else {
+            P_material = material
+            _material = material.substring(1)
+        }
+
+        const result_printSEM = await funcion.printLabel_SEM(station, P_material, _material, cantidad, subline, serial_num)
+        if (result_printSEM.status !== 200) { return res.json({ "key": `Label print error check Bartender Server` }) }
+
+        res.json(result_printSEM)
+
+    } catch (err) {
+        return res.json(err)
+    }
+}
+
 controller.cargaListado_GET = (req, res) => {
     let user = req.connection.user
     let destino = req.params.destino

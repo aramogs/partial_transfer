@@ -6,7 +6,6 @@ const dbC = require('../../db/conn_cycle');
 const dbEX = require('../../db/conn_extr');
 const dbA = require('../../db/conn_areas');
 const dbBartender = require('../../db/conn_b10_bartender');
-const dbBartenderExt = require('../../db/conn_b10_bartender_ext');
 const dbB10 = require('../../db/conn_b10');
 //Require Node-RFC
 const node_RFC = require('../../sap/Connection');
@@ -409,7 +408,7 @@ funcion.sapFromMandrel = (mandrel, table) => {
 
 funcion.materialEXT = (material) => {
     return new Promise((resolve, reject) => {
-        dbBartenderExt(`
+        dbBartender(`
         SELECT
             *
         FROM
@@ -429,6 +428,21 @@ funcion.materialVUL = (material) => {
             *
         FROM
             vulc
+        WHERE
+            no_sap = '${material}'
+        `)
+            .then((result) => { resolve(result) })
+            .catch((error) => { reject(error) })
+    })
+}
+
+funcion.materialSEM = (material) => {
+    return new Promise((resolve, reject) => {
+        dbBartender(`
+        SELECT
+            *
+        FROM
+            sem
         WHERE
             no_sap = '${material}'
         `)
@@ -772,7 +786,7 @@ funcion.sapRFC_transferVULProd = async (serial, storage_location, storage_type, 
 
 
 funcion.sapRFC_transferProdVul_1 = async (material, qty, storage_location, storage_type, storage_bin) => {
-    
+
     let managed_client
     try {
         managed_client = await node_RFC.acquire();
@@ -903,7 +917,7 @@ funcion.sapRFC_TBNUM = async (material, cantidad) => {
             DELIMITER: ",",
             OPTIONS: [
                 { TEXT: `LGNUM EQ '521' AND MATNR EQ '${material}' AND MENGE EQ '${cantidad}'` },
-                { TEXT: `AND ELIKZ EQ ''`},
+                { TEXT: `AND ELIKZ EQ ''` },
             ]
         });
         const fields = result.FIELDS.map(field => field.FIELDNAME);
@@ -952,16 +966,49 @@ funcion.sapRFC_transferVul_TR = async (serial_num, quantity, storage_type, stora
                 I_LGNUM: '521',
                 I_TBNUM: `${tbnum}`,
                 IT_TRITE:
-                        [{
-                            TBPOS:"001",
-                            ANFME:`${quantity}`,
-                            ALTME:"ST",
-                            NLTYP:`${storage_type}`,
-                            NLBER:"001",
-                            NLPLA:`${storage_bin}`,
-                            NLENR:`${funcion.addLeadingZeros(serial_num, 20)}`,
-                            LETYP:"001"
-                        }]            
+                    [{
+                        TBPOS: "001",
+                        ANFME: `${quantity}`,
+                        ALTME: "ST",
+                        NLTYP: `${storage_type}`,
+                        NLBER: "001",
+                        NLPLA: `${storage_bin}`,
+                        NLENR: `${funcion.addLeadingZeros(serial_num, 20)}`,
+                        LETYP: "001"
+                    }]
+            });
+
+            return result;
+        } catch (err) {
+            throw err;
+        }
+    } catch (err) {
+        throw err;
+    } finally {
+        if (managed_client) { managed_client.release() };
+    }
+};
+
+funcion.sapRFC_transferSEM_TR = async (serial_num, quantity, storage_type, storage_bin, tbnum) => {
+
+    let managed_client
+    try {
+        managed_client = await node_RFC.acquire();
+        try {
+            const result = await managed_client.call('L_TO_CREATE_TR', {
+                I_LGNUM: '521',
+                I_TBNUM: `${tbnum}`,
+                IT_TRITE:
+                    [{
+                        TBPOS: "001",
+                        ANFME: `${quantity}`,
+                        ALTME: "ST",
+                        NLTYP: `${storage_type}`,
+                        NLBER: "001",
+                        NLPLA: `${storage_bin}`,
+                        NLENR: `${funcion.addLeadingZeros(serial_num, 20)}`,
+                        LETYP: "001"
+                    }]
             });
 
             return result;
@@ -1756,7 +1803,66 @@ funcion.sapRFC_HUVUL = async (storage_location, material, cantidad) => {
     let managed_client
     try {
         managed_client = await node_RFC.acquire();
-        
+
+        const result_packing_object = await managed_client.call('RFC_READ_TABLE', {
+            QUERY_TABLE: 'PACKKP',
+            DELIMITER: ",",
+            OPTIONS: [{ TEXT: `POBJID EQ 'UC${material}'` }],
+            FIELDS: ['PACKNR']
+        });
+
+        const result_packing_material = await managed_client.call('RFC_READ_TABLE', {
+            QUERY_TABLE: 'PACKPO',
+            DELIMITER: ",",
+            OPTIONS: [{ TEXT: `PACKNR EQ '${result_packing_object.DATA[0].WA}' AND PAITEMTYPE EQ 'P'` }],
+            FIELDS: ['MATNR']
+        });
+
+        const result_hu_create = await managed_client.call('BAPI_HU_CREATE', {
+            HEADERPROPOSAL: {
+                PACK_MAT: result_packing_material.DATA[0].WA,
+                HU_GRP3: 'UC11',
+                PACKG_INSTRUCT: result_packing_object.DATA[0].WA,
+                PLANT: '5210',
+                L_PACKG_STATUS_HU: '2',
+                HU_STATUS_INIT: 'A',
+                STGE_LOC: storage_location
+            },
+            ITEMSPROPOSAL: [{
+                HU_ITEM_TYPE: '1',
+                MATERIAL: material,
+                PACK_QTY: cantidad,
+                PLANT: '5210',
+            }],
+        });
+
+        const result_commit = await managed_client.call("BAPI_TRANSACTION_COMMIT", { WAIT: "X" });
+
+        const result_hu_change_header = await managed_client.call('BAPI_HU_CHANGE_HEADER', {
+            HUKEY: result_hu_create.HUKEY,
+            HUCHANGED: {
+                CLIENT: '200',
+                PACK_MAT_OBJECT: '07',
+                WAREHOUSE_NUMBER: '521',
+                HU_STOR_LOC: 'A'
+            },
+        });
+
+        const result_commit2 = await managed_client.call("BAPI_TRANSACTION_COMMIT", { WAIT: "X" });
+
+        return result_hu_create
+    } catch (err) {
+        throw err;
+    } finally {
+        if (managed_client) { managed_client.release() };
+    }
+}
+
+funcion.sapRFC_HUSEM = async (storage_location, material, cantidad) => {
+    let managed_client
+    try {
+        managed_client = await node_RFC.acquire();
+
         const result_packing_object = await managed_client.call('RFC_READ_TABLE', {
             QUERY_TABLE: 'PACKKP',
             DELIMITER: ",",
@@ -1952,7 +2058,7 @@ funcion.sapRFC_pallet_request_create = async (array_handling_units, packing_mate
                         proposalItem.HU_ITEM_TYPE === '2' && // Check if HU_ITEM_TYPE is '2'
                         proposalItem.MATERIAL === item.MATNR // Check if MATERIAL matches
                 );
-                if (!exists){
+                if (!exists) {
                     itemsProposal.push({
                         HU_ITEM_TYPE: "2",
                         MATERIAL: item.MATNR,
@@ -1962,7 +2068,7 @@ funcion.sapRFC_pallet_request_create = async (array_handling_units, packing_mate
                 }
 
             }
-        });        
+        });
 
         //5 If the pallet is correct then we can proceed to create the pallet
         const result_hu_create = await managed_client.call('BAPI_HU_CREATE', {
@@ -2030,6 +2136,47 @@ funcion.printLabel_VUL = async (station, P_material, _material, cantidad, sublin
         const result_printer = await funcion.getPrinter(station);
         if (result_printer.length === 0) { return res.json({ "key": `Printer not set for device ${station}` }) }
         const materialResult = await funcion.materialVUL(P_material);
+        if (materialResult.length === 0) { return res.json({ "key": `Part number not set in database ${_material}` }) }
+        const data = {
+            printer: result_printer[0].impre,
+            no_sap: materialResult[0].no_sap,
+            assembly: materialResult[0].assembly,
+            cust_part: materialResult[0].cust_part,
+            // platform: materialResult[0].platform,
+            rack: materialResult[0].rack,
+            rack_return: materialResult[0].rack_return,
+            // family: materialResult[0].family,
+            // length: materialResult[0].length,
+            line: subline,
+            std_pack: `${parseInt(materialResult[0].std_pack)}`,
+            real_quant: `${parseInt(cantidad)}`,
+            serial_num: `${parseInt(serial_num)}`,
+            client: materialResult[0].client,
+            platform: "VULC"
+        };
+        // let printedLabel = await funcion.printLabel_VUL(data, "VULC")
+        // if (printedLabel.status !== 200) { return res.json({ "key": `Label print error check Bartender Server` }) }
+
+        const printedLabel = await axios({
+            method: 'POST',
+            url: `http://${process.env.BARTENDER_SERVER}:${process.env.BARTENDER_PORT}/Integration/${labelType}/Execute/`,
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            data: JSON.stringify(data)
+        });
+        return printedLabel;
+    } catch (err) {
+        throw err;
+    }
+};
+
+funcion.printLabel_SEM = async (station, P_material, _material, cantidad, subline, serial_num) => {
+    const labelType = "SUB"
+    try {
+        const result_printer = await funcion.getPrinter(station);
+        if (result_printer.length === 0) { return res.json({ "key": `Printer not set for device ${station}` }) }
+        const materialResult = await funcion.materialSEM(P_material);
         if (materialResult.length === 0) { return res.json({ "key": `Part number not set in database ${_material}` }) }
         const data = {
             printer: result_printer[0].impre,

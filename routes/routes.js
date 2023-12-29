@@ -116,6 +116,9 @@ router.post('/reprintLabelVUL',routesController.reprintLabelVUL_POST);
 router.post('/transferSemProd', routesController.transferSemProd_POST);
 router.post('/transferProdSem', routesController.transferProdSem_POST);
 router.post('/consultaSemProduccionStock', routesController.consultaSemProductionStock_POST);
+router.post("/handlingSEM", routesController.handlingSEM_POST);
+router.post("/postSEM", routesController.postSEM_POST);
+router.post('/reprintLabelSEM',routesController.reprintLabelSEM_POST);
 // // router.get('*', (req, res) => {
 // //   res.redirect('http://tftdelsrv001:3000/not_found');
 // // });
