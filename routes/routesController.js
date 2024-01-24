@@ -2582,11 +2582,13 @@ controller.pallet_request_createFORD_POST = async (req, res) => {
             return res.json(resPalletCreateFORD)
         }
 
-        const targetItem = resPalletCreateFORD.HUITEM.find(item => item.HU_ITEM_TYPE === "3");
+        const targetHUITEM = resPalletCreateFORD.HUITEM.find(item => item.HU_ITEM_TYPE === "3");
+    
 
-        let p_material = `P${targetItem.MATERIAL}`;
-        let _material = targetItem.MATERIAL;
-        let totalQty = `${resPalletCreateFORD.ITEMSPROPOSAL.reduce((sum, item) => sum + parseFloat(item.PACK_QTY), 0)}`
+        let p_material = `P${targetHUITEM.MATERIAL}`;
+        let _material = targetHUITEM.MATERIAL;
+        // let totalQty = `${resPalletCreateFORD.ITEMSPROPOSAL.reduce((sum, item) => sum + parseFloat(item.PACK_QTY), 0)}`
+        let totalQty = `${resPalletCreateFORD.ITEMSPROPOSAL.filter(item => item.HU_ITEM_TYPE === "3").reduce((sum, item) => sum + parseFloat(item.PACK_QTY), 0)}`;
         let serial_num = `${parseInt(parseFloat(resPalletCreateFORD.HUHEADER.HU_EXID))}`
         let total_weight = `${resPalletCreateFORD.HUHEADER.TOTAL_WGHT}`
         let fifo_date = `${resPalletCreateFORD.lowerDate}`
@@ -2634,11 +2636,12 @@ controller.pallet_request_createGM_POST = async (req, res) => {
             return res.json(resPalletCreateGM)
         }
 
-        const targetItem = resPalletCreateGM.HUITEM.find(item => item.HU_ITEM_TYPE === "3");
+        const targetHUITEM = resPalletCreateGM.HUITEM.find(item => item.HU_ITEM_TYPE === "3");
 
-        let p_material = `P${targetItem.MATERIAL}`;
-        let _material = targetItem.MATERIAL;
-        let totalQty = `${resPalletCreateGM.ITEMSPROPOSAL.reduce((sum, item) => sum + parseFloat(item.PACK_QTY), 0)}`
+        let p_material = `P${targetHUITEM.MATERIAL}`;
+        let _material = targetHUITEM.MATERIAL;
+        // let totalQty = `${resPalletCreateGM.ITEMSPROPOSAL.reduce((sum, item) => sum + parseFloat(item.PACK_QTY), 0)}`
+        let totalQty = `${resPalletCreateGM.ITEMSPROPOSAL.filter(item => item.HU_ITEM_TYPE === "3").reduce((sum, item) => sum + parseFloat(item.PACK_QTY), 0)}`;
         let serial_num = `${parseInt(parseFloat(resPalletCreateGM.HUHEADER.HU_EXID))}`
         let total_weight = `${resPalletCreateGM.HUHEADER.TOTAL_WGHT}`
         let fifo_date = `${resPalletCreateGM.lowerDate}`
