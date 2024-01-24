@@ -79,6 +79,14 @@ router.get('/master_fg_gm',middleware.verifyToken, routesController.master_FG_GM
 router.post('/get_packing_instructionGM',middleware.verifyToken, middleware.macFromIP, routesController.get_packing_instructionGM_POST);
 router.post('/get_packing_matreialsGM',middleware.verifyToken, middleware.macFromIP, routesController.get_packing_matreialsGM_POST);
 router.post('/pallet_request_createGM',middleware.verifyToken, middleware.macFromIP, routesController.pallet_request_createGM_POST);
+
+// ##############Master FORD##################
+router.get('/master_fg_FORD',middleware.verifyToken, routesController.master_FG_FORD_GET);
+// router.post('/master_request_FORD',middleware.verifyToken, middleware.macFromIP, routesController.master_request_FORD_POST);
+// router.post('/master_request_FORD_create',middleware.verifyToken, middleware.macFromIP, routesController.master_request_FORD_CREATE_POST);
+router.post('/get_packing_instructionFORD',middleware.verifyToken, middleware.macFromIP, routesController.get_packing_instructionFORD_POST);
+router.post('/get_packing_matreialsFORD',middleware.verifyToken, middleware.macFromIP, routesController.get_packing_matreialsFORD_POST);
+router.post('/pallet_request_createFORD',middleware.verifyToken, middleware.macFromIP, routesController.pallet_request_createFORD_POST);
 // ##############Master Pallet##################
 router.get('/master_pallet',middleware.verifyToken, routesController.master_PALLET_GET);
 router.post('/get_packing_instruction',middleware.verifyToken, middleware.macFromIP, routesController.get_packing_instruction_POST);

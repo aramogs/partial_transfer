@@ -156,6 +156,15 @@ controller.master_FG_GM_GET = (req, res) => {
     })
 }
 
+controller.master_FG_FORD_GET = (req, res) => {
+    let user_id = req.res.locals.authData.id.id
+    let user_name = req.res.locals.authData.id.username
+    res.render('master_fg_ford.ejs', {
+        user_id,
+        user_name
+    })
+}
+
 controller.master_PALLET_GET = (req, res) => {
     let user_id = req.res.locals.authData.id.id
     let user_name = req.res.locals.authData.id.username
@@ -2529,6 +2538,69 @@ controller.get_packing_instructionGM_POST = async (req, res) => {
     }
 };
 
+controller.get_packing_instructionFORD_POST = async (req, res) => {
+    try {
+        let serial = req.body.serial
+
+        const result = await funcion.sapRFC_get_packing_instruction(serial)
+
+        res.json(result);
+    } catch (err) {
+        res.json(err);
+    }
+};
+
+controller.get_packing_matreialsFORD_POST = async (req, res) => {
+    try {
+        let POBJID = req.body.POBJID
+        let PACKNR = req.body.PACKNR
+        let hu_packing_instruction = req.body.hu_packing_instruction
+        const result = await funcion.sapRFC_get_packing_matreials(POBJID, PACKNR)
+
+        res.json(result);
+    } catch (err) {
+        res.json(err);
+    }
+};
+
+controller.pallet_request_createFORD_POST = async (req, res) => {
+    try {
+        let estacion = req.res.locals.macIP.mac
+        let user_id = req.res.locals.authData.id.id
+        let serial = req.body.serial
+        let serials_array = serial.split(",")
+        let packing_materials = req.body.result_packing_materials_formatted
+        let result_packingr_formatted = req.body.result_packingr_formatted
+        let pallet_packing_material = req.body.pallet_packing_material
+
+
+        const resPalletCreateFORD = await funcion.sapRFC_pallet_request_createFORD(serials_array, packing_materials, result_packingr_formatted, pallet_packing_material)
+
+        if (resPalletCreateFORD.key) {
+            return res.json(resPalletCreateFORD)
+        } else if (resPalletCreateFORD.error) {
+            return res.json(resPalletCreateFORD)
+        }
+
+        const targetItem = resPalletCreateFORD.HUITEM.find(item => item.HU_ITEM_TYPE === "3");
+
+        let p_material = `P${targetItem.MATERIAL}`;
+        let _material = targetItem.MATERIAL;
+        let totalQty = `${resPalletCreateFORD.ITEMSPROPOSAL.reduce((sum, item) => sum + parseFloat(item.PACK_QTY), 0)}`
+        let serial_num = `${parseInt(parseFloat(resPalletCreateFORD.HUHEADER.HU_EXID))}`
+        let total_weight = `${resPalletCreateFORD.HUHEADER.TOTAL_WGHT}`
+        let fifo_date = `${resPalletCreateFORD.lowerDate}`
+
+        let print = await funcion.printLabel_FORD(estacion, p_material, _material, serial_num, totalQty, total_weight, fifo_date, serials_array, user_id)
+
+        if (print.key) { return res.json(print.key) }
+
+        res.json(resPalletCreateFORD);
+    } catch (err) {
+        res.json(err);
+    }
+};
+
 controller.get_packing_matreialsGM_POST = async (req, res) => {
     try {
         let POBJID = req.body.POBJID
@@ -2541,6 +2613,8 @@ controller.get_packing_matreialsGM_POST = async (req, res) => {
         res.json(err);
     }
 };
+
+
 
 controller.pallet_request_createGM_POST = async (req, res) => {
     try {
@@ -2560,15 +2634,17 @@ controller.pallet_request_createGM_POST = async (req, res) => {
             return res.json(resPalletCreateGM)
         }
 
-        let p_material = `P${resPalletCreateGM.HUITEM[0].MATERIAL}`
-        let _material = `${resPalletCreateGM.HUITEM[0].MATERIAL}`
+        const targetItem = resPalletCreateGM.HUITEM.find(item => item.HU_ITEM_TYPE === "3");
+
+        let p_material = `P${targetItem.MATERIAL}`;
+        let _material = targetItem.MATERIAL;
         let totalQty = `${resPalletCreateGM.ITEMSPROPOSAL.reduce((sum, item) => sum + parseFloat(item.PACK_QTY), 0)}`
         let serial_num = `${parseInt(parseFloat(resPalletCreateGM.HUHEADER.HU_EXID))}`
         let total_weight = `${resPalletCreateGM.HUHEADER.TOTAL_WGHT}`
         let fifo_date = `${resPalletCreateGM.lowerDate}`
 
         let print = await funcion.printLabel_GM(estacion, p_material, _material, serial_num, totalQty, total_weight, fifo_date, serials_array)
-
+        if (print.key) { return res.json(print.key) }
 
         res.json(resPalletCreateGM);
     } catch (err) {
