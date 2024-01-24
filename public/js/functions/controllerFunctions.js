@@ -467,6 +467,46 @@ funcion.update_plan_ext = async (plan_id) => {
     }
 };
 
+funcion.materialGM = (material) => {
+    return new Promise((resolve, reject) => {
+        dbBartender(`
+        SELECT
+            *
+        FROM
+            gm
+        WHERE
+            no_sap = '${material}'
+        `)
+            .then((result) => { resolve(result) })
+            .catch((error) => { reject(error) })
+    })
+}
+
+funcion.searchUnion = async (material) => {
+    try {
+        const tables = await dbBartender(`SELECT table_name FROM information_schema.tables WHERE table_schema = "b10_bartender"`)
+
+        for (const table of tables) {
+            let values = await dbBartender(`
+                SELECT
+                    *
+                FROM
+                    ${table.table_name}
+                WHERE
+                    no_sap = '${material}'
+            `)
+            if (values.length > 0) {
+                let columns = await dbBartender(`SELECT COLUMN_NAME FROM information_schema.columns WHERE table_schema = "b10_bartender" AND table_name = "${table.table_name}"`)
+
+                return [columns, values[0], table.table_name]
+            }
+        }
+
+    } catch (error) {
+        throw error;
+    }
+}
+
 funcion.update_print_ext = async (serial_num, plan_id, material, emp_num, cantidad, impresoType) => {
     try {
         const result = await dbEX(`
@@ -2010,6 +2050,117 @@ funcion.sapRFC_get_packing_matreials = async (POBJID, PACKNR) => {
 
 }
 
+
+funcion.sapRFC_pallet_request_createGM = async (array_handling_units, packing_materials, result_packingr_formatted, pallet_packing_material) => {
+    const resultArray = array_handling_units.map(serial => funcion.addLeadingZeros(serial, 20));
+    let managed_client = await node_RFC.acquire();
+    try {
+        const result_hus_history = await managed_client.call('BAPI_HU_GETLIST', {
+            NOTEXT: 'X',
+            ONLYKEYS: '',
+            HUNUMBERS: resultArray,
+        });
+
+        //If there are mismatched objects then we return an error with the HU's of the problem ❌
+        const subpacknrOfTypeI = packing_materials
+            .filter(item => item.PAITEMTYPE === 'I')
+            .map(item => item.SUBPACKNR);
+
+        const mismatchedObjects = result_hus_history.HUHEADER.filter(headerObj =>
+            !subpacknrOfTypeI.includes(headerObj.PACKG_INSTRUCT)
+        );
+        if (mismatchedObjects.length > 0) { return ({ "error": mismatchedObjects }); }
+
+
+        const dates = result_hus_history.HUHEADER.map(item => moment(item.CREATED_DATE, 'YYYYMMDD'));
+
+        // Check if the highest date is not 30 days older than the lowest date ❌
+        if (moment.max(dates).diff(moment.min(dates), 'days') > 30) { return ({ "key": "Not in the 30 day range" }); }
+
+        //4.1 The HU's are sent to the correct storage bin in orther to be packed into the pallet
+        for (let i = 0; i < resultArray.length; i++) {
+            const result_hu_transfer = await managed_client.call('L_TO_CREATE_MOVE_SU', {
+                
+                I_LENUM: resultArray[i],
+                I_BWLVS: '998',
+                I_NLTYP: `923`,
+                I_NLBER: '001',
+                I_NLPLA: `PACK.BIN`
+            });
+        }
+
+        //Creating item proposal with all the handling units
+        const itemsProposal = array_handling_units.map((handlingUnit) => ({
+            HU_ITEM_TYPE: "3",
+            LOWER_LEVEL_EXID: funcion.addLeadingZeros(handlingUnit, 20),
+            MATERIAL: result_hus_history.HUITEM[0].MATERIAL,
+            PACK_QTY: result_hus_history.HUITEM[0].PACK_QTY,
+            PLANT: result_hus_history.HUHEADER[0].PLANT,
+        }));
+
+        packing_materials.forEach((item) => {
+            if (item.PAITEMTYPE === 'P' && item.MATNR !== pallet_packing_material[0]) {
+
+                const exists = itemsProposal.some(
+                    (proposalItem) =>
+                        proposalItem.HU_ITEM_TYPE === '2' && // Check if HU_ITEM_TYPE is '2'
+                        proposalItem.MATERIAL === item.MATNR // Check if MATERIAL matches
+                );
+                if (!exists) {
+                    itemsProposal.push({
+                        HU_ITEM_TYPE: "2",
+                        MATERIAL: item.MATNR,
+                        PACK_QTY: parseFloat(item.TRGQTY),
+                        PLANT: result_hus_history.HUHEADER[0].PLANT,
+                    });
+                }
+
+            }
+        });
+
+        //5 If the pallet is correct then we can proceed to create the pallet
+        const result_hu_create = await managed_client.call('BAPI_HU_CREATE', {
+            HEADERPROPOSAL: {
+                PACK_MAT: pallet_packing_material[0],
+                // HU_GRP3: result_hu_history.HUHEADER[0].HU_GRP3,
+                PACKG_INSTRUCT: result_packingr_formatted[0].PACKNR,
+                PLANT: result_hus_history.HUHEADER[0].PLANT,
+                // L_PACKG_STATUS_HU: '2',
+                HU_STATUS_INIT: 'A',
+                EXT_ID_HU_2: 'P'
+            },
+            ITEMSPROPOSAL: itemsProposal
+        });
+
+        const result_commit = await managed_client.call("BAPI_TRANSACTION_COMMIT", { WAIT: "X" });
+
+        const result_um_transfer = await managed_client.call('L_TO_CREATE_MOVE_SU', {
+            I_LENUM: result_hu_create.HUKEY,
+            I_BWLVS: '998',
+            I_NLTYP: `SHP`,
+            I_NLBER: '001',
+            I_NLPLA: `SHP`
+        });
+
+        // if (result_hu_create.HUKEY) {
+        //     let dataPrint = {
+        //         "printer": "\\\\tftdelsrv003\\tftdelprn060",
+        //         "serial_um": parseFloat(result_hu_create.HUKEY),
+        //         "storage_bin": "SHP",
+        //         "serial_uc": array_handling_units[0],
+        //     }
+        //     funcion.printLabel_ONT_UM(dataPrint, "ONT_UM")
+        // }
+        result_hu_create.lowerDate = moment.min(dates).format('YYYYMMDD');
+        return result_hu_create;
+    } catch (err) {
+        throw err;
+    } finally {
+        if (managed_client) { managed_client.release() };
+    }
+
+}
+
 funcion.sapRFC_pallet_request_create = async (array_handling_units, packing_materials, result_packingr_formatted, pallet_packing_material, packing_instruction, packing_id) => {
     const resultArray = array_handling_units.map(serial => funcion.addLeadingZeros(serial, 20));
     let managed_client = await node_RFC.acquire();
@@ -2223,6 +2374,51 @@ funcion.printLabel_ONT_UM = async (data, labelType) => {
             data: JSON.stringify(data)
         });
         return result;
+    } catch (err) {
+        throw err;
+    }
+};
+
+
+
+
+
+
+funcion.printLabel_GM = async (station, P_material, _material, serial_num, cantidad, total_weight, fifo_date, serials_array) => {
+    const labelType = "GMMASTER"
+    try {
+        const result_printer = await funcion.getPrinter(station);
+        if (result_printer.length === 0) { return res.json({ "key": `Printer not set for device ${station}` }) }
+        const materialResult = await funcion.materialGM(P_material);
+        if (materialResult.length === 0) { return res.json({ "key": `Part number not set in database ${_material}` }) }
+
+        let partNumberData = await funcion.searchUnion(P_material);
+        const [columns, values] = partNumberData;
+        const data = columns.reduce((result, column, index) => {
+            const columnName = column.COLUMN_NAME;
+            const ColumnValue = values[columnName];
+            result[columnName] = ColumnValue;
+            return result;
+        }, {});
+
+        data.printer = `${result_printer[0].impre}`
+        data.no_sap = `${_material}`
+        data.serial_num = `${serial_num}`
+        data.total_quant = `${cantidad}`
+        data.total_packs = `${serials_array.length }`;
+        data.qty_per_pack = `${parseInt(cantidad) / serials_array.length}`;
+        data.total_weight = `${total_weight}`
+        data.fifo_date = `${fifo_date}`
+
+        const printedLabel = await axios({
+            method: 'POST',
+            url: `http://${process.env.BARTENDER_SERVER}:${process.env.BARTENDER_PORT}/Integration/${labelType}/Execute/`,
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            data: JSON.stringify(data)
+        });
+        return printedLabel;
     } catch (err) {
         throw err;
     }

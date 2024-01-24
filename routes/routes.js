@@ -74,9 +74,11 @@ router.post('/postSerialesAcreditacionFG',middleware.verifyToken, middleware.mac
 
 // ##############Master GM##################
 router.get('/master_fg_gm',middleware.verifyToken, routesController.master_FG_GM_GET);
-router.post('/master_request_gm',middleware.verifyToken, middleware.macFromIP, routesController.master_request_GM_POST);
-router.post('/master_request_gm_create',middleware.verifyToken, middleware.macFromIP, routesController.master_request_GM_CREATE_POST);
-
+// router.post('/master_request_gm',middleware.verifyToken, middleware.macFromIP, routesController.master_request_GM_POST);
+// router.post('/master_request_gm_create',middleware.verifyToken, middleware.macFromIP, routesController.master_request_GM_CREATE_POST);
+router.post('/get_packing_instructionGM',middleware.verifyToken, middleware.macFromIP, routesController.get_packing_instructionGM_POST);
+router.post('/get_packing_matreialsGM',middleware.verifyToken, middleware.macFromIP, routesController.get_packing_matreialsGM_POST);
+router.post('/pallet_request_createGM',middleware.verifyToken, middleware.macFromIP, routesController.pallet_request_createGM_POST);
 // ##############Master Pallet##################
 router.get('/master_pallet',middleware.verifyToken, routesController.master_PALLET_GET);
 router.post('/get_packing_instruction',middleware.verifyToken, middleware.macFromIP, routesController.get_packing_instruction_POST);

@@ -2517,7 +2517,64 @@ controller.consultaSemProductionStock_POST = async (req, res) => {
     }
 };
 
+controller.get_packing_instructionGM_POST = async (req, res) => {
+    try {
+        let serial = req.body.serial
 
+        const result = await funcion.sapRFC_get_packing_instruction(serial)
+
+        res.json(result);
+    } catch (err) {
+        res.json(err);
+    }
+};
+
+controller.get_packing_matreialsGM_POST = async (req, res) => {
+    try {
+        let POBJID = req.body.POBJID
+        let PACKNR = req.body.PACKNR
+        let hu_packing_instruction = req.body.hu_packing_instruction
+        const result = await funcion.sapRFC_get_packing_matreials(POBJID, PACKNR)
+
+        res.json(result);
+    } catch (err) {
+        res.json(err);
+    }
+};
+
+controller.pallet_request_createGM_POST = async (req, res) => {
+    try {
+        let estacion = req.res.locals.macIP.mac
+        let serial = req.body.serial
+        let serials_array = serial.split(",")
+        let packing_materials = req.body.result_packing_materials_formatted
+        let result_packingr_formatted = req.body.result_packingr_formatted
+        let pallet_packing_material = req.body.pallet_packing_material
+
+
+        const resPalletCreateGM = await funcion.sapRFC_pallet_request_createGM(serials_array, packing_materials, result_packingr_formatted, pallet_packing_material)
+
+        if (resPalletCreateGM.key) {
+            return res.json(resPalletCreateGM)
+        } else if (resPalletCreateGM.error) {
+            return res.json(resPalletCreateGM)
+        }
+
+        let p_material = `P${resPalletCreateGM.HUITEM[0].MATERIAL}`
+        let _material = `${resPalletCreateGM.HUITEM[0].MATERIAL}`
+        let totalQty = `${resPalletCreateGM.ITEMSPROPOSAL.reduce((sum, item) => sum + parseFloat(item.PACK_QTY), 0)}`
+        let serial_num = `${parseInt(parseFloat(resPalletCreateGM.HUHEADER.HU_EXID))}`
+        let total_weight = `${resPalletCreateGM.HUHEADER.TOTAL_WGHT}`
+        let fifo_date = `${resPalletCreateGM.lowerDate}`
+
+        let print = await funcion.printLabel_GM(estacion, p_material, _material, serial_num, totalQty, total_weight, fifo_date, serials_array)
+
+
+        res.json(resPalletCreateGM);
+    } catch (err) {
+        res.json(err);
+    }
+};
 
 controller.get_packing_instruction_POST = async (req, res) => {
     try {

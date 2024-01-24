@@ -8,9 +8,9 @@
                         class="fas fa-arrow-alt-circle-left  text-warning"></span>Menu</a></li>
 
                     <li class="breadcrumb-item"><a href="/masterFG" class="text-warning"><span
-                                class="fas fa-arrow-circle-left text-warning"></span>Pallet FG</a></li>
+                                class="fas fa-arrow-circle-left text-warning"></span>Master FG</a></li>
 
-                    <li class="breadcrumb-item active" aria-current="page">Pallet General</li>
+                    <li class="breadcrumb-item active" aria-current="page">Masterizar Handling Units</li>
                 </ol>
             </nav>
 
@@ -48,18 +48,17 @@
                     <form id="submitSerial">
               
                       <h4 class="text-center animate__animated animate__bounceIn d-none d-lg-block" display: inline-block>
-                       Pallet Creation:</h4>
-                       <img src="/img/sap2.png" alt="SAP" srcset="" class="">
+                       Etiqueta Master GM:</h4>
+                       <img src="/img/GM.png" alt="GM" srcset="" class="">
               
                       <div class="form-group">
               
               
               
                         <label for="serial_num">Handling Unit:(S) <i class="fas fa-barcode" style="font-size: 1rem;"></i></label>
-                        <small id="ejs_selected_packing" class="form-text "></small>
-                        <small id="ejs_packing_quantity" class="form-text "></small>
                         <input type="text" class="form-control" name="serial_num" id="serial_num" aria-describedby="helpId"
                           placeholder="" autocomplete="off">
+                        <small id="helpId" class="form-text text-muted"></small>
                       </div>
                     </form>
                     <div class="alert alert-danger animate__flipOutX animate__animated role=" alert" id="alerta_prefijo">Error:
@@ -217,7 +216,7 @@
                   <thead class="thead-dark">
                     <tr class="header">
                       <th>SU:</th>
-                      <th>Note:</th>
+                      <th>Error:</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -275,44 +274,11 @@
         </div>
   
         <div class="modal-footer">
-          <button id="btnCerrar_Master" type="button" class="btn btn-secondary btnCerrar" data-dismiss="modal">Cerrar</button>
+          <button id="btnCerrar_Master" type="button" class="btn btn-secondary " data-dismiss="modal">Cerrar</button>
         </div>
       </div>
     </div>
   </div>
-
-
-    <!-- Small modal Confirm Select Packing Instruction-->
-    <div class="modal fade" id="modalSelectPacking" tabindex="-1" role="dialog" aria-labelledby="modelTitleId" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-scrollable" role="document">
-        <div class="modal-content">
-          <div class="modal-header card-mov">
-            <img src="/img/sap.png" alt="SAP" srcset="" class="card-mov">
-            <h5 class="card-mov"> Seleccionar Packing Instruction </h5>
-            <!-- <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            </button> -->
-          </div>
-    
-          <div class="modal-body">
-
-            <div class="row text-center">
-              <div class="col-12">
-                <form id="submit_PackingInstruction">
-                  
-                  <!-- Added via Javascript -->
-                
-                </form>
-              </div>
-            </div>
-
-          </div>
-    
-          <div class="modal-footer">
-            <button id="btnCerrar_Master" type="button" class="btn btn-secondary btnCerrar" data-dismiss="modal">Cerrar</button>
-          </div>
-        </div>
-      </div>
-    </div>
   
   <!-- Modal Spinners -->
   <div class="modal fade" id="modalSpinner" tabindex="-1" aria-labelledby="myModalLabel" aria-hidden="true">
@@ -337,7 +303,7 @@
               
 <%- include ("./static/footer")%>
 
-<script type="text/javascript" src="/js/functions/master_pallet.js"></script>
+<script type="text/javascript" src="/js/functions/master_fg_gm.js"></script>
 
 </body>
 
