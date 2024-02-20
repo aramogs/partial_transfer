@@ -834,11 +834,16 @@ controller.postSerialesAcreditacionFG_POST = async (req, res) => {
     let serial = req.body.serial
 
     let serials_array = serial.split(",");
-    const result_getStorageLocation = await funcion.getStorageLocation(estacion);
+    const resultSL = await funcion.getStorageLocation(estacion);
+    const resultPV = await funcion.getProductVersion(estacion);
+    if (resultSL.length === 0) { return res.json({ "key": `Storage Location not set for device "${station}"` }) }
+    if (resultPV.length === 0) { return res.json({ "key": `Product Version not set for device "${station}"` }) }
+    const storage_location = resultSL[0].storage_location;
+    const product_version = resultSL[0].product_version;
     const newArray = [];
 
     for (let i = 0; i < serials_array.length; i++) {
-        let resultBackflush = await funcion.backflushFG(serials_array[i]);
+        let resultBackflush = await funcion.backflushFG(serials_array[i], product_version);
         newArray.push(resultBackflush)
     }
     res.json(newArray);
@@ -1163,11 +1168,14 @@ controller.postVUL_POST = async (req, res) => {
             _material = material.substring(1)
         }
 
-        const resultSL = await funcion.getStorageLocation(station);
+        const resultSL = await funcion.getStorageLocation(estacion);
+        const resultPV = await funcion.getProductVersion(estacion);
         if (resultSL.length === 0) { return res.json({ "key": `Storage Location not set for device "${station}"` }) }
+        if (resultPV.length === 0) { return res.json({ "key": `Product Version not set for device "${station}"` }) }
         const storage_location = resultSL[0].storage_location;
+        const product_version = resultSL[0].product_version;
 
-        let resultBackflush = await funcion.backflushFG(serial_num);
+        let resultBackflush = await funcion.backflushFG(serial_num, product_version);
         if (resultBackflush.E_RETURN.TYPE !== "S") {
             if (!resultBackflush.E_RETURN.MESSAGE.toLowerCase().includes('already posted')) {
                 return res.json({ "key": `${resultBackflush.E_RETURN.MESSAGE}` })
@@ -1274,11 +1282,14 @@ controller.postSEM_POST = async (req, res) => {
             _material = material.substring(1)
         }
 
-        const resultSL = await funcion.getStorageLocation(station);
+        const resultSL = await funcion.getStorageLocation(estacion);
+        const resultPV = await funcion.getProductVersion(estacion);
         if (resultSL.length === 0) { return res.json({ "key": `Storage Location not set for device "${station}"` }) }
+        if (resultPV.length === 0) { return res.json({ "key": `Product Version not set for device "${station}"` }) }
         const storage_location = resultSL[0].storage_location;
+        const product_version = resultSL[0].product_version;
 
-        let resultBackflush = await funcion.backflushFG(serial_num);
+        let resultBackflush = await funcion.backflushFG(serial_num, product_version);
         if (resultBackflush.E_RETURN.TYPE !== "S") {
             if (!resultBackflush.E_RETURN.MESSAGE.toLowerCase().includes('already posted')) {
                 return res.json({ "key": `${resultBackflush.E_RETURN.MESSAGE}` })
@@ -2583,7 +2594,7 @@ controller.pallet_request_createFORD_POST = async (req, res) => {
         }
 
         const targetHUITEM = resPalletCreateFORD.HUITEM.find(item => item.HU_ITEM_TYPE === "3");
-    
+
 
         let p_material = `P${targetHUITEM.MATERIAL}`;
         let _material = targetHUITEM.MATERIAL;

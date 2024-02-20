@@ -359,7 +359,7 @@ function verifyHandlingUnits(e) {
                         let row = `
                                 <tr class="bg-danger">
                                     <td>${parseFloat(element.HU_EXID)}</td>
-                                    <td>Cehck HU</td>
+                                    <td>Check HU</td>
                                 </tr>
                                 `
                         newRow.classList.add("bg-danger", "text-white")
@@ -380,7 +380,7 @@ function verifyHandlingUnits(e) {
                 let row = `
                         <tr class="bg-danger">
                             <td>${response.key}</td>
-                            <td>Cehck HU</td>
+                            <td>Check HU</td>
                         </tr>
                         `
                 newRow.classList.add("bg-danger", "text-white")

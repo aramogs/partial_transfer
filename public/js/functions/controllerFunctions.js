@@ -1608,6 +1608,18 @@ funcion.getStorageLocation = (station) => {
     })
 }
 
+funcion.getProductVersion = (station) => {
+    return new Promise((resolve, reject) => {
+        dbB10(`
+        SELECT product_version
+        FROM b10.station_conf
+        WHERE no_estacion = '${station}'
+            `)
+            .then((result) => { resolve(result) })
+            .catch((error) => { reject(error) })
+    })
+}
+
 funcion.sapRFC_transfer = (serial, storage_type, storage_bin) => {
     return new Promise((resolve, reject) => {
         node_RFC.acquire()
@@ -1709,14 +1721,14 @@ funcion.insertRawDelivery = async (valores) => {
     }
 }
 
-funcion.backflushFG = async (serial) => {
+funcion.backflushFG = async (serial, product_version) => {
     let managed_client
     try {
         managed_client = await node_RFC.acquire();
 
         const result = await managed_client.call('ZWM_HU_MFHU', {
             I_EXIDV: `${funcion.addLeadingZeros(serial, 20)}`,
-            I_VERID: '1'
+            I_VERID: `${product_version}`
         });
         return result;
     } catch {
@@ -2747,50 +2759,51 @@ funcion.printLabel_GM = async (station, P_material, _material, serial_num, canti
 //     })
 
 
-// node_RFC.acquire()
-// .then(managed_client => {
+node_RFC.acquire()
+.then(managed_client => {
 
-//     structure_scrap =  {
-//         GOODSMVT_CODE: { GM_CODE: "06" },
-//         GOODSMVT_HEADER: {
-//             PSTNG_DATE: '20230213',
-//             DOC_DATE: '20230213',
-//             HEADER_TXT: 'NODEJS_TEST',
-//         },
-//         GOODSMVT_ITEM: [
-//             {
-//                 MATERIAL: '5000010065A0',
-//                 PLANT: '5210',
-//                 STGE_LOC: '0012',
-//                 MOVE_TYPE: '551',
-//                 ENTRY_QNT: '1.000',
-//                 COSTCENTER: '0052101020',
-//                 MOVE_REAS: '5204',
-//                 PROFIT_CTR: '0052100000',
-//                 BASE_UOM: 'PC',
-//             }
-//         ]
-//     }
+    structure_scrap =  {
+        GOODSMVT_CODE: { GM_CODE: "03" },
+        GOODSMVT_HEADER: {
+            PSTNG_DATE: '20240128',
+            DOC_DATE: '20240128',
+            HEADER_TXT: 'NODEJS_TEST',
+        },
+        GOODSMVT_ITEM: [
+            {
+                MATERIAL: '5000010065A0',
+                PLANT: '5210',
+                STGE_LOC: '0012',
+                MOVE_TYPE: '712',
+                ENTRY_QNT: '1.000',
+                COSTCENTER: '0052101020',
+                // MOVE_REAS: '5204',
+                PROFIT_CTR: '0052100000',
+                // BASE_UOM: 'PC',
 
-//     managed_client.invoke('BAPI_GOODSMVT_CREATE', structure_scrap, function(err,res){       
-//         managed_client.invoke('BAPI_TRANSACTION_COMMIT',{}, function(err,res){
-//             console.log('committed?');
-//             console.log(err);
-//             console.log(res);
-//         });
+            }
+        ]
+    }
 
-//         if (err) {
-//             return console.error('Error invoking BAPI_COSTCENTER_CHANGEMULTIPLE:', err);
-//         }
+    managed_client.invoke('BAPI_GOODSMVT_CREATE', structure_scrap, function(err,res){       
+        managed_client.invoke('BAPI_TRANSACTION_COMMIT',{}, function(err,res){
+            console.log('committed?');
+            console.log(err);
+            console.log(res);
+        });
 
-//         console.log('update cc res:', res);
-//     })  
+        if (err) {
+            return console.error('Error invoking BAPI_COSTCENTER_CHANGEMULTIPLE:', err);
+        }
 
-// })
-// .catch(err => {
-//     console.error(err);
-//     if (managed_client) { managed_client.release() }
-// })
+        console.log('update cc res:', res);
+    })  
+
+})
+.catch(err => {
+    console.error(err);
+    if (managed_client) { managed_client.release() }
+})
 
 
 
