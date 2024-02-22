@@ -839,7 +839,7 @@ controller.postSerialesAcreditacionFG_POST = async (req, res) => {
     if (resultSL.length === 0) { return res.json({ "key": `Storage Location not set for device "${station}"` }) }
     if (resultPV.length === 0) { return res.json({ "key": `Product Version not set for device "${station}"` }) }
     const storage_location = resultSL[0].storage_location;
-    const product_version = resultSL[0].product_version;
+    const product_version = resultPV[0].product_version;
     const newArray = [];
 
     for (let i = 0; i < serials_array.length; i++) {
