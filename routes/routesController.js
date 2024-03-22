@@ -165,6 +165,15 @@ controller.master_FG_FORD_GET = (req, res) => {
     })
 }
 
+controller.master_FG_BMW_GET = (req, res) => {
+    let user_id = req.res.locals.authData.id.id
+    let user_name = req.res.locals.authData.id.username
+    res.render('master_fg_bmw.ejs', {
+        user_id,
+        user_name
+    })
+}
+
 controller.master_PALLET_GET = (req, res) => {
     let user_id = req.res.locals.authData.id.id
     let user_name = req.res.locals.authData.id.username
@@ -467,7 +476,9 @@ controller.getUbicacionesFG_POST = async (req, res) => {
     try {
 
         const storageLocation = await funcion.getStorageLocation(estacion);
+        if (storageLocation.length === 0) { return res.json({ key: `Storage Location not set for device "${estacion}"` })}
         const serialResult = await funcion.sapRFC_consultaStorageUnit(funcion.addLeadingZeros(serial, 20));
+        
         const storage_location = storageLocation[0].storage_location;
         if (serialResult.length === 0) {
             return res.json({ key: "Check Serial Number" });
@@ -643,7 +654,7 @@ controller.getBinStatusReport_POST = async (req, res) => {
             return res.json({ info_list, error: "N/A" });
         }
     } catch (err) {
-        return res.json({ error: "An error occurred" });
+        return res.json({ error: err.message });
     }
 };
 
@@ -1611,7 +1622,7 @@ controller.getRawFIFOSerial_POST = async (req, res) => {
             return res.json({ key: "Storage Types do not match", abapMsgV1: `${serial}` });
         }
 
-        const materialInfo = await funcion.sapRFC_consultaMaterial_ST(serialResult[0].MATNR, "0011", storage_type);
+        const materialInfo = await funcion.sapRFC_consultaMaterial_ST(serialResult[0].MATNR, storage_location, storage_type);
         res.json(materialInfo);
     } catch (error) {
 
@@ -2666,6 +2677,109 @@ controller.pallet_request_createGM_POST = async (req, res) => {
     }
 };
 
+controller.get_packing_instructionBMW_POST = async (req, res) => {
+    try {
+        let serial = req.body.serial
+
+        const result = await funcion.sapRFC_get_packing_instructionBMW(serial)
+
+        res.json(result);
+    } catch (err) {
+        res.json(err);
+    }
+};
+
+controller.get_packing_matreialsBMW_POST = async (req, res) => {
+    try {
+        let POBJID = req.body.POBJID
+        let PACKNR = req.body.PACKNR
+        let hu_packing_instruction = req.body.hu_packing_instruction
+        const result = await funcion.sapRFC_get_packing_matreials(POBJID, PACKNR)
+
+        res.json(result);
+    } catch (err) {
+        res.json(err);
+    }
+};
+
+controller.getRawFIFOSerialBMW_POST = async (req, res) => {
+    try {
+        const serial = req.body.serial;
+        const storage_type = req.body.storage_type
+        const estacion = req.res.locals.macIP.mac;
+        const hu_packing_instruction = req.body.hu_packing_instruction;
+
+        const serialResult = await funcion.sapRFC_consultaStorageUnit(funcion.addLeadingZeros(serial, 20));
+        const storageLocation = await funcion.getStorageLocation(estacion);
+        const storage_location = storageLocation[0].storage_location;
+
+        if (serialResult.length === 0) {
+            return res.json({ key: "Check Serial Number" });
+        }
+        if (serialResult[0].LGORT !== storage_location) {
+            return res.json({ "key": "Storage Locations do not match", "abapMsgV1": `${serial}` });
+        }
+        if (serialResult[0].LGTYP.trim("").trim("") !== storage_type) {
+            return res.json({ key: "Storage Types do not match", abapMsgV1: `${serial}` });
+        }
+
+        const materialInfo = await funcion.sapRFC_consultaMaterial_BMW(serialResult[0].MATNR, storage_location, storage_type, hu_packing_instruction);
+        res.json(materialInfo);
+    } catch (error) {
+
+        res.json(error);
+    }
+};
+
+controller.pallet_request_createBMW_POST = async (req, res) => {
+    try {
+        let serial = req.body.serial
+        let not_found_storage_units = req.body.seriales_obsoletos
+        let serials_array = serial.split(",")
+        let packing_materials = req.body.result_packing_materials_formatted
+        let result_packingr_formatted = req.body.result_packingr_formatted
+        let pallet_packing_material = req.body.pallet_packing_material
+        let packing_instruction = req.body.packing_instruction
+        let packing_id = req.body.packing_id
+        let printerResult = await funcion.getPrinter_alt(req.res.locals.macIP.mac)
+        let printer = printerResult[0].impre_alt
+        if (printer === null) { return res.json({ key: `Printer not set for device "${req.res.locals.macIP.mac}"` }) }
+        const result = await funcion.sapRFC_pallet_request_create(serials_array, packing_materials, result_packingr_formatted, pallet_packing_material, packing_instruction, packing_id, printer)
+
+        let storage_location = "0014" // TODO cambiar a que sea dinamico
+        let storage_type = "FG"
+        let st = "901"
+        let sb = "CICLICOFG"
+        let not_found_storage_units_promises = []
+
+        if (not_found_storage_units.length > 0) {
+            not_found_storage_units.forEach(element => {
+                not_found_storage_units_promises.push(funcion.sapRFC_transferSlocCheck(element, storage_location, st, sb)
+                    .catch((err) => { return err }))
+            })
+    
+        }
+        const nfsup = Promise.all(not_found_storage_units_promises)
+        Promise.all([ nfsup])
+        let nfsup_result = result[0]
+
+        nfsup_result.forEach(element => {
+            if (element.key) {
+                response_list.push({ "serial_num": parseInt(element.abapMsgV1), "result": "N/A", "error": element.key })
+                funcion.dBinsert_cycle_result(storage_type, storage_bin, element.abapMsgV1, user_id, "NOSCAN-ERROR", element.key)
+            } else {
+                response_list.push({ "serial_num": parseInt(element.I_LENUM), "result": element.E_TANUM, "error": "N/A" })
+                funcion.dBinsert_cycle_result(storage_type, storage_bin, parseInt(element.I_LENUM), user_id, "NOSCAN", element.E_TANUM)
+            }
+
+        })
+
+        res.json(result);
+    } catch (err) {
+        res.json(err);
+    }
+};
+
 controller.get_packing_instruction_POST = async (req, res) => {
     try {
         let serial = req.body.serial
@@ -2677,6 +2791,7 @@ controller.get_packing_instruction_POST = async (req, res) => {
         res.json(err);
     }
 };
+
 
 controller.get_packing_matreials_POST = async (req, res) => {
     try {
@@ -2700,7 +2815,10 @@ controller.pallet_request_create_POST = async (req, res) => {
         let pallet_packing_material = req.body.pallet_packing_material
         let packing_instruction = req.body.packing_instruction
         let packing_id = req.body.packing_id
-        const result = await funcion.sapRFC_pallet_request_create(serials_array, packing_materials, result_packingr_formatted, pallet_packing_material, packing_instruction, packing_id)
+        let printerResult = await funcion.getPrinter_alt(req.res.locals.macIP.mac)
+        let printer = printerResult[0].impre_alt
+        if (printer === null) { return res.json({ key: `Printer not set for device "${req.res.locals.macIP.mac}"` }) }
+        const result = await funcion.sapRFC_pallet_request_create(serials_array, packing_materials, result_packingr_formatted, pallet_packing_material, packing_instruction, packing_id, printer)
 
         res.json(result);
     } catch (err) {

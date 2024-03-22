@@ -48,7 +48,7 @@ submitSerial.addEventListener("submit", listAdd)
 
 btn_t.addEventListener("click", () => { $('#myModal').modal({ backdrop: 'static', keyboard: false }) })
 
-submitArray_form.addEventListener("submit", verifyHandlingUnits)
+submitArray_form.addEventListener("submit", palletCreate)
 
 submitArray_Master.addEventListener("submit", createMaster)
 
@@ -331,7 +331,7 @@ function verifyQuantity() {
 // }
 
 
-function verifyHandlingUnits(e) {
+function palletCreate(e) {
     e.preventDefault()
     $('#myModal').modal('hide')
     $('#modalSpinner').modal({ backdrop: 'static', keyboard: false })
@@ -371,7 +371,7 @@ function verifyHandlingUnits(e) {
 
                 setTimeout(() => { soundWrong(), $('#modalSpinner').modal('hide') }, 500);
                 $('#modalError').modal({ backdrop: 'static', keyboard: false })
-            } else if (response.message) {
+            } else if (response.message || response.key) {
                 tabla_consulta.innerHTML = ""
                 tabla_consulta_container.hidden = false
                 errorTextField.innerHTML = ""
@@ -379,7 +379,7 @@ function verifyHandlingUnits(e) {
                 let newRow = tabla_consulta.insertRow(tabla_consulta.rows.length);
                 let row = `
                         <tr class="bg-danger">
-                            <td>${response.message}</td>
+                            <td>${response.message ? response.message : response.key}</td>
                             <td>Check HU</td>
                         </tr>
                         `

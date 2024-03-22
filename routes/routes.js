@@ -87,6 +87,13 @@ router.get('/master_fg_FORD',middleware.verifyToken, routesController.master_FG_
 router.post('/get_packing_instructionFORD',middleware.verifyToken, middleware.macFromIP, routesController.get_packing_instructionFORD_POST);
 router.post('/get_packing_matreialsFORD',middleware.verifyToken, middleware.macFromIP, routesController.get_packing_matreialsFORD_POST);
 router.post('/pallet_request_createFORD',middleware.verifyToken, middleware.macFromIP, routesController.pallet_request_createFORD_POST);
+// ##############Master Pallet BMW ##################
+router.get('/master_fg_bmw',middleware.verifyToken, routesController.master_FG_BMW_GET);
+router.post('/get_packing_instructionBMW',middleware.verifyToken, middleware.macFromIP, routesController.get_packing_instructionBMW_POST);
+router.post('/get_packing_matreialsBMW',middleware.verifyToken, middleware.macFromIP, routesController.get_packing_matreialsBMW_POST);
+router.post('/getRawFIFOSerialBMW', middleware.verifyToken,  middleware.macFromIP, routesController.getRawFIFOSerialBMW_POST);
+router.post('/pallet_request_createBMW',middleware.verifyToken, middleware.macFromIP, routesController.pallet_request_createBMW_POST);
+// router.post('/pallet_print',middleware.verifyToken, middleware.macFromIP, routesController.pallet_print_POST);
 // ##############Master Pallet##################
 router.get('/master_pallet',middleware.verifyToken, routesController.master_PALLET_GET);
 router.post('/get_packing_instruction',middleware.verifyToken, middleware.macFromIP, routesController.get_packing_instruction_POST);
