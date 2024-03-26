@@ -663,17 +663,13 @@ funcion.sapRFC_consultaMaterial_BMW = async (material_number, storage_location, 
             ONLYKEYS: '',
             HUNUMBERS: lenumArray,
         });
-        // Filter the result to only include the HUHEADER with the matching packing instruction
-        const filteredResult = result_hu_history.HUHEADER.filter(header => header.PACKG_INSTRUCT === hu_packing_instruction);
-        // Map the filtered result to the original result to include the LENUM
-        const filteredArray = filteredResult.map((item, index) => {
-            return {
-                ...res[index],
-                LENUM: item.HU_EXID
-            };
-        });
-        // Return the filtered array
-        return filteredArray;
+        
+        const matchPacking = result_hu_history.HUHEADER.filter(header => header.PACKG_INSTRUCT === hu_packing_instruction);
+
+        const matchResmatchPacking = res.filter(item => matchPacking.some(result => result.HU_EXID === item.LENUM));
+
+
+        return matchResmatchPacking;
     } catch (error) {
         await createSapRfcPool.destroy(managed_client);
         throw error;
