@@ -69,7 +69,7 @@ function listAdd(e) {
 
     serial = serial_num.value;
     const regex = /.*[a-zA-Z].*/;
-    if (serial.charAt(0) !== "S" && serial.charAt(0) !== "s" || (serial.substring(1)).length < 9 || regex.exec(serial.substring(1)) !== null) {
+    if ((serial.charAt(0) !== "S" && serial.charAt(0) !== "s" && serial.charAt(0) !== "M" && serial.charAt(0) !== "m") || serial.substring(1).length < 9 || regex.exec(serial.substring(1)) !== null) {
         soundWrong()
         alerta_prefijo.classList.remove("animate__flipOutX", "animate__animated")
         alerta_prefijo.classList.add("animate__flipInX", "animate__animated")
