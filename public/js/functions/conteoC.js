@@ -144,7 +144,7 @@ submitSU.addEventListener("submit", function (e) {
     let currentSerial = parseInt(inp_verifyCount.value.substring(1))
     let serial = inp_verifyCount.value;
 
-    if (serial.charAt(0) !== "S" && serial.charAt(0) !== "s") {
+    if (serial.charAt(0) !== "S" && serial.charAt(0) !== "s" && serial.charAt(0) !== "M" && serial.charAt(0) !== "m") {
         soundWrong()
         alerta_prefijo2.classList.remove("animate__flipOutX", "animate__animated")
         alerta_prefijo2.classList.add("animate__flipInX", "animate__animated")
