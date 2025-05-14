@@ -299,7 +299,7 @@ function consultarMaterial() {
                 // cScan.innerHTML = `${currentCount}/${contenedores}`
                 let date_
                 array_fifo.forEach(function (element) {
-                    if (!(element.LGPLA.toUpperCase().includes("CICLI") || element.LGPLA.toUpperCase().includes("JRPLANTA"))) {
+                    if (!(element.LGPLA.toUpperCase().includes("CICLI") || element.LGPLA.toUpperCase().includes("JRPLANTA") || element.LGPLA.toUpperCase().includes("JRVINEDOS"))) {
                         let key = JSON.stringify(moment(element.WDATU == "00000000" ? date_ = "20110101" : date_ = element.WDATU, "YYYYMMDD").format("MM/DD/YYYY"))
                         dates[key] = (dates[key] || 0) + 1
                     }
@@ -313,7 +313,7 @@ function consultarMaterial() {
                     newRow.setAttribute("hu_quantity", `${(parseInt(parseFloat(element.VERME)))}`)
                     newRow.setAttribute("part_number", `${(element.MATNR).trim()}`)
 
-                    if ((element.LGPLA).toUpperCase().includes("CICLI") || (element.LGPLA).toUpperCase().includes("JRPLANTA")) {
+                    if ((element.LGPLA).toUpperCase().includes("CICLI") || (element.LGPLA).toUpperCase().includes("JRPLANTA") || (element.LGPLA).toUpperCase().includes("JRVINEDOS")) {
                         newRow.setAttribute("class", "bg-secondary text-white")
                         row = `
                     <tr>
@@ -406,7 +406,7 @@ function consultaSerial() {
                 array_fifo = response
 
                 array_fifo.forEach(function (element) {
-                    if (!(element.LGPLA).toUpperCase().includes("CICLI") && !(element.LGPLA).toUpperCase().includes("JRPLANTA")) {
+                    if (!(element.LGPLA).toUpperCase().includes("CICLI") && !(element.LGPLA).toUpperCase().includes("JRPLANTA") && !(element.LGPLA).toUpperCase().includes("JRVINEDOS")) {
                         let key = JSON.stringify(moment(element.WDATU == "00000000" ? date_ = "20110101" : date_ = element.WDATU, "YYYYMMDD").format("MM/DD/YYYY"))
                         dates[key] = (dates[key] || 0) + 1
                     }
@@ -420,7 +420,7 @@ function consultaSerial() {
                     newRow.setAttribute("hu_quantity", `${(parseInt(parseFloat(element.VERME)))}`)
                     newRow.setAttribute("part_number", `${(element.MATNR).trim()}`)
 
-                    if ((element.LGPLA).toUpperCase().includes("CICLI") || (element.LGPLA).toUpperCase().includes("JRPLANTA")) {
+                    if ((element.LGPLA).toUpperCase().includes("CICLI") || (element.LGPLA).toUpperCase().includes("JRPLANTA") || (element.LGPLA).toUpperCase().includes("JRVINEDOS")) {
                         newRow.setAttribute("class", "bg-secondary text-white")
                         row = `
                     <tr>
@@ -491,7 +491,7 @@ submitMaterial.addEventListener("submit", function (e) {
         soundWrong()
         inp_verifyFIFO.value = ""
         lower_date = "12/12/9999"
-        } if ((currentSU.cells[0].innerHTML).toUpperCase().includes("CICLI") || (currentSU.cells[0].innerHTML).toUpperCase().includes("JRPLANTA")) {
+        } if ((currentSU.cells[0].innerHTML).toUpperCase().includes("CICLI") || (currentSU.cells[0].innerHTML).toUpperCase().includes("JRPLANTA") || (currentSU.cells[0].innerHTML).toUpperCase().includes("JRVINEDOS")) {
         soundWrong()
         inp_verifyFIFO.value = ""
         lower_date = "12/12/9999"
