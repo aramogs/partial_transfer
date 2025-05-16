@@ -139,7 +139,7 @@ function submitMaterial(e, proceso) {
                 cScan.innerHTML = `${currentCount}/${contenedores}`
                 let date_
                 array_fifo.forEach(function (element) {
-                    if (!(element.LGPLA).toUpperCase().includes("CICLI")) {
+                    if (!(element.LGPLA).toUpperCase().includes("CICLI") && !(element.LGPLA).toUpperCase().startsWith("JR")) {
                         let key = JSON.stringify(moment(element.WDATU == "00000000" ? date_ = "20110101" : date_ = element.WDATU, "YYYYMMDD").format("MM/DD/YYYY"))
                         dates[key] = (dates[key] || 0) + 1
                     }
@@ -151,7 +151,7 @@ function submitMaterial(e, proceso) {
                     let newRow = tabla_consulta.insertRow(tabla_consulta.rows.length);
                     newRow.setAttribute("id", `${(element.LENUM).replace(/^0+/gm, "")}`)
 
-                    if ((element.LGPLA).toUpperCase().includes("CICLI")) {
+                    if ((element.LGPLA).toUpperCase().includes("CICLI") || (element.LGPLA).toUpperCase().startsWith("JR")) {
                         newRow.setAttribute("class", "bg-secondary text-white")
                         row = `
                         <tr>
@@ -245,7 +245,7 @@ submitSerials.addEventListener("submit", function (e) {
         soundWrong()
         inp_verifyFIFO.value = ""
         lower_date = "12/12/9999"
-    } if ((currentSU.cells[0].innerHTML).toUpperCase().includes("CICLI")) {
+    } if ((currentSU.cells[0].innerHTML).toUpperCase().includes("CICLI") || (currentSU.cells[0].innerHTML).toUpperCase().startsWith("JR")) {
         soundWrong()
         inp_verifyFIFO.value = ""
         lower_date = "12/12/9999"
