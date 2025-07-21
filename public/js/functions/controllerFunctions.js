@@ -12,6 +12,43 @@ const createSapRfcPool = require('../../sap/Connection');
 //Require Axios
 const axios = require('axios');
 
+// Utility to sanitize values for SAP RFC_READ_TABLE filters
+function sanitizeSapValue(value) {
+    // Replace single quote with two single quotes (SAP style escaping)
+    // Remove double quotes, semicolons, backslashes, and SQL comment markers
+    return String(value)
+        .replace(/'/g, "''")
+        .replace(/"/g, "")
+        .replace(/;/g, "")
+        .replace(/\\/g, "")
+        .replace(/--/g, "")
+        .replace(/\/\*[\s\S]*?\*\//g, "");
+}
+
+// Utility to split long filter strings into SAP RFC_READ_TABLE OPTIONS
+function buildRfcOptions(filterString) {
+    // SAP limit: 72 characters per line
+    const maxLength = 72;
+    const options = [];
+    for (let i = 0; i < filterString.length; i += maxLength) {
+        options.push({ TEXT: filterString.substring(i, i + maxLength) });
+    }
+    return options;
+}
+
+/*
+// Example usage:
+const material_number = sanitizeSapValue(userInputMaterial);
+const storage_location = sanitizeSapValue(userInputLocation);
+const filter = `MATNR EQ '${material_number}' AND LGORT EQ '${storage_location}'`;
+const options = buildRfcOptions(filter);
+
+const result = await managed_client.call('RFC_READ_TABLE', {
+    QUERY_TABLE: 'LQUA',
+    DELIMITER: ",",
+    OPTIONS: options
+});
+*/
 
 funcion.addLeadingZeros = (num, totalLength) => {
     return String(num).padStart(totalLength, '0');
@@ -580,10 +617,12 @@ funcion.sapRFC_consultaMaterial = async (material_number, storage_location) =>{
     let managed_client
     try {
         managed_client = await createSapRfcPool.acquire();
+        const filter = `MATNR EQ '${sanitizeSapValue(material_number)}' AND LGORT EQ '${sanitizeSapValue(storage_location)}'`;
+        const options = buildRfcOptions(filter);
         const result = await managed_client.call('RFC_READ_TABLE', {
             QUERY_TABLE: 'LQUA',
             DELIMITER: ",",
-            OPTIONS: [{ TEXT: `MATNR EQ '${material_number}'   AND LGORT EQ '${storage_location}'` }]
+            OPTIONS: options
         });
         const columns = [];
         const rows = [];
@@ -603,7 +642,6 @@ funcion.sapRFC_consultaMaterial = async (material_number, storage_location) =>{
             columns.map((key, i) => [key, row[i]])
         ));
 
-
         return res;
     } catch (err) {
         await createSapRfcPool.destroy(managed_client);
@@ -617,15 +655,13 @@ funcion.sapRFC_consultaMaterial_ST = async (material_number, storage_location, s
     let managed_client
     try {
         managed_client = await createSapRfcPool.acquire();
-
-        const options = {
+        const filter = `MATNR EQ '${sanitizeSapValue(material_number).toUpperCase()}' AND LGORT EQ '${sanitizeSapValue(storage_location)}' AND LGTYP EQ '${sanitizeSapValue(storage_type)}'`;
+        const options = buildRfcOptions(filter);
+        const result = await managed_client.call('RFC_READ_TABLE', {
             QUERY_TABLE: 'LQUA',
             DELIMITER: ",",
-            OPTIONS: [{ TEXT: `MATNR EQ '${material_number.toUpperCase()}' AND LGORT EQ '${storage_location}' AND LGTYP EQ '${storage_type}' ` }]
-        };
-
-        const result = await managed_client.call('RFC_READ_TABLE', options);
-
+            OPTIONS: options
+        });
         const columns = result.FIELDS.map(field => field.FIELDNAME);
         const rows = result.DATA.map(data_ => data_.WA.split(","));
         const res = rows.map(row => Object.fromEntries(columns.map((key, i) => [key, row[i]])));
@@ -642,14 +678,13 @@ funcion.sapRFC_consultaMaterial_BMW = async (material_number, storage_location, 
     let managed_client
     try {
         managed_client = await createSapRfcPool.acquire();
-
-        const options = {
+        const filter = `MATNR EQ '${sanitizeSapValue(material_number).toUpperCase()}' AND LGORT EQ '${sanitizeSapValue(storage_location)}' AND LGTYP EQ '${sanitizeSapValue(storage_type)}'`;
+        const options = buildRfcOptions(filter);
+        const result = await managed_client.call('RFC_READ_TABLE', {
             QUERY_TABLE: 'LQUA',
             DELIMITER: ",",
-            OPTIONS: [{ TEXT: `MATNR EQ '${material_number.toUpperCase()}' AND LGORT EQ '${storage_location}' AND LGTYP EQ '${storage_type}' ` }]
-        };
-
-        const result = await managed_client.call('RFC_READ_TABLE', options);
+            OPTIONS: options
+        });
 
         const columns = result.FIELDS.map(field => field.FIELDNAME);
         const rows = result.DATA.map(data_ => data_.WA.split(","));
@@ -683,17 +718,16 @@ funcion.sapRFC_consultaStorageUnit = async (storage_unit) => {
     let managed_client
     try {
         managed_client = await createSapRfcPool.acquire();
-
+        const filter = `LENUM EQ '${sanitizeSapValue(storage_unit)}'`;
+        const options = buildRfcOptions(filter);
         const result = await managed_client.call('RFC_READ_TABLE', {
             QUERY_TABLE: 'LQUA',
             DELIMITER: ",",
-            OPTIONS: [{ TEXT: `LENUM EQ '${storage_unit}' ` }]
+            OPTIONS: options
         });
-
         const columns = result.FIELDS.map(field => field.FIELDNAME);
         const rows = result.DATA.map(data_ => data_.WA.split(","));
         const res = rows.map(row => Object.fromEntries(columns.map((key, i) => [key, row[i]])));
-
         return res;
     } catch (error) {
         await createSapRfcPool.destroy(managed_client);
@@ -728,30 +762,26 @@ funcion.sapRFC_consultaStorageBin = async (storage_location, storage_type, stora
     let managed_client
     try {
         managed_client = await createSapRfcPool.acquire();
+        const filter = `LGORT EQ '${sanitizeSapValue(storage_location)}' AND LGTYP EQ '${sanitizeSapValue(storage_type)}' AND LGPLA EQ '${sanitizeSapValue(storage_bin).toUpperCase()}'`;
+        const options = buildRfcOptions(filter);
         const result = await managed_client.call('RFC_READ_TABLE', {
             QUERY_TABLE: 'LQUA',
             DELIMITER: ",",
-            OPTIONS: [{ TEXT: `LGORT EQ '${storage_location}' AND LGTYP EQ '${storage_type}' AND LGPLA EQ '${storage_bin.toUpperCase()}'` }]
+            OPTIONS: options
         });
-
         let columns = [];
         let rows = [];
         let fields = result.FIELDS;
-
         fields.forEach(field => {
             columns.push(field.FIELDNAME);
         });
-
         let data = result.DATA;
-
         data.forEach(data_ => {
             rows.push(data_.WA.split(","));
         });
-
         let res = rows.map(row => Object.fromEntries(
             columns.map((key, i) => [key, row[i]])
         ));
-
         return res;
     } catch (err) {
         await createSapRfcPool.destroy(managed_client);
@@ -800,11 +830,12 @@ funcion.sapRFC_transferEXTProd = async (serial, storage_location, storage_type, 
     try {
         managed_client = await createSapRfcPool.acquire();
         managed_client2 = await createSapRfcPool.acquire();
-
+        const filter = `LENUM EQ '${funcion.addLeadingZeros(serial, 20)}'`;
+        const options = buildRfcOptions(filter);
         const result_suCheck = await managed_client.call('RFC_READ_TABLE', {
             QUERY_TABLE: 'LQUA',
             DELIMITER: ",",
-            OPTIONS: [{ TEXT: `LENUM EQ '${funcion.addLeadingZeros(serial, 20)}'` }]
+            OPTIONS: options
         });
         const columns = result_suCheck.FIELDS.map(field => field.FIELDNAME);
         const rows = result_suCheck.DATA.map(data_ => data_.WA.split(","));
@@ -845,11 +876,12 @@ funcion.sapRFC_transferVULProd = async (serial, storage_location, storage_type, 
     try {
         managed_client = await createSapRfcPool.acquire();
         managed_client2 = await createSapRfcPool.acquire();
-
+        const filter = `LENUM EQ '${funcion.addLeadingZeros(sanitizeSapValue(serial), 20)}'`;
+        const options = buildRfcOptions(filter);
         const result_suCheck = await managed_client.call('RFC_READ_TABLE', {
             QUERY_TABLE: 'LQUA',
             DELIMITER: ",",
-            OPTIONS: [{ TEXT: `LENUM EQ '${funcion.addLeadingZeros(serial, 20)}'` }]
+            OPTIONS: options
         });
         const columns = result_suCheck.FIELDS.map(field => field.FIELDNAME);
         const rows = result_suCheck.DATA.map(data_ => data_.WA.split(","));
@@ -1003,31 +1035,33 @@ funcion.sapRFC_transferProdSem_2 = async (material, qty, storage_location, stora
 };
 
 funcion.sapRFC_TBNUM = async (material, cantidad) => {
-    let managed_client
+    let managed_client;
     try {
         managed_client = await createSapRfcPool.acquire();
-        // const yesterday = moment().subtract(1, 'days').format('YYYYMMDD');
+        const filter = `LGNUM EQ '521' AND MATNR EQ '${sanitizeSapValue(material)}' AND MENGE EQ '${sanitizeSapValue(cantidad)}' AND ELIKZ EQ ''`;
+        const options = buildRfcOptions(filter);
         const result = await managed_client.call('RFC_READ_TABLE', {
             QUERY_TABLE: 'LTBP',
             DELIMITER: ",",
-            OPTIONS: [
-                { TEXT: `LGNUM EQ '521' AND MATNR EQ '${material}' AND MENGE EQ '${cantidad}'` },
-                { TEXT: `AND ELIKZ EQ ''` },
-            ]
+            OPTIONS: options
         });
+
         const fields = result.FIELDS.map(field => field.FIELDNAME);
         const rows = result.DATA.map(data_ => data_.WA.split(","));
         const res = rows.map(row => Object.fromEntries(fields.map((key, i) => [key, row[i]])));
+
         // Sort by TBNUM field in descending order
-        res.sort((a, b) => (parseInt(b.TBNUM) - parseInt(a.TBNUM)));
+        res.sort((a, b) => parseInt(b.TBNUM) - parseInt(a.TBNUM));
+
         return res;
     } catch (err) {
         await createSapRfcPool.destroy(managed_client);
-        return err;
+        throw err;
     } finally {
-        setTimeout(() => { if (managed_client.alive) { createSapRfcPool.release(managed_client) } }, 500);
+        setTimeout(() => { if (managed_client.alive) { createSapRfcPool.release(managed_client); } }, 500);
     }
 };
+
 
 
 funcion.sapRFC_transferVul = async (serial, storage_bin) => {
@@ -1424,26 +1458,23 @@ funcion.sapRFC_consultaMaterial_EXT = async (material_number, storage_location, 
     let managed_client
     try {
         managed_client = await createSapRfcPool.acquire();
+        const filter = `MATNR EQ '${sanitizeSapValue(material_number).toUpperCase()}' AND LGTYP EQ '${sanitizeSapValue(storage_type)}' AND LGPLA EQ '${sanitizeSapValue(storage_bin)}'`;
+        const options = buildRfcOptions(filter);
         const result = await managed_client.call('RFC_READ_TABLE', {
             QUERY_TABLE: 'LQUA',
             DELIMITER: ",",
-            OPTIONS: [{ TEXT: `MATNR EQ '${material_number.toUpperCase()}' AND LGTYP EQ '${storage_type}' AND LGPLA EQ '${storage_bin}'` }]
+            OPTIONS: options
         });
-
         let columns = [];
         let rows = [];
         let fields = result.FIELDS;
-
         fields.forEach(field => {
             columns.push(field.FIELDNAME);
         });
-
         let data = result.DATA;
-
         data.forEach(data_ => {
             rows.push(data_.WA.split(","));
         });
-
         let res = rows.map(row => Object.fromEntries(
             columns.map((key, i) => [key, row[i]])
         ));
@@ -1511,11 +1542,12 @@ funcion.sapRFC_SbinOnStypeExists = async (storage_type, storage_bin) => {
     let managed_client
     try {
         managed_client = await createSapRfcPool.acquire();
-
+        const filter = `LGNUM EQ 521 AND LGTYP EQ '${sanitizeSapValue(storage_type)}' AND LGPLA EQ '${sanitizeSapValue(storage_bin)}'`;
+        const options = buildRfcOptions(filter);
         const result = await managed_client.call('RFC_READ_TABLE', {
             QUERY_TABLE: 'LAGP',
             DELIMITER: ",",
-            OPTIONS: [{ TEXT: `LGNUM EQ 521 AND LGTYP EQ '${storage_type}' AND LGPLA EQ '${storage_bin}'` }]
+            OPTIONS: options
             // FIELDS: ["MATNR", "LGORT", "LGTYP", "LGPLA"]
         });
         const fields = result.FIELDS.map(field => field.FIELDNAME);
@@ -1534,11 +1566,13 @@ funcion.sapRFC_SbinOnStypeExists = async (storage_type, storage_bin) => {
 funcion.sapRFC_consultaMaterial_VUL = async (material_number, storage_location, storage_type, storage_bin) => {
     let managed_client
     try {
-        await createSapRfcPool.destroy(managed_client);
+        managed_client = await createSapRfcPool.acquire();
+        const filter = `MATNR EQ '${sanitizeSapValue(material_number).toUpperCase()}' AND LGTYP EQ '${sanitizeSapValue(storage_type)}' AND LGPLA EQ '${sanitizeSapValue(storage_bin)}'`;
+        const options = buildRfcOptions(filter);
         const result = await managed_client.call('RFC_READ_TABLE', {
             QUERY_TABLE: 'LQUA',
             DELIMITER: ",",
-            OPTIONS: [{ TEXT: `MATNR EQ ${material_number.toUpperCase()} AND LGTYP EQ '${storage_type}' AND LGPLA EQ '${storage_bin}'` }]
+            OPTIONS: options
         });
         const columns = [];
         const rows = [];
@@ -1553,10 +1587,9 @@ funcion.sapRFC_consultaMaterial_VUL = async (material_number, storage_location, 
         const res = rows.map(row => Object.fromEntries(
             columns.map((key, i) => [key, row[i]])
         ));
-
         return res;
     } catch (err) {
-        managed_client = await createSapRfcPool.acquire();
+        await createSapRfcPool.destroy(managed_client);
         throw err;
     } finally{
         setTimeout(() => { if (managed_client.alive) { createSapRfcPool.release(managed_client) } }, 500);
@@ -1567,16 +1600,16 @@ funcion.sapRFC_consultaMaterial_SEM = async (material_number, storage_location, 
     let managed_client
     try {
         managed_client = await createSapRfcPool.acquire();
+        const filter = `MATNR EQ '${sanitizeSapValue(material_number).toUpperCase()}' AND LGTYP EQ '${sanitizeSapValue(storage_type)}' AND LGORT EQ '${sanitizeSapValue(storage_location)}'`;
+        const options = buildRfcOptions(filter);
         const result = await managed_client.call('RFC_READ_TABLE', {
             QUERY_TABLE: 'LQUA',
             DELIMITER: ",",
-            OPTIONS: [{ TEXT: `MATNR EQ ${material_number.toUpperCase()} AND LGTYP EQ '${storage_type}' AND LGORT EQ '${storage_location}'` }]
+            OPTIONS: options
         });
-
         const columns = result.FIELDS.map(field => field.FIELDNAME);
         const rows = result.DATA.map(data_ => data_.WA.split(","));
         const res = rows.map(row => Object.fromEntries(columns.map((key, i) => [key, row[i]])));
-
         return res;
     } catch (err) {
         await createSapRfcPool.destroy(managed_client);
@@ -1638,29 +1671,27 @@ funcion.sapRFC_transfer = async (serial, storage_type, storage_bin) => {
 }
 
 funcion.sapRFC_transferSlocCheck = async (serial, storage_location, storage_type, storage_bin) => {
-    let managed_client
-    let managed_client2
+    let managed_client;
     try {
         managed_client = await createSapRfcPool.acquire();
-        managed_client2 = await createSapRfcPool.acquire();
+
+        const filter = `LENUM EQ '${funcion.addLeadingZeros(sanitizeSapValue(serial), 20)}'`;
+        const options = buildRfcOptions(filter);
 
         const result_suCheck = await managed_client.call('RFC_READ_TABLE', {
             QUERY_TABLE: 'LQUA',
             DELIMITER: ",",
-            OPTIONS: [{ TEXT: `LENUM EQ '${funcion.addLeadingZeros(serial, 20)}'` }]
+            OPTIONS: options
         });
-        const columns = result_suCheck.FIELDS.map(field => field.FIELDNAME);
-        const rows = result_suCheck.DATA.map(data_ => data_.WA.split(","));
 
-        const res = rows.map(row => Object.fromEntries(
-            columns.map((key, i) => [key, row[i]])
-        ));
+        const fields = result_suCheck.FIELDS.map(field => field.FIELDNAME);
+        const rows = result_suCheck.DATA.map(data_ => data_.WA.split(","));
+        const res = rows.map(row => Object.fromEntries(fields.map((key, i) => [key, row[i]])));
 
         if (res.length === 0) {
-            return ({ "key": "SU_DOESNT_EXIST", "abapMsgV1": `${serial}` });
-
+            return { key: "SU_DOESNT_EXIST", abapMsgV1: serial };
         } else if (res[0].LGORT !== storage_location) {
-            return ({ "key": "Storage Locations do not match", "abapMsgV1": `${serial}` });
+            return { key: "Storage Locations do not match", abapMsgV1: serial };
         } else {
             const inputParameters = {
                 I_LENUM: funcion.addLeadingZeros(serial, 20),
@@ -1669,19 +1700,20 @@ funcion.sapRFC_transferSlocCheck = async (serial, storage_location, storage_type
                 I_NLBER: '001',
                 I_NLPLA: storage_bin.toUpperCase()
             };
-            
-            const result = await managed_client2.call('L_TO_CREATE_MOVE_SU', inputParameters);
+
+            const result = await managed_client.call('L_TO_CREATE_MOVE_SU', inputParameters);
             return result;
         }
     } catch (err) {
         await createSapRfcPool.destroy(managed_client);
-        await createSapRfcPool.destroy(managed_client2);
         throw err;
     } finally {
-        setTimeout(() => { if (managed_client.alive) { createSapRfcPool.release(managed_client) } }, 500);
-        setTimeout(() => { if (managed_client2.alive) { createSapRfcPool.release(managed_client2) } }, 500);
+        setTimeout(() => { if (managed_client.alive) { createSapRfcPool.release(managed_client); } }, 500);
     }
 };
+
+
+
 
 
 funcion.sapRFC_materialDescription = async (material_number) => {
@@ -1804,18 +1836,23 @@ funcion.sapRFC_HUEXT = async (storage_location, material, cantidad) => {
     let managed_client
     try {
         managed_client = await createSapRfcPool.acquire();
+        const filter = `POBJID EQ 'UC${sanitizeSapValue(material)}'`;
+        const options = buildRfcOptions(filter);
 
         const result_packing_object = await managed_client.call('RFC_READ_TABLE', {
             QUERY_TABLE: 'PACKKP',
             DELIMITER: ",",
-            OPTIONS: [{ TEXT: `POBJID EQ 'UC${material}'` }],
+            OPTIONS: options,
             FIELDS: ['PACKNR']
         });
+
+        const filter2 = `PACKNR EQ '${sanitizeSapValue(result_packing_object.DATA[0].WA)}' AND PAITEMTYPE EQ 'P'`
+        const options2 = buildRfcOptions(filter2)
 
         const result_packing_material = await managed_client.call('RFC_READ_TABLE', {
             QUERY_TABLE: 'PACKPO',
             DELIMITER: ",",
-            OPTIONS: [{ TEXT: `PACKNR EQ '${result_packing_object.DATA[0].WA}' AND PAITEMTYPE EQ 'P'` }],
+            OPTIONS: options2,
             FIELDS: ['MATNR']
         });
 
@@ -1865,18 +1902,23 @@ funcion.sapRFC_HUVUL = async (storage_location, material, cantidad) => {
     let managed_client
     try {
         managed_client = await createSapRfcPool.acquire();
-
+        const filter = `POBJID EQ 'UC${sanitizeSapValue(material)}'`;
+        const options = buildRfcOptions(filter);
+        
         const result_packing_object = await managed_client.call('RFC_READ_TABLE', {
             QUERY_TABLE: 'PACKKP',
             DELIMITER: ",",
-            OPTIONS: [{ TEXT: `POBJID EQ 'UC${material}'` }],
+            OPTIONS: options,
             FIELDS: ['PACKNR']
         });
+
+        const filter2 = `PACKNR EQ '${sanitizeSapValue(result_packing_object.DATA[0].WA)}' AND PAITEMTYPE EQ 'P'`;
+        const options2 = buildRfcOptions(filter2);
 
         const result_packing_material = await managed_client.call('RFC_READ_TABLE', {
             QUERY_TABLE: 'PACKPO',
             DELIMITER: ",",
-            OPTIONS: [{ TEXT: `PACKNR EQ '${result_packing_object.DATA[0].WA}' AND PAITEMTYPE EQ 'P'` }],
+            OPTIONS: options2,
             FIELDS: ['MATNR']
         });
 
@@ -1925,18 +1967,23 @@ funcion.sapRFC_HUSEM = async (storage_location, material, cantidad) => {
     let managed_client
     try {
         managed_client = await createSapRfcPool.acquire();
-
+        const filter = `POBJID EQ 'UC${sanitizeSapValue(material)}'`;
+        const options = buildRfcOptions(filter);
+        
         const result_packing_object = await managed_client.call('RFC_READ_TABLE', {
             QUERY_TABLE: 'PACKKP',
             DELIMITER: ",",
-            OPTIONS: [{ TEXT: `POBJID EQ 'UC${material}'` }],
+            OPTIONS: options,
             FIELDS: ['PACKNR']
         });
 
+        const filter2 = `PACKNR EQ '${sanitizeSapValue(result_packing_object.DATA[0].WA)}' AND PAITEMTYPE EQ 'P'`;
+        const options2 = buildRfcOptions(filter2);
+        
         const result_packing_material = await managed_client.call('RFC_READ_TABLE', {
             QUERY_TABLE: 'PACKPO',
             DELIMITER: ",",
-            OPTIONS: [{ TEXT: `PACKNR EQ '${result_packing_object.DATA[0].WA}' AND PAITEMTYPE EQ 'P'` }],
+            OPTIONS: options2,
             FIELDS: ['MATNR']
         });
 
@@ -1998,16 +2045,16 @@ funcion.sapRFC_get_packing_instruction = async (handlingUnit) => {
         }
 
         let hu_material_number = result_hu_history.HUITEM[0].MATERIAL;
-        let hu_packing_instruction = result_hu_history.HUHEADER[0].PACKG_INSTRUCT
+        let hu_packing_instruction = result_hu_history.HUHEADER[0].PACKG_INSTRUCT;
         // 2 Given the material number get the packing instructions from table PACKKP
+        const filter = `POBJID LIKE '%${sanitizeSapValue(hu_material_number)}%' AND POBJID LIKE 'UM%'`;
+        const options = buildRfcOptions(filter);
         const result_packing_instructions = await managed_client.call('RFC_READ_TABLE', {
             QUERY_TABLE: 'PACKKP',
             DELIMITER: ",",
-            OPTIONS: [{ TEXT: `POBJID LIKE '%${hu_material_number}%' AND POBJID LIKE 'UM%'` }],
+            OPTIONS: options,
             FIELDS: ["PACKNR", "POBJID"]
         });
-
-
 
         // 2.1 At this point the user should select the correct master packing instruction to use
         const hu_packing_um_instructions = result_packing_instructions.DATA.map(row => {
@@ -2027,7 +2074,6 @@ funcion.sapRFC_get_packing_instruction = async (handlingUnit) => {
     } finally {
         setTimeout(() => { if (managed_client.alive) { createSapRfcPool.release(managed_client) } }, 500);
     }
-
 }
 
 
@@ -2047,16 +2093,16 @@ funcion.sapRFC_get_packing_instructionBMW = async (handlingUnit) => {
         }
 
         let hu_material_number = result_hu_history.HUITEM[0].MATERIAL;
-        let hu_packing_instruction = result_hu_history.HUHEADER[0].PACKG_INSTRUCT
+        let hu_packing_instruction = result_hu_history.HUHEADER[0].PACKG_INSTRUCT;
         // 2 Given the material number get the packing instructions from table PACKKP
+        const filter = `POBJID LIKE '%${sanitizeSapValue(hu_material_number)}%' AND POBJID LIKE 'UM%'`;
+        const options = buildRfcOptions(filter);
         const result_packing_instructions = await managed_client.call('RFC_READ_TABLE', {
             QUERY_TABLE: 'PACKKP',
             DELIMITER: ",",
-            OPTIONS: [{ TEXT: `POBJID LIKE '%${hu_material_number}%' AND POBJID LIKE 'UM%'` }],
+            OPTIONS: options,
             FIELDS: ["PACKNR", "POBJID"]
         });
-
-
 
         // 2.1 At this point the user should select the correct master packing instruction to use
         const hu_packing_um_instructions = result_packing_instructions.DATA.map(row => {
@@ -2076,25 +2122,21 @@ funcion.sapRFC_get_packing_instructionBMW = async (handlingUnit) => {
     } finally {
         setTimeout(() => { if (managed_client.alive) { createSapRfcPool.release(managed_client) } }, 500);
     }
-
 }
 
 funcion.sapRFC_get_packing_instructionPartNumber = async (partNumber) => {
     let managed_client
     try {
         managed_client = await createSapRfcPool.acquire();
-        //1 First step scan HU and get packing instruction to use on table PACKKP and get all master packing instructions
-
-
         // 2 Given the material number get the packing instructions from table PACKKP
+        const filter = `POBJID LIKE '%${sanitizeSapValue(partNumber)}%' AND POBJID LIKE 'UM%'`;
+        const options = buildRfcOptions(filter);
         const result_packing_instructions = await managed_client.call('RFC_READ_TABLE', {
             QUERY_TABLE: 'PACKKP',
             DELIMITER: ",",
-            OPTIONS: [{ TEXT: `POBJID LIKE '%${partNumber}%' AND POBJID LIKE 'UM%'` }],
+            OPTIONS: options,
             FIELDS: ["PACKNR", "POBJID"]
         });
-
-
         // 2.1 At this point the user should select the correct master packing instruction to use
         const hu_packing_um_instructions = result_packing_instructions.DATA.map(row => {
             const formattedRow = {};
@@ -2104,7 +2146,6 @@ funcion.sapRFC_get_packing_instructionPartNumber = async (partNumber) => {
             });
             return formattedRow;
         });
-
         return hu_packing_um_instructions;
     } catch (err) {
         await createSapRfcPool.destroy(managed_client);
@@ -2112,7 +2153,6 @@ funcion.sapRFC_get_packing_instructionPartNumber = async (partNumber) => {
     } finally {
         setTimeout(() => { if (managed_client.alive) { createSapRfcPool.release(managed_client) } }, 500);
     }
-
 }
 
 
@@ -2120,18 +2160,20 @@ funcion.sapRFC_get_packing_matreials = async (POBJID, PACKNR) => {
     let managed_client
     try {
         managed_client = await createSapRfcPool.acquire();
+        const filter1 = `POBJID EQ '${sanitizeSapValue(POBJID)}'`;
+        const options1 = buildRfcOptions(filter1);
         const result_packnr = await managed_client.call('RFC_READ_TABLE', {
             QUERY_TABLE: 'PACKKP',
             DELIMITER: ",",
-            OPTIONS: [{ TEXT: `POBJID EQ '${POBJID}'` }],
+            OPTIONS: options1,
             FIELDS: ["PACKNR", "MAPACO_ITEM"]
         });
-
-
+        const filter2 = `PACKNR EQ '${sanitizeSapValue(PACKNR)}' AND INDDEL NE 'X'`;
+        const options2 = buildRfcOptions(filter2);
         const result_packing_materials = await managed_client.call('RFC_READ_TABLE', {
             QUERY_TABLE: 'PACKPO',
             DELIMITER: ",",
-            OPTIONS: [{ TEXT: `PACKNR EQ '${PACKNR}' AND INDDEL NE 'X'` }],
+            OPTIONS: options2,
             FIELDS: ["PACKITEMID", "MATNR", "PAITEMTYPE", "TRGQTY", "SUBPACKNR"]
         });
 
@@ -3022,17 +3064,16 @@ funcion.sapRFC_createHU = async function main() {
             HUNUMBERS: [test_hu_number],
         });
 
-
         let hu_material_number = result_hu_history.HUITEM[0].MATERIAL;
         // 2 Given the material number get the packing instructions from table PACKKP
+        const filter1 = `POBJID LIKE '%${sanitizeSapValue(hu_material_number)}%' AND POBJID LIKE 'UM%'`;
+        const options1 = buildRfcOptions(filter1);
         const result_packing_instructions = await managed_client.call('RFC_READ_TABLE', {
             QUERY_TABLE: 'PACKKP',
             DELIMITER: ",",
-            OPTIONS: [{ TEXT: `POBJID LIKE '%${hu_material_number}%' AND POBJID LIKE 'UM%'` }],
+            OPTIONS: options1,
             FIELDS: ["PACKNR", "POBJID"]
         });
-
-
 
         // 2.1 At this point the user should select the correct master packing instruction to use
         const hu_packing_um_instructions = result_packing_instructions.DATA.map(row => {
@@ -3044,21 +3085,23 @@ funcion.sapRFC_createHU = async function main() {
             return formattedRow;
         });
 
-
         // 2.2 Once the user selected the correct packing instruction, get the packing materials for that packing instruction from table PACKPO
         // Note Just using dummy selection for now basically whatever is in poistion 0 of the array
+        const filter2 = `POBJID EQ '${sanitizeSapValue(hu_packing_um_instructions[0].POBJID)}'`;
+        const options2 = buildRfcOptions(filter2);
         const result_packnr = await managed_client.call('RFC_READ_TABLE', {
             QUERY_TABLE: 'PACKKP',
             DELIMITER: ",",
-            OPTIONS: [{ TEXT: `POBJID EQ '${hu_packing_um_instructions[0].POBJID}'` }],
+            OPTIONS: options2,
             FIELDS: ["PACKNR", "MAPACO_ITEM"]
         });
 
-
+        const filter3 = `PACKNR EQ '${sanitizeSapValue(result_packnr.DATA[0].WA.split(',')[0])}'`;
+        const options3 = buildRfcOptions(filter3);
         const result_packing_materials = await managed_client.call('RFC_READ_TABLE', {
             QUERY_TABLE: 'PACKPO',
             DELIMITER: ",",
-            OPTIONS: [{ TEXT: `PACKNR EQ '${result_packnr.DATA[0].WA.split(',')[0]}' ` }],
+            OPTIONS: options3,
             FIELDS: ["PACKITEMID", "MATNR", "PAITEMTYPE", "TRGQTY", "SUBPACKNR"]
         });
 
