@@ -1307,10 +1307,6 @@ funcion.sapRFC_transferMP1_DEL = async (storage_unit, storage_type, storage_bin,
             I_NLPLA: `${storage_bin.toUpperCase()}`
         });
         await managed_client.call('BAPI_TRANSACTION_COMMIT', {WAIT: 'X' });
-<<<<<<< HEAD
-=======
-
->>>>>>> ce4883dea879ae8459ba8bde118cdcbb9e654182
         funcion.insertRawMovement(raw_id, storage_type, emp_num, storage_unit, result.E_TANUM);
 
         return result;
@@ -1390,10 +1386,6 @@ funcion.sapRFC_transferMP_Obsoletos = async (storage_unit, storage_type, storage
             I_NLPLA: `${storage_bin}`
         });
         await managed_client.call('BAPI_TRANSACTION_COMMIT', {WAIT: 'X' });
-<<<<<<< HEAD
-=======
-
->>>>>>> ce4883dea879ae8459ba8bde118cdcbb9e654182
         await funcion.insertRawMovement(raw_id, storage_type, emp_num, (storage_unit).replace(/^0+/gm, ""), `${storage_bin}-${result.E_TANUM}`);
 
         return result;
@@ -2608,10 +2600,6 @@ funcion.sapRFC_pallet_request_create = async (array_handling_units, packing_mate
             I_NLPLA: `SHP`
         });
         await managed_client.call('BAPI_TRANSACTION_COMMIT', {WAIT: 'X' });
-<<<<<<< HEAD
-=======
-
->>>>>>> ce4883dea879ae8459ba8bde118cdcbb9e654182
         if (result_hu_create.HUKEY) {
             let dataPrint = {
                 "printer": printer,
