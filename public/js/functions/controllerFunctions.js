@@ -560,6 +560,7 @@ funcion.sapRFC_transferFG = async (serial, storage_bin) => {
             I_NLBER: '001',
             I_NLPLA: `${storage_bin.toUpperCase()}`
         });
+        await managed_client.call('BAPI_TRANSACTION_COMMIT', {WAIT: 'X' });
 
 
         return result;
@@ -827,6 +828,7 @@ funcion.sapRFC_transferEXTProd = async (serial, storage_location, storage_type, 
                 I_NLBER: '001',
                 I_NLPLA: storage_bin.toUpperCase()
             });
+            await managed_client.call('BAPI_TRANSACTION_COMMIT', {WAIT: 'X' });
             return result;
         }
     } catch (err) {
@@ -872,6 +874,7 @@ funcion.sapRFC_transferVULProd = async (serial, storage_location, storage_type, 
                 I_NLBER: '001',
                 I_NLPLA: storage_bin.toUpperCase()
             });
+            await managed_client.call('BAPI_TRANSACTION_COMMIT', {WAIT: 'X' });
             return result;
         }
     } catch (err) {
@@ -1043,7 +1046,7 @@ funcion.sapRFC_transferVul = async (serial, storage_bin) => {
             I_NLBER: `001`,
             I_NLPLA: `${storage_bin.toUpperCase()}`
         });
-
+        await managed_client.call('BAPI_TRANSACTION_COMMIT', {WAIT: 'X' });
         return result;
     } catch (err) {
         await createSapRfcPool.destroy(managed_client);
@@ -1131,6 +1134,7 @@ funcion.sapRFC_transferSemProd = async (serial, storage_type, storage_bin) => {
         };
 
         const result = await managed_client.call('L_TO_CREATE_MOVE_SU', parameters);
+        await managed_client.call('BAPI_TRANSACTION_COMMIT', {WAIT: 'X' });
         return result;
     } catch (err) {
         await createSapRfcPool.destroy(managed_client);
@@ -1228,6 +1232,7 @@ funcion.sapRFC_transferMP = async (storage_unit, storage_type, storage_bin, emp_
             I_NLBER: '001',
             I_NLPLA: `${storage_bin.toUpperCase()}`
         });
+        await managed_client.call('BAPI_TRANSACTION_COMMIT', {WAIT: 'X' });
 
         funcion.insertCompleteTransfer(emp_num, storage_type, storage_unit, storage_bin.toUpperCase(), resultLTO.E_TANUM);
         return resultLTO;
@@ -1256,6 +1261,7 @@ funcion.sapRFC_transferMP_BetweenStorageTypes = async (storage_unit, storage_typ
             I_NLBER: `001`,
             I_NLPLA: `${storage_bin}`
         });
+        await managed_client.call('BAPI_TRANSACTION_COMMIT', {WAIT: 'X' });
 
         funcion.insertCompleteTransfer(emp_num, storage_type, (storage_unit).replace(/^0+/gm, ""), storage_bin, result.E_TANUM);
 
@@ -1285,7 +1291,7 @@ funcion.sapRFC_transferMP1_DEL = async (storage_unit, storage_type, storage_bin,
             I_NLBER: '001',
             I_NLPLA: `${storage_bin.toUpperCase()}`
         });
-
+        await managed_client.call('BAPI_TRANSACTION_COMMIT', {WAIT: 'X' });
         funcion.insertRawMovement(raw_id, storage_type, emp_num, storage_unit, result.E_TANUM);
 
         return result;
@@ -1364,7 +1370,7 @@ funcion.sapRFC_transferMP_Obsoletos = async (storage_unit, storage_type, storage
             I_NLBER: `001`,
             I_NLPLA: `${storage_bin}`
         });
-
+        await managed_client.call('BAPI_TRANSACTION_COMMIT', {WAIT: 'X' });
         await funcion.insertRawMovement(raw_id, storage_type, emp_num, (storage_unit).replace(/^0+/gm, ""), `${storage_bin}-${result.E_TANUM}`);
 
         return result;
@@ -1390,6 +1396,7 @@ funcion.sapRFC_transferExt = async (serial, storage_bin) => {
             I_NLBER: `001`,
             I_NLPLA: `${storage_bin.toUpperCase()}`
         });
+        await managed_client.call('BAPI_TRANSACTION_COMMIT', {WAIT: 'X' });
         return result;
     } catch (err) {
         managed_client = await createSapRfcPool.acquire();
@@ -1411,6 +1418,7 @@ funcion.sapRFC_transferExtRP = async (serial, storage_type, storage_bin) => {
             I_NLBER: `001`,
             I_NLPLA: `${storage_bin.toUpperCase()}`
         });
+        await managed_client.call('BAPI_TRANSACTION_COMMIT', {WAIT: 'X' });
         return result;
     } catch (err) {
         await createSapRfcPool.destroy(managed_client);
@@ -1623,7 +1631,7 @@ funcion.sapRFC_transfer = async (serial, storage_type, storage_bin) => {
             I_NLBER: `001`,
             I_NLPLA: `${storage_bin.toUpperCase()}`
         });
-
+        await managed_client.call('BAPI_TRANSACTION_COMMIT', {WAIT: 'X' });
         if (managed_client) {
             managed_client.release();
         }
@@ -1671,6 +1679,7 @@ funcion.sapRFC_transferSlocCheck = async (serial, storage_location, storage_type
             };
             
             const result = await managed_client2.call('L_TO_CREATE_MOVE_SU', inputParameters);
+            await managed_client.call('BAPI_TRANSACTION_COMMIT', {WAIT: 'X' });
             return result;
         }
     } catch (err) {
@@ -2201,6 +2210,7 @@ funcion.sapRFC_pallet_request_createGM = async (array_handling_units, packing_ma
                 I_NLBER: '001',
                 I_NLPLA: `PACK.BIN`
             });
+            await managed_client.call('BAPI_TRANSACTION_COMMIT', {WAIT: 'X' });
         }
 
         //Creating item proposal with all the handling units
@@ -2255,6 +2265,7 @@ funcion.sapRFC_pallet_request_createGM = async (array_handling_units, packing_ma
             I_NLBER: '001',
             I_NLPLA: `SHP`
         });
+        await managed_client.call('BAPI_TRANSACTION_COMMIT', {WAIT: 'X' });
 
         // if (result_hu_create.HUKEY) {
         //     let dataPrint = {
@@ -2313,6 +2324,7 @@ funcion.sapRFC_pallet_request_createFORD = async (array_handling_units, packing_
                 I_NLBER: '001',
                 I_NLPLA: `PACK.BIN`
             });
+            await managed_client.call('BAPI_TRANSACTION_COMMIT', {WAIT: 'X' });
         }
 
         //Creating item proposal with all the handling units
@@ -2367,6 +2379,7 @@ funcion.sapRFC_pallet_request_createFORD = async (array_handling_units, packing_
             I_NLBER: '001',
             I_NLPLA: `SHP`
         });
+        await managed_client.call('BAPI_TRANSACTION_COMMIT', {WAIT: 'X' });
 
         //Not requiered for FORD
         // // result_hu_create.lowerDate = moment.min(dates).format('YYYYMMDD');
@@ -2410,6 +2423,7 @@ funcion.sapRFC_pallet_request_create = async (array_handling_units, packing_mate
                 I_NLBER: '001',
                 I_NLPLA: `PACK.BIN`
             });
+            await managed_client.call('BAPI_TRANSACTION_COMMIT', {WAIT: 'X' });
         }
 
         //Creating item proposal with all the handling units
@@ -2464,7 +2478,7 @@ funcion.sapRFC_pallet_request_create = async (array_handling_units, packing_mate
             I_NLBER: '001',
             I_NLPLA: `SHP`
         });
-
+        await managed_client.call('BAPI_TRANSACTION_COMMIT', {WAIT: 'X' });
         if (result_hu_create.HUKEY) {
             let dataPrint = {
                 "printer": printer,
@@ -3143,6 +3157,7 @@ funcion.sapRFC_createHU = async function main() {
                 I_NLBER: '001',
                 I_NLPLA: `PACK.BIN`
             });
+            await managed_client.call('BAPI_TRANSACTION_COMMIT', {WAIT: 'X' });
         }
 
         //Creating item proposal with all the handling units
@@ -3189,6 +3204,7 @@ funcion.sapRFC_createHU = async function main() {
         // //     I_NLBER: '001',
         // //     I_NLPLA: `PACK.BIN`
         // // });
+        // // await managed_client.call('BAPI_TRANSACTION_COMMIT', {WAIT: 'X' });
 
         // //7 At this point the pallet is created and we can proceed to pack the handling units into the pallet
         // // const result_hu_pack = await managed_client.call('BAPI_HU_PACK', {

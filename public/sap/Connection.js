@@ -49,7 +49,7 @@ const factory = {
 };
 
 const opts = {
-  max: 100, // maximum size of the pool
+  max: 50, // maximum size of the pool
   min: 10,  // minimum size of the pool
   testOnBorrow: true, // validate resources before giving them to clients
   idleTimeoutMillis: 600000, // remove resources which are idle for more than 10 minutes

@@ -88,7 +88,9 @@ function cookieSet(req, res, result) {
         {
             maxAge: time,
             httpOnly: false,
-            secure: process.env.NODE_ENV === 'production' ? true : false
+            secure: false,
+            sameSite: 'lax',
+            path: '/'
         })
     res.json(result)
 
@@ -404,18 +406,25 @@ controller.postSerialsMP_POST = async (req, res) => {
         const user_id = req.res.locals.authData.id.id;
 
         const serials_array = serial.split(",");
-        const promises = serials_array.map(async (serial_) => {
-            try {
-                return await funcion.sapRFC_transferMP(serial_, storage_type, storage_bin, user_id, estacion);
-            } catch (err) {
-                return err;
-            }
-        });
+        const results = [];
 
-        const results = await Promise.all(promises);
+        for (const serial_ of serials_array) {
+            try {
+                const result = await funcion.sapRFC_transferMP(serial_, storage_type, storage_bin, user_id, estacion);
+                results.push(result);
+            } catch (err) {
+                results.push({
+                    serial: serial_,
+                    error: err.message || err,
+                });
+            }
+        }
+
         res.json(results);
     } catch (error) {
-        res.json(error);
+        res.status(500).json({
+            error: error.message || error,
+        });
     }
 };
 
