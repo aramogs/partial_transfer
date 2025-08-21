@@ -1062,10 +1062,6 @@ funcion.sapRFC_transferVul = async (serial, storage_bin) => {
             I_NLPLA: `${storage_bin.toUpperCase()}`
         });
         await managed_client.call('BAPI_TRANSACTION_COMMIT', {WAIT: 'X' });
-<<<<<<< HEAD
-=======
-
->>>>>>> ce4883dea879ae8459ba8bde118cdcbb9e654182
         return result;
     } catch (err) {
         await createSapRfcPool.destroy(managed_client);
