@@ -165,6 +165,14 @@ controller.master_FG_FORD_GET = (req, res) => {
     })
 }
 
+controller.master_FG_LUCID_GET = (req, res) => {
+    let user_id = req.res.locals.authData.id.id
+    let user_name = req.res.locals.authData.id.username
+    res.render('master_fg_LUCID.ejs', {
+        user_id,
+        user_name
+    })
+}
 controller.master_FG_BMW_GET = (req, res) => {
     let user_id = req.res.locals.authData.id.id
     let user_name = req.res.locals.authData.id.username
@@ -404,18 +412,25 @@ controller.postSerialsMP_POST = async (req, res) => {
         const user_id = req.res.locals.authData.id.id;
 
         const serials_array = serial.split(",");
-        const promises = serials_array.map(async (serial_) => {
-            try {
-                return await funcion.sapRFC_transferMP(serial_, storage_type, storage_bin, user_id, estacion);
-            } catch (err) {
-                return err;
-            }
-        });
+        const results = [];
 
-        const results = await Promise.all(promises);
+        for (const serial_ of serials_array) {
+            try {
+                const result = await funcion.sapRFC_transferMP(serial_, storage_type, storage_bin, user_id, estacion);
+                results.push(result);
+            } catch (err) {
+                results.push({
+                    serial: serial_,
+                    error: err.message || err,
+                });
+            }
+        }
+
         res.json(results);
     } catch (error) {
-        res.json(error);
+        res.status(500).json({
+            error: error.message || error,
+        });
     }
 };
 
@@ -2620,6 +2635,71 @@ controller.pallet_request_createFORD_POST = async (req, res) => {
         if (print.key) { return res.json(print.key) }
 
         res.json(resPalletCreateFORD);
+    } catch (err) {
+        res.json(err);
+    }
+};
+
+controller.get_packing_instructionLUCID_POST = async (req, res) => {
+    try {
+        let serial = req.body.serial
+
+        const result = await funcion.sapRFC_get_packing_instruction(serial)
+
+        res.json(result);
+    } catch (err) {
+        res.json(err);
+    }
+};
+
+controller.get_packing_matreialsLUCID_POST = async (req, res) => {
+    try {
+        let POBJID = req.body.POBJID
+        let PACKNR = req.body.PACKNR
+        let hu_packing_instruction = req.body.hu_packing_instruction
+        const result = await funcion.sapRFC_get_packing_matreials(POBJID, PACKNR)
+
+        res.json(result);
+    } catch (err) {
+        res.json(err);
+    }
+};
+
+controller.pallet_request_createLUCID_POST = async (req, res) => {
+    try {
+        let estacion = req.res.locals.macIP.mac
+        let user_id = req.res.locals.authData.id.id
+        let serial = req.body.serial
+        let serials_array = serial.split(",")
+        let packing_materials = req.body.result_packing_materials_formatted
+        let result_packingr_formatted = req.body.result_packingr_formatted
+        let pallet_packing_material = req.body.pallet_packing_material
+
+
+        const resPalletCreateLUCID = await funcion.sapRFC_pallet_request_createLUCID(serials_array, packing_materials, result_packingr_formatted, pallet_packing_material)
+
+        if (resPalletCreateLUCID.key) {
+            return res.json(resPalletCreateLUCID)
+        } else if (resPalletCreateLUCID.error) {
+            return res.json(resPalletCreateLUCID)
+        }
+
+        const targetHUITEM = resPalletCreateLUCID.HUITEM.find(item => item.HU_ITEM_TYPE === "3");
+
+
+        let p_material = `P${targetHUITEM.MATERIAL}`;
+        let _material = targetHUITEM.MATERIAL;
+        // let totalQty = `${resPalletCreateLUCID.ITEMSPROPOSAL.reduce((sum, item) => sum + parseFloat(item.PACK_QTY), 0)}`
+        let totalQty = `${resPalletCreateLUCID.ITEMSPROPOSAL.filter(item => item.HU_ITEM_TYPE === "3").reduce((sum, item) => sum + parseFloat(item.PACK_QTY), 0)}`;
+        let serial_num = `${parseInt(parseFloat(resPalletCreateLUCID.HUHEADER.HU_EXID))}`
+        let total_weight = `${resPalletCreateLUCID.HUHEADER.TOTAL_WGHT}`
+        let fifo_date = `${resPalletCreateLUCID.lowerDate}`
+
+        let print = await funcion.printLabel_LUCID(estacion, p_material, _material, serial_num, totalQty, total_weight, fifo_date, serials_array, user_id)
+
+        if (print.key) { return res.json(print.key) }
+
+        res.json(resPalletCreateLUCID);
     } catch (err) {
         res.json(err);
     }
