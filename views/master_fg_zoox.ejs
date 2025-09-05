@@ -1,0 +1,344 @@
+<%- include ("./static/header")%>
+    <%- include ("./static/sidebar") %>
+        <%- include ("./static/navbar")%>
+
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/mainMenu" class="text-warning"><span
+                        class="fas fa-arrow-alt-circle-left  text-warning"></span>Menu</a></li>
+
+                    <li class="breadcrumb-item"><a href="/masterFG" class="text-warning"><span
+                                class="fas fa-arrow-circle-left text-warning"></span>Pallet FG</a></li>
+
+                    <li class="breadcrumb-item active" aria-current="page">Pallet ZOOX</li>
+                </ol>
+            </nav>
+
+
+            <div class="col-lg-12 frame">
+
+                <div class="row justify-content-center">
+                  
+              
+                  <div class="col-lg-4 d-none d-md-block">
+                    <div class="card">
+                      <div class="card-header "><strong>Datos de Usuario</strong></div>
+                      <div class="card-body">
+                        <table class="table table-sm borderless">
+                          <tbody>
+                            <tr>
+                              <td><small><strong>ID:</strong></small></td>
+                              <td><small id="user_id"><%= user_id %></small> </td>
+                            </tr>
+                            <tr>
+                              <td><small><strong>Nombre:</strong></small></td>
+                              <td><small id="user_name"><%= user_name  %></small> </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+              
+                </div>
+              
+                <div class="row justify-content-center">
+                  
+                  <div class="col-lg-4 text-center">
+                    <form id="submitSerial">
+              
+                      <h4 class="text-center animate__animated animate__bounceIn d-none d-lg-block" display: inline-block>
+                       Pallet Creation:</h4>
+                       <img src="/img/ZOOX.png" alt="SAP"  />
+              
+                      <div class="form-group">
+              
+              
+              
+                        <label for="serial_num">Handling Unit:(S) <i class="fas fa-barcode" style="font-size: 1rem;"></i></label>
+                        <small id="ejs_selected_packing" class="form-text "></small>
+                        <small id="ejs_packing_quantity" class="form-text "></small>
+                        <input type="text" class="form-control" name="serial_num" id="serial_num" aria-describedby="helpId"
+                          placeholder="" autocomplete="off">
+                      </div>
+                    </form>
+                    <div class="alert alert-danger animate__flipOutX animate__animated role=" alert" id="alerta_prefijo">Error:
+                      Verificar escaneo
+                    </div>
+              
+                  </div>
+                  
+                </div>
+              
+              
+                <div class="row justify-content-center">
+                  
+              
+                  <div class="col-lg-4">
+                    <div class="card">
+                      <div class="card-header ">
+                        <div class="row">
+                          <div class="col-9">
+                            <strong>Seriales :</strong>
+                            <small id="user_id"><%= user_id %></small>
+                          </div>
+                          <div class="col-2">
+                            <button id="btn_t" type="button" class="btn btn-secondary btn-sm" disabled><small><span
+                                  class="fa fa-external-link-alt"></span></small></button>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="card-body bg-secondary text-center">
+                        <div id="currentST">
+              
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                
+                </div>
+                <br><br><br><br>
+              </div>
+
+<!-- ############################################################## Modals ############################################################## -->
+              <!-- Small modal Error-->
+<div class="modal fade" id="modalSuccess" tabindex="-1" role="dialog" aria-labelledby="modelTitleId" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable" role="document">
+      <div class="modal-content">
+        <div class="modal-header card-mov">
+          <img src="/img/sap.png" alt="SAP" srcset="" class="card-mov">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-2">
+              <i class="fas fa-check-circle text-success" style="font-size: 2rem;"> </i>
+            </div>
+            <div class="col">
+              <h5>Master serial number:  <span class="badge badge-success" id="serialMaster"></span></h5>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="btnCerrar_Success" type="button" class="btn btn-secondary btnCerrar"
+            data-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  
+  <!-- Modal -->
+  <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable" role="document">
+      <div class="modal-content">
+        <div class="modal-body">
+          <div class="row text-center">
+            <div class="col-lg-12">
+              <button id="btn_verificar_cantidad" type="button" class="btn btn-primary btn-block"><span
+                  class="fas fa-hand-point-right text-light">
+                </span> Verificar Cantidad</button>
+            </div>
+          </div>
+  
+          <hr>
+          <br><br>
+  
+          <div class="row text-center">
+            <span class="col-4 col-lg-4 fas fa-chevron-circle-down text-warning" id="decrease" onclick="decreaseValue()"
+              value="Decrease Value" style="font-size: 65px;"></span>
+            <div class="col-4 col-lg-4 text-center">
+              <input type="number" class="form-control" name="contadorSeriales" id="contadorSeriales" value="0">
+            </div>
+            <span class="col-4 col-lg-4 fas fa-chevron-circle-up text-success" id="increase" onclick="increaseValue()"
+              value="Increase Value" style="font-size: 65px;"></span>
+          </div>
+  
+          <div class="row text-center">
+            <div class="col-lg-4"></div>
+            <div class="col-lg-4">
+              <label class="badge badge-warning animate__flipOutX animate__animated" id="contadorWarning">
+                <span class="badge badge-danger">
+                  <span class="fas fa-exclamation-triangle"></span></span>
+                Cantidad Incorrecta
+              </label>
+            </div>
+            <div class="col-lg-4"></div>
+          </div>
+  
+          <div class="row text-center">
+            <div class="col-lg-12">
+  
+              <form id="submitArray_form">
+                <div id="div_storage_bin" class="col-lg-12 animate__flipOutX animate__animated">
+                    <button type="submit" id="submitArray" type="button" class="btn btn-success rounded-pill"> Verificar Seriales</button>
+                </div>
+  
+              </form>
+            </div>
+          </div>
+          <br>
+  
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-danger btn-sm btnCerrar" data-dismiss="modal">Cerrar <span
+                class="fas fa-times-circle"></span></button>
+            <!-- <button id="submitArray" type="button" class="btn btn-outline-primary btn-sm">Terminar <span
+                    class="fas fa-check-circle"></span></button> -->
+          </div>
+  
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  
+  <!-- Small modal Success-->
+  <div class="modal fade" id="modalError" tabindex="-1" role="dialog" aria-labelledby="modelTitleId" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable" role="document">
+      <div class="modal-content">
+        <div class="modal-header card-mov">
+          <img src="/img/sap.png" alt="SAP" srcset="" class="card-mov">
+          <h3 class="card-mov"> Error(s): <span class="badge badge-danger" id="cantidadErrores"></span> </h3>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+  
+            <div class="col-lg-12">
+  
+              <h5 id="errorText" hidden><span class="fas fa-exclamation-circle text-danger"></span><span
+                  id="errorTextField"></span></h5>
+  
+              <div id="tabla_consulta_container" class="table-responsive">
+                <table id="tabla_consulta" class="table table-hover table-sm  table-striped text-center ">
+                  <thead class="thead-dark">
+                    <tr class="header">
+                      <th>SU:</th>
+                      <th>Note:</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <!-- INFO AGREGADA DESDE JAVASCRIPT -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+  
+        </div>
+        <div class="modal-footer">
+          <button id="btnCerrar_Error" type="button" class="btn btn-outline-warning btnCerrar" data-dismiss="modal">Cerrar
+          </button>
+  
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Small modal Confirm Storage-Bin-->
+  <div class="modal fade" id="modalMaster" tabindex="-1" role="dialog" aria-labelledby="modelTitleId" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable" role="document">
+      <div class="modal-content">
+        <div class="modal-header card-mov">
+          <img src="/img/sap.png" alt="SAP" srcset="" class="card-mov">
+          <h5 class="card-mov"> Masterizar Seriales </h5>
+          <!-- <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          </button> -->
+        </div>
+  
+        <div class="modal-body">
+          <div class="row text-center">
+            <div class="col-12">
+              <form id="submitArray_Master">
+              <button type="submit" class="btn btn-primary">Masterizar</button>
+              </form>
+            </div>
+          </div>
+          <!-- <div class="row text-center">
+            <div class="col-lg-12">
+              <form id="submitArray_Bin">
+                <div id="div_storage_bin" class="col-12 ">
+                  <div class="input-group">
+                    <div class="input-group-prepend">
+                      <span class="input-group-text fas fa-barcode" id="inputGroupPrepend2"></span>
+                    </div>
+                    <input type="text" class="form-control" id="verifySBin" placeholder=""
+                      aria-describedby="inputGroupPrepend2" required autocomplete="off">
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div> -->
+        </div>
+  
+        <div class="modal-footer">
+          <button id="btnCerrar_Master" type="button" class="btn btn-secondary btnCerrar" data-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+    <!-- Small modal Confirm Select Packing Instruction-->
+    <div class="modal fade" id="modalSelectPacking" tabindex="-1" role="dialog" aria-labelledby="modelTitleId" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-scrollable" role="document">
+        <div class="modal-content">
+          <div class="modal-header card-mov">
+            <img src="/img/sap.png" alt="SAP" srcset="" class="card-mov">
+            <h5 class="card-mov"> Seleccionar Packing Instruction </h5>
+            <!-- <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            </button> -->
+          </div>
+    
+          <div class="modal-body">
+
+            <div class="row text-center">
+              <div class="col-12">
+                <form id="submit_PackingInstruction">
+                  
+                  <!-- Added via Javascript -->
+                
+                </form>
+              </div>
+            </div>
+
+          </div>
+    
+          <div class="modal-footer">
+            <button id="btnCerrar_Master" type="button" class="btn btn-secondary btnCerrar" data-dismiss="modal">Cerrar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+  <!-- Modal Spinners -->
+  <div class="modal fade" id="modalSpinner" tabindex="-1" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header text-center">
+          <h2 class="modal-title "> <span class="text-secondary  fas fa-stopwatch"></span>
+            Procesando</h2>
+          <div class="spinner-grow spinner-grow-sm text-warning mt-4 cdelay-1" role="status">
+            <span class="sr-only">Loading...</span>
+          </div>
+          <div class="spinner-grow spinner-grow-sm text-primary mt-4 cdelay-2" role="status">
+            <span class="sr-only">Loading...</span>
+          </div>
+          <div class="spinner-grow spinner-grow-sm text-secondary mt-4 cdelay-3" role="status">
+            <span class="sr-only">Loading...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+              
+<%- include ("./static/footer")%>
+
+<script type="text/javascript" src="/js/functions/master_pallet_zoox.js"></script>
+
+</body>
+
+</html>

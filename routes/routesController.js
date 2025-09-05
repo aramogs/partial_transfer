@@ -175,6 +175,25 @@ controller.master_FG_LUCID_GET = (req, res) => {
         user_name
     })
 }
+
+controller.master_FG_ZF_GET = (req, res) => {
+    let user_id = req.res.locals.authData.id.id
+    let user_name = req.res.locals.authData.id.username
+    res.render('master_fg_ZF.ejs', {
+        user_id,
+        user_name
+    })
+}
+
+controller.master_FG_ZOOX_GET = (req, res) => {
+    let user_id = req.res.locals.authData.id.id
+    let user_name = req.res.locals.authData.id.username
+    res.render('master_fg_ZOOX.ejs', {
+        user_id,
+        user_name
+    })
+}
+
 controller.master_FG_BMW_GET = (req, res) => {
     let user_id = req.res.locals.authData.id.id
     let user_name = req.res.locals.authData.id.username
@@ -2706,6 +2725,137 @@ controller.pallet_request_createLUCID_POST = async (req, res) => {
         res.json(err);
     }
 };
+
+controller.get_packing_instructionZF_POST = async (req, res) => {
+    try {
+        let serial = req.body.serial
+
+        const result = await funcion.sapRFC_get_packing_instruction(serial)
+
+        res.json(result);
+    } catch (err) {
+        res.json(err);
+    }
+};
+
+controller.get_packing_matreialsZF_POST = async (req, res) => {
+    try {
+        let POBJID = req.body.POBJID
+        let PACKNR = req.body.PACKNR
+        let hu_packing_instruction = req.body.hu_packing_instruction
+        const result = await funcion.sapRFC_get_packing_matreials(POBJID, PACKNR)
+
+        res.json(result);
+    } catch (err) {
+        res.json(err);
+    }
+};
+
+controller.pallet_request_createZF_POST = async (req, res) => {
+    try {
+        let estacion = req.res.locals.macIP.mac
+        let user_id = req.res.locals.authData.id.id
+        let serial = req.body.serial
+        let serials_array = serial.split(",")
+        let packing_materials = req.body.result_packing_materials_formatted
+        let result_packingr_formatted = req.body.result_packingr_formatted
+        let pallet_packing_material = req.body.pallet_packing_material
+
+
+        const resPalletCreateZF = await funcion.sapRFC_pallet_request_createZF(serials_array, packing_materials, result_packingr_formatted, pallet_packing_material)
+
+        if (resPalletCreateZF.key) {
+            return res.json(resPalletCreateZF)
+        } else if (resPalletCreateZF.error) {
+            return res.json(resPalletCreateZF)
+        }
+
+        const targetHUITEM = resPalletCreateZF.HUITEM.find(item => item.HU_ITEM_TYPE === "3");
+
+
+        let p_material = `P${targetHUITEM.MATERIAL}`;
+        let _material = targetHUITEM.MATERIAL;
+        // let totalQty = `${resPalletCreateZF.ITEMSPROPOSAL.reduce((sum, item) => sum + parseFloat(item.PACK_QTY), 0)}`
+        let totalQty = `${resPalletCreateZF.ITEMSPROPOSAL.filter(item => item.HU_ITEM_TYPE === "3").reduce((sum, item) => sum + parseFloat(item.PACK_QTY), 0)}`;
+        let serial_num = `${parseInt(parseFloat(resPalletCreateZF.HUHEADER.HU_EXID))}`
+        let total_weight = `${resPalletCreateZF.HUHEADER.TOTAL_WGHT}`
+        let fifo_date = `${resPalletCreateZF.lowerDate}`
+
+        let print = await funcion.printLabel_ZF(estacion, p_material, _material, serial_num, totalQty, total_weight, fifo_date, serials_array, user_id)
+
+        if (print.key) { return res.json(print.key) }
+
+        res.json(resPalletCreateZF);
+    } catch (err) {
+        res.json(err);
+    }
+};
+
+controller.get_packing_instructionZOOX_POST = async (req, res) => {
+    try {
+        let serial = req.body.serial
+
+        const result = await funcion.sapRFC_get_packing_instruction(serial)
+
+        res.json(result);
+    } catch (err) {
+        res.json(err);
+    }
+};
+
+controller.get_packing_matreialsZOOX_POST = async (req, res) => {
+    try {
+        let POBJID = req.body.POBJID
+        let PACKNR = req.body.PACKNR
+        let hu_packing_instruction = req.body.hu_packing_instruction
+        const result = await funcion.sapRFC_get_packing_matreials(POBJID, PACKNR)
+
+        res.json(result);
+    } catch (err) {
+        res.json(err);
+    }
+};
+
+controller.pallet_request_createZOOX_POST = async (req, res) => {
+    try {
+        let estacion = req.res.locals.macIP.mac
+        let user_id = req.res.locals.authData.id.id
+        let serial = req.body.serial
+        let serials_array = serial.split(",")
+        let packing_materials = req.body.result_packing_materials_formatted
+        let result_packingr_formatted = req.body.result_packingr_formatted
+        let pallet_packing_material = req.body.pallet_packing_material
+
+
+        const resPalletCreateZOOX = await funcion.sapRFC_pallet_request_createZOOX(serials_array, packing_materials, result_packingr_formatted, pallet_packing_material)
+
+        if (resPalletCreateZOOX.key) {
+            return res.json(resPalletCreateZOOX)
+        } else if (resPalletCreateZOOX.error) {
+            return res.json(resPalletCreateZOOX)
+        }
+
+        const targetHUITEM = resPalletCreateZOOX.HUITEM.find(item => item.HU_ITEM_TYPE === "3");
+
+
+        let p_material = `P${targetHUITEM.MATERIAL}`;
+        let _material = targetHUITEM.MATERIAL;
+        // let totalQty = `${resPalletCreateZOOX.ITEMSPROPOSAL.reduce((sum, item) => sum + parseFloat(item.PACK_QTY), 0)}`
+        let totalQty = `${resPalletCreateZOOX.ITEMSPROPOSAL.filter(item => item.HU_ITEM_TYPE === "3").reduce((sum, item) => sum + parseFloat(item.PACK_QTY), 0)}`;
+        let serial_num = `${parseInt(parseFloat(resPalletCreateZOOX.HUHEADER.HU_EXID))}`
+        let total_weight = `${resPalletCreateZOOX.HUHEADER.TOTAL_WGHT}`
+        let fifo_date = `${resPalletCreateZOOX.lowerDate}`
+
+        let print = await funcion.printLabel_ZOOX(estacion, p_material, _material, serial_num, totalQty, total_weight, fifo_date, serials_array, user_id)
+
+        if (print.key) { return res.json(print.key) }
+
+        res.json(resPalletCreateZOOX);
+    } catch (err) {
+        res.json(err);
+    }
+};
+
 
 controller.get_packing_matreialsGM_POST = async (req, res) => {
     try {

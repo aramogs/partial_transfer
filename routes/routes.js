@@ -94,6 +94,20 @@ router.get('/master_fg_LUCID',middleware.verifyToken, routesController.master_FG
 router.post('/get_packing_instructionLUCID',middleware.verifyToken, middleware.macFromIP, routesController.get_packing_instructionLUCID_POST);
 router.post('/get_packing_matreialsLUCID',middleware.verifyToken, middleware.macFromIP, routesController.get_packing_matreialsLUCID_POST);
 router.post('/pallet_request_createLUCID',middleware.verifyToken, middleware.macFromIP, routesController.pallet_request_createLUCID_POST);
+// ##############Master ZF##################
+router.get('/master_fg_ZF',middleware.verifyToken, routesController.master_FG_ZF_GET);
+// router.post('/master_request_ZF',middleware.verifyToken, middleware.macFromIP, routesController.master_request_ZF_POST);
+// router.post('/master_request_ZF_create',middleware.verifyToken, middleware.macFromIP, routesController.master_request_ZF_CREATE_POST);
+router.post('/get_packing_instructionZF',middleware.verifyToken, middleware.macFromIP, routesController.get_packing_instructionZF_POST);
+router.post('/get_packing_matreialsZF',middleware.verifyToken, middleware.macFromIP, routesController.get_packing_matreialsZF_POST);
+router.post('/pallet_request_createZF',middleware.verifyToken, middleware.macFromIP, routesController.pallet_request_createZF_POST);
+// ##############Master ZOOX##################
+router.get('/master_fg_ZOOX',middleware.verifyToken, routesController.master_FG_ZOOX_GET);
+// router.post('/master_request_ZOOX',middleware.verifyToken, middleware.macFromIP, routesController.master_request_ZOOX_POST);
+// router.post('/master_request_ZOOX_create',middleware.verifyToken, middleware.macFromIP, routesController.master_request_ZOOX_CREATE_POST);
+router.post('/get_packing_instructionZOOX',middleware.verifyToken, middleware.macFromIP, routesController.get_packing_instructionZOOX_POST);
+router.post('/get_packing_matreialsZOOX',middleware.verifyToken, middleware.macFromIP, routesController.get_packing_matreialsZOOX_POST);
+router.post('/pallet_request_createZOOX',middleware.verifyToken, middleware.macFromIP, routesController.pallet_request_createZOOX_POST);
 // ##############Master Pallet BMW ##################
 router.get('/master_fg_bmw',middleware.verifyToken, routesController.master_FG_BMW_GET);
 router.post('/get_packing_instructionBMW',middleware.verifyToken, middleware.macFromIP, routesController.get_packing_instructionBMW_POST);
